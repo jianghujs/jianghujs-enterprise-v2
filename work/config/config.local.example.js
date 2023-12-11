@@ -5,7 +5,6 @@ const path = require('path');
 module.exports = appInfo => {
 
   return {
-    appDirectoryLink: 'http://127.0.0.1:7007/work',
     debug: true,
     jiangHuConfig: {
       packageIdCheck: false,

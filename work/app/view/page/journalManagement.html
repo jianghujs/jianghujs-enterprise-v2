@@ -11,7 +11,7 @@
     <div class="jh-page-second-bar px-8">
       <v-row>
         <v-col cols="12" xs="12" sm="12" md="4" xl="3">
-          <div class="pt-3 text-h7 font-weight-bold">任务管理
+          <div class="pt-3 text-h7 font-weight-bold">日志管理
             <!-- 帮助页按钮 -->
             <v-icon @click="isHelpPageDrawerShown = true" color="success" small>mdi-help-circle-outline
             </v-icon>
@@ -99,47 +99,47 @@
              
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">任务名称</span>
+              <span class="jh-input-label">日志名称</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.taskTitle"></v-text-field>
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">任务描述</span>
+              <span class="jh-input-label">日志描述</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.taskDesc"></v-text-field>
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">任务优先级</span>
+              <span class="jh-input-label">日志优先级</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.taskLevel"></v-text-field>
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">任务标签</span>
+              <span class="jh-input-label">日志标签</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.taskTag"></v-text-field>
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">任务状态：进行中,已完成,已拒绝</span>
+              <span class="jh-input-label">日志状态：进行中,已完成,已拒绝</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.taskStatus"></v-text-field>
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">任务类型</span>
+              <span class="jh-input-label">日志类型</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.taskType"></v-text-field>
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">任务内容</span>
+              <span class="jh-input-label">日志内容</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.taskContent"></v-text-field>
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">任务开始时间</span>
+              <span class="jh-input-label">日志开始时间</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.taskStartAt"></v-text-field>
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">任务结束时间</span>
+              <span class="jh-input-label">日志结束时间</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.taskEndAt"></v-text-field>
             </v-col>
              
@@ -154,17 +154,17 @@
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">任务关联的信息列表</span>
+              <span class="jh-input-label">日志关联的信息列表</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.taskRelationList"></v-text-field>
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">任务关联的附件列表</span>
+              <span class="jh-input-label">日志关联的附件列表</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.taskFileList"></v-text-field>
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">子任务列表todo</span>
+              <span class="jh-input-label">子日志列表todo</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.taskChildList"></v-text-field>
             </v-col>
              
@@ -193,47 +193,47 @@
             <!-- <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.xxxId" :rules="validationRules.requireRules"></v-text-field> -->
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">任务名称</span>
+              <span class="jh-input-label">日志名称</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.taskTitle"></v-text-field>
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">任务描述</span>
+              <span class="jh-input-label">日志描述</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.taskDesc"></v-text-field>
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">任务优先级</span>
+              <span class="jh-input-label">日志优先级</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.taskLevel"></v-text-field>
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">任务标签</span>
+              <span class="jh-input-label">日志标签</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.taskTag"></v-text-field>
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">任务状态：进行中,已完成,已拒绝</span>
+              <span class="jh-input-label">日志状态：进行中,已完成,已拒绝</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.taskStatus"></v-text-field>
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">任务类型</span>
+              <span class="jh-input-label">日志类型</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.taskType"></v-text-field>
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">任务内容</span>
+              <span class="jh-input-label">日志内容</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.taskContent"></v-text-field>
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">任务开始时间</span>
+              <span class="jh-input-label">日志开始时间</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.taskStartAt"></v-text-field>
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">任务结束时间</span>
+              <span class="jh-input-label">日志结束时间</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.taskEndAt"></v-text-field>
             </v-col>
              
@@ -248,17 +248,17 @@
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">任务关联的信息列表</span>
+              <span class="jh-input-label">日志关联的信息列表</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.taskRelationList"></v-text-field>
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">任务关联的附件列表</span>
+              <span class="jh-input-label">日志关联的附件列表</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.taskFileList"></v-text-field>
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">子任务列表todo</span>
+              <span class="jh-input-label">子日志列表todo</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.taskChildList"></v-text-field>
             </v-col>
                        
@@ -316,7 +316,7 @@ new Vue({
         disabled: true,
       },
       {
-        text: '任务管理',
+        text: '日志管理',
         disabled: true,
       }
     ],
@@ -336,27 +336,27 @@ new Vue({
     },
     currentSceneId: null,
     serverSearchInput: {
-      taskType: '任务',
+      taskType: '日志',
       gender: null
     },
     searchInput: null,
     isTableLoading: true,
     tableData: [],
     headers: [
-      {text: "任务ID", value: "taskId", width: 120}, 
-      {text: "任务名称", value: "taskTitle", width: 120}, 
-      {text: "任务描述", value: "taskDesc", width: 120}, 
-      {text: "任务优先级", value: "taskLevel", width: 120}, 
-      {text: "任务标签", value: "taskTag", width: 120}, 
-      {text: "任务状态：进行中,已完成,已拒绝", value: "taskStatus", width: 120}, 
-      {text: "任务内容", value: "taskContent", width: 120}, 
-      {text: "任务开始时间", value: "taskStartAt", width: 120}, 
-      {text: "任务结束时间", value: "taskEndAt", width: 120}, 
+      {text: "日志ID", value: "taskId", width: 120}, 
+      {text: "日志名称", value: "taskTitle", width: 120}, 
+      {text: "日志描述", value: "taskDesc", width: 120}, 
+      {text: "日志优先级", value: "taskLevel", width: 120}, 
+      {text: "日志标签", value: "taskTag", width: 120}, 
+      {text: "日志状态：进行中,已完成,已拒绝", value: "taskStatus", width: 120}, 
+      {text: "日志内容", value: "taskContent", width: 120}, 
+      {text: "日志开始时间", value: "taskStartAt", width: 120}, 
+      {text: "日志结束时间", value: "taskEndAt", width: 120}, 
       {text: "负责人id", value: "taskManagerId", width: 120}, 
       {text: "参与人id", value: "taskMemberIdList", width: 120}, 
-      {text: "任务关联的信息列表", value: "taskRelationList", width: 120}, 
-      {text: "任务关联的附件列表", value: "taskFileList", width: 120}, 
-      {text: "子任务列表todo", value: "taskChildList", width: 120}, 
+      {text: "日志关联的信息列表", value: "taskRelationList", width: 120}, 
+      {text: "日志关联的附件列表", value: "taskFileList", width: 120}, 
+      {text: "子日志列表todo", value: "taskChildList", width: 120}, 
       {text: "操作者", value: "operationByUser", width: 120},
       {text: "操作时间", value: "operationAt", width: 250},
       {text: '操作', value: 'action', align: 'center', sortable: false, width: 120, class: 'fixed', cellClass: 'fixed'},
@@ -489,12 +489,12 @@ new Vue({
             pageId: 'taskManagement',
             actionId: 'insertItem',
             actionData: {
-              taskType: '任务',
+              taskType: '日志',
               ...this.createActionData
             },
             bizIdGenerate: {
               tableName: "task",
-              prefix: "RW",
+              prefix: "RZ",
               type: "idSequence",
               bizId: "taskId",
             },

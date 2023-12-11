@@ -18,7 +18,7 @@ module.exports = appInfo => {
     appTitle: '江湖演示-企业级-办公应用',
     appLogo: `${appId}/public/img/logo.png`,
     appType: 'multiApp',
-    appDirectoryLink: 'http://127.0.0.1:7007/work',
+    appDirectoryLink: null,
     indexPage: `/${appId}/page/taskManagement`,
     loginPage: `/${appId}/page/login`,
     helpPage: `/${appId}/page/help`,
