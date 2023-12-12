@@ -185,9 +185,10 @@
       <v-navigation-drawer v-if="isUpdateDrawerShown" v-model="isUpdateDrawerShown" :permanent="isUpdateDrawerShown" fixed temporary right width="80%" class="elevation-24">
         <v-form ref="updateForm" lazy-validation>
           <!-- 抽屉标题 -->
-          <v-row>
-            <span class="text-subtitle-1 font-weight-medium pa-6 pl-7">修改信息</span>
-          </v-row>
+          <v-row no-gutters>
+<span class="text-h7 font-weight-bold pa-4">修改信息</span>
+</v-row>
+<v-divider class="jh-divider"></v-divider>
           <!-- 抽屉表单 -->
           <v-row class="mt-0 px-4">
             <!-- <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.xxxId" :rules="validationRules.requireRules"></v-text-field> -->
