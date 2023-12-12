@@ -10,7 +10,7 @@ const eggJianghuDir = path.join(eggJianghuDirResolve, '../');
 module.exports = appInfo => {
 
   const projectId = 'jianghujs_enterprise';
-  const appId = 'work';
+  const appId = 'task';
 
   return {
     appId,
