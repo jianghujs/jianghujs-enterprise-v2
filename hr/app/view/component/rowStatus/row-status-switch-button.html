@@ -1,0 +1,53 @@
+<template id="row-status-switch-button">
+  <v-menu offset-y rounded="lg">
+    <template v-slot:activator="{ on, attrs }">
+      <span
+        v-bind="attrs"
+        v-on="on"
+        role="button" class="success--text font-weight-medium font-size-2">
+        {{ textOfValue[value] }}
+        <v-icon size="16" class="success--text">mdi-chevron-down</v-icon>
+      </span>
+    </template>
+    <v-list dense>
+      <v-list-item 
+        link
+        v-for="(item, index) in items"
+        :key="index"
+        @click="$emit('update-value', item.value)"
+        v-if="item.value !== value">
+        <v-list-item-title>{{ item.text }}</v-list-item-title>
+      </v-list-item>
+    </v-list>
+  </v-menu>
+</template>
+
+<script type="module">
+  Vue.component('row-status-switch-button', {
+    template: '#row-status-switch-button',
+    props: {
+      value: { type: String },
+    },
+    vuetify: new Vuetify(),
+    data: () => ({
+      items: [
+        { text: "正常", value: "正常" },
+        { text: "草稿", value: "草稿" },
+        { text: "回收站", value: "回收站" },
+      ],
+      textOfValue: {
+        "正常": "正常",
+        "草稿": "草稿",
+        "回收站": "回收站",
+      },
+    }),
+    computed: {
+    },
+    watch: {
+    },
+    created() {
+    },
+    methods: {
+    }
+  })
+</script>

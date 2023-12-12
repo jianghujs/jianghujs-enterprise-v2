@@ -1,0 +1,434 @@
+{% extends 'template/jhTemplateV4.html'%}
+
+{% block vueTemplate %}
+<script type="text/html" id="app-template">
+  <div>
+    <v-app mobile-breakpoint="sm">
+      <jh-menu />
+      <!-- 头部内容 >>>>>>>>>>>>> -->
+      <v-main class="d-flex flex-column" style="margin-top: 60px">
+        <div class="jh-page-second-bar px-8">
+          <v-row class="align-center">
+            <v-col cols="12" xs="12" sm="12" md="4" xl="3">
+              <div class="py-4 text-body-1 font-weight-bold">工作台
+                <!-- 帮助页按钮 -->
+                <!-- 
+            <span role="button" class="success--text font-weight-regular jh-font-size-13 ml-2" @click="isHelpPageDrawerShown = true">
+              <v-icon size="13" class="success--text">mdi-help-circle-outline</v-icon>帮助
+            </span> -->
+              </div>
+            </v-col>
+            <v-col cols="12" xs="12" sm="12" md="8" xl="3">
+            </v-col>
+          </v-row>
+        </div>
+        <!-- <<<<<<<<<<<<< 头部内容 -->
+
+      <div class="jh-page-body-container px-8">
+        <v-row>
+          <v-col cols="8" xs="12" md="12" lg="8">
+            <v-card class="rounded-lg mb-6 jh-dashboard-card">
+              <div class="d-flex pa-4">
+                <div class="font-weight-medium text-subtitle-2">人事概况</div>
+                <div class="text--secondary text-caption ml-2">（20xx.xx.xx-20xx.xx.xx）</div>
+              </div>
+              <v-row>
+                <v-col cols="12">
+                  <v-card class="d-flex flex-row flex-wrap mx-3" elevation="0">
+                    <template v-for="(status, index) in entryStatusList" :key="index">
+                      <v-card
+                        elevation="0"
+                        class="pa-3 text-center jh-statistics-card">
+                        <div class="mb-2">{{status.text}}</div>
+                        <div><span class="primary--text">{{status.value || 0}}</span> 人</div>
+                      </v-card>
+                    </template>
+                  </v-card>
+                </v-col>
+              </v-row>
+            </v-card>
+              
+            <v-card class="rounded-lg mb-6 jh-dashboard-card">
+              <div class="d-flex pa-4">
+                <div class="font-weight-medium text-subtitle-2">招聘动态</div>
+                <div class="text--secondary text-caption ml-2">（20xx.xx.xx-20xx.xx.xx）</div>
+              </div>
+              <v-row>
+                <v-col cols="12">
+                  <v-card class="d-flex flex-row flex-wrap ml-3" elevation="0">
+                    <template v-for="(status, index) in jobStatusList" :key="index">
+                      <v-card
+                        elevation="0"
+                        class="pa-3 text-center jh-statistics-card">
+                        <div class="mb-2">{{status.text}}</div>
+                        <div><span class="primary--text">{{status.value || 0}}</span> 人</div>
+                      </v-card>
+                    </template>
+                  </v-card>
+                </v-col>
+              </v-row>
+            </v-card>
+
+            <v-card class="rounded-lg mb-6 jh-dashboard-card">
+              <div class="d-flex pa-4">
+                <div class="font-weight-medium text-subtitle-2">上月薪资概况</div>
+                <span class="text--secondary text-caption ml-2">模拟数据</span>
+              </div>
+              <v-row>
+                <v-col cols="12">
+                  <v-card class="d-flex flex-row flex-wrap ml-3" elevation="0">
+                    <template v-for="(status, index) in constantObj.status2" :key="index">
+                      <v-card
+                        elevation="0"
+                        class="pa-3 text-center jh-statistics-card">
+                        <div class="mb-2">{{status.text}}</div>
+                        <div><span class="primary--text">{{status.num || 0}}</span> 人</div>
+                      </v-card>
+                    </template>
+                    <v-card
+                      elevation="0"
+                      class="pa-3 text-center jh-statistics-card">
+                      <h4>部门薪资占比</h4>
+                      <div class="text--secondary text-caption mt-3">暂无数据</div>
+                    </v-card>
+                  </v-card>
+                </v-col>
+              </v-row>
+            </v-card>
+
+            <v-card class="rounded-lg mb-6 jh-dashboard-card">
+              <div class="d-flex pa-4">
+                <div class="font-weight-medium text-subtitle-2">绩效考核</div>
+                <div class="text--secondary text-caption ml-2">模拟数据</div>
+              </div>
+              <v-row>
+                <v-col cols="12">
+                  <v-tabs dense v-model="actionTab" class="px-4 pb-4">
+                    <v-tab v-for="(tab, index) in tabs" :key="index">{{tab.title}}</v-tab>
+                  </v-tabs>
+                </v-col>
+              </v-row>
+            </v-card>
+          </v-col>
+          <v-col cols="4" class="pl-0" xs="12" md="12" lg="4">
+
+            <v-card class="rounded-lg mb-6 jh-dashboard-card">
+              <div class="d-flex pa-4">
+                <div class="font-weight-medium text-subtitle-2">待办提醒</div>
+              </div>
+              <!-- <v-row class="px-6">
+                <v-col cols="12" xs="12" sm="6" md="4" v-for="(item, index) in todoList" :key="index">
+                  <div class="mb-2 text-center">{{item.text}}</div>
+                  <div class="text-center"><span class="warning--text">{{item.value || 0}}</span> 人</div>
+                </v-col>
+              </v-row> -->
+              <v-row no-getters>
+
+                <v-col cols="12">
+
+                  <v-card class="px-4" flat> 
+                    <v-simple-table dense class="no-left-padding-table">
+                      <template v-slot:default>
+                        <!-- <thead>
+                          <tr>
+                            <th class="text-left font-weight-bold">
+                              Name
+                            </th>
+                            <th class="text-right font-weight-bold">
+                              Calories
+                            </th>
+                          </tr>
+                        </thead> -->
+                        <tbody>
+                          <tr
+                            v-for="item in todoList"
+                            :key="item.name"
+                          >
+                            <td> <a :href="'/<$ ctx.app.config.appId $>/page/' + item.page" class="v-btn v-btn--contained success--text">{{ item.text }}</a> </td>
+                            <td class="text-right"><span class="warning--text">{{item.value || 0}}</span> 人</td>
+                          </tr>
+                        </tbody>
+                      </template>
+                    </v-simple-table>
+                  </v-card>
+                </v-col>
+              </v-row>
+            </v-card>
+
+            <v-card class="rounded-lg mb-6 jh-dashboard-card">
+              <div class="d-flex pa-4">
+                <div class="font-weight-medium text-subtitle-2">日历</div>
+              </div>
+              <div class="text-center">
+                <v-date-picker
+                  v-model="picker"
+                  color="green lighten-1"
+                ></v-date-picker>
+              </div>
+              <div class="pa-4">
+                <v-btn block color="primary">添加备忘录</v-btn>
+              </div>
+              <div class="pa-4">
+                <h4>当天事项</h4>
+                <div class="text--secondary text-caption mt-3 text-center">暂无数据</div>
+              </div>
+            </v-card>
+          </v-col>
+
+          <v-overlay absolute :value="isLoading" color="#fff">
+            <v-progress-circular
+              color="success"
+              indeterminate
+              size="24"
+            ></v-progress-circular>
+          </v-overlay>
+        </v-row>   
+      </div>
+        
+        <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
+        <v-navigation-drawer v-model="isHelpPageDrawerShown" v-click-outside="drawerClickOutside" fixed temporary right width="80%" class="elevation-24">
+          <iframe style="border: 0" :src="`/${appInfo.appId}/pageDoc#workbench.md`" width="100%" height="100%"></iframe>
+          <v-btn elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn" @click="isHelpPageDrawerShown = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-navigation-drawer>
+        <!-- <<<<<<<<<<<<< 帮助页抽屉 -->
+
+      </v-main>  
+    </v-app>
+  <jh-toast />
+  <jh-mask />
+  <jh-confirm-dialog />
+  </div>
+</script>
+
+<div id="app">
+</div>
+
+{% endblock %}
+
+{% block vueScript %}
+{% include 'component/drawerForm.html' %}
+{% include 'component/editForm.html' %}
+{% include 'component/globalHandler.html' %}
+<script type="module">
+new Vue({
+  el: '#app',
+  template: '#app-template',
+  vuetify: new Vuetify(),
+  data: () => ({
+    isHelpPageDrawerShown: false,
+    globalHandler: new GlobalHandler(),
+    statusFilter: [],
+    searchText: null,
+    tableFilterKeyword: null,
+    isFormValid: true,
+    requireRules: [
+      v => !!v || '此项为必填项',
+    ],
+    constantObj: {
+      // 在职 入职 待入职 已离职 待离职 转正 调岗
+      entryStatus: ['在职', '入职', '待入职', '已离职', '待离职', '转正', '调岗'],
+      jobStatus: ['正在招聘职位', '评选中', '待入职', '已入职'],
+      status2: [
+          {text: "计薪人员", value: 1},
+          {text: "实发工资", value: 2},
+      ],
+      status4: [
+          {text: "待转正", value: 0},
+          {text: "待入职", value: 0},
+          {text: "生日", value: 0},
+      ],
+    },
+    tabs: [
+      { title: '已完成考核', action: 'post' },
+      { title: '进行中考核', action: 'basic' },
+    ],
+    serverSearchForm: {
+      postName: null,
+      select: {},
+      searchSummary: null,
+    },
+    isTableLoading: true,
+    tableDataBackups: [],
+    headers: [],
+    editItem: {},
+    isUpdateDrawerShown: false,
+    currentClickButton: {},
+    actionTab: 0,
+    isDetailDrawerShow: false,  
+    picker: (new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().substr(0, 10),
+    entryStatusList: [
+      {text: "在职", value: 0},
+      {text: "入职", value: 0},
+      {text: "待入职", value: 0},
+      {text: "已离职", value: 0},
+      {text: "待离职", value: 0},
+      {text: "转正", value: 0},
+      {text: "调岗", value: 0},
+    ],
+    isLoading: false,
+    jobStatusList: [
+      {text: "正在招聘职位", value: 0},
+      {text: "评选中", value: 0},
+      {text: "待入职", value: 0},
+      {text: "已入职", value: 0},
+    ],
+    contractWarnList: [],
+    todoList: [
+      {text: "待审核薪资", value: 0, page: 'monthEmpRecord'},
+      {text: "待离职", value: 0, page: 'employeeDepartApproved'},
+      {text: "合同到期", value: 0, page: 'employeeManagement'},
+    ],
+
+  }),
+  computed: {
+    isMobile() {
+      return window.innerWidth < 600;
+    },
+    tableData() {
+      return this.tableDataBackups;
+    },
+    getEditItem() {
+      return this.editItem;
+    },
+  },
+  watch: {
+    searchText(value) {
+      value = value && value.toLowerCase();
+      const {constantObj: {status = []}} = this;
+      if (value) {
+        this.statusFilter = status.slice()
+            .filter((v) => v.text && (v.text.toLowerCase().includes(value) || v.text.includes(value)))
+        return false;
+      }
+      this.statusFilter = status.slice();
+    },
+  },
+  async created() {
+    await this.doUiAction('getWorkbenchCount');
+  },
+  async mounted() {
+  },
+  methods: {
+    dayjs,
+    async doUiAction(uiActionId, uiActionData) {
+      switch (uiActionId) {
+        case 'getTableData':
+          await this.getTableData()
+          break;
+        case 'getWorkbenchCount':
+          await this.getWorkbenchCount()
+          break;
+        case 'handleTableButton':
+          await this.globalHandler.handleTableButton(uiActionData, this)
+          break;
+        case 'saveInfo':
+          await this.saveInfo();
+          break;
+      }
+    },
+    /**
+     * 获取表格数据
+     */
+    async getTableData() {
+      this.isTableLoading = true;
+      const where = _.omitBy(this.serverSearchForm.select, _.isNull);
+      const {rows, count} = (await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'recruitPpostManagement',
+            actionId: 'selectItemList',
+            where,
+            whereLike: {
+              postName: this.serverSearchForm.postName,
+            },
+            limit: _.size(where) === 0 ? 200 : 99999999,
+            orderBy: [
+              {column: 'createTime', order: 'desc'}
+            ]
+          }
+        }
+      })).data.appData.resultData;
+      this.tableDataBackups = rows;
+      this.isTableLoading = false;  
+    },
+    async getWorkbenchCount() {
+      this.isLoading = true;
+      const {entryStatus, jobStatus, contractWarnList} = (await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'workbench',
+            actionId: 'getWorkbenchCount',
+          }
+        }
+      })).data.appData.resultData;
+      this.entryStatusList = this.buildEntryStatusList(entryStatus);
+      this.jobStatusList = jobStatus;
+      this.contractWarnList = contractWarnList;
+      // todoList 合同到期 contractWarnList.length
+      this.todoList[2].value = contractWarnList.length;
+      this.isLoading = false;
+    },
+    buildEntryStatusList(entryStatusList) {
+      const {constantObj: {entryStatus = []}} = this;
+      return entryStatus.map((v) => {
+        return {
+          text: v,
+          value: entryStatusList.find((item) => item.entryStatus === v)?.count || 0,
+        }
+      })
+    },
+    /**
+     * 保存数据
+     */
+    async saveInfo() {
+      await this.doUiAction(`${this.currentClickButton.action}Save`);
+    },
+  }
+})
+</script>
+
+<style scoped>
+  .borderRightNone {
+    border-right: none !important;
+  }
+
+
+  .jh-wrapper-card{
+    min-height: calc(100vh - 150px);
+    background-color: #F2F2F2 !important;
+  }
+  .v-divider{
+    border-color: #F4F5F6 !important;
+  }
+  .jh-directory-card{
+    height: calc(100vh - 70px);
+    padding: 16px !important;
+    overflow: scroll;
+  }
+  .jh-dashboard-wrapper-card{
+    padding: 16px !important; 
+    height: 100%;
+    min-height: 400px;
+  }
+  .jh-dashboard-card{
+    box-shadow: 0 1px 20px 0 rgb(0 0 0 / 3%) !important;
+  }
+  .jh-statistics-card{
+    flex: 1 !important;
+    border-right: 1px solid #f5f5f5 !important;
+    border-radius: 0 !important;
+  }
+  .jh-dashboard-card .jh-statistics-card:last-child{
+    border-right: none !important;
+  }
+  .jh-dashboard-chip .v-slide-group__content{
+    padding: 0 !important;
+  }
+
+  .no-left-padding-table.v-data-table>.v-data-table__wrapper>table>tbody>tr>td:first-child, .v-data-table>.v-data-table__wrapper>table>tfoot>tr>td:first-child, .no-left-padding-table.v-data-table>.v-data-table__wrapper>table>thead>tr>th:first-child {
+    padding-left: 0px !important;
+  }
+</style>
+{% endblock %}

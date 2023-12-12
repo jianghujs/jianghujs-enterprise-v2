@@ -1,0 +1,166 @@
+<template id="select-export-header">
+  <div class="select-export-header-container">
+    <!-- server input 展开菜单样式 -->
+    <v-menu class="jh-v-input" transition="scale-transition" offset-y min-width="auto" :close-on-content-click="false"
+      v-model="isMenuShown" :disabled="disabled">
+
+      <template v-slot:activator="{on, attrs}">
+        <div v-bind="attrs" v-on="on">
+          <slot>
+          </slot>
+        </div>
+      </template>
+      <v-row class="ma-0" style="width: 600px; max-width: 80vw">
+        <v-col cols="12" class="">
+          <v-btn small :outlined="currentCate !== category" v-for="(category, index) in subjectCategoryList"
+            :key="index" :dark="currentCate === category" @click="currentCate = currentCate === category ? '' : category" color="success darken-1"
+            class="mr-1">
+            {{ category }}
+          </v-btn>
+        </v-col>
+        <v-col cols="12" class="select-subject-box">
+          <v-chip-group
+            active-class="primary--text"
+            column
+            v-model="defaultHeader"
+            multiple
+          >
+            <v-chip
+              v-for="item in headers"
+              :key="item.value"
+              :value="item.value"
+              small
+            >
+              {{ item.text }}
+            </v-chip>
+          </v-chip-group>
+        </v-col>
+        <v-col cols="12" class="d-flex justify-end">
+          
+          <v-btn color="" small class="elevation-0 mr-2" @click="isMenuShown = false">取消</v-btn>
+          <v-btn color="success" small class="elevation-0" @click="confirmExport">确认</v-btn>
+        </v-col>
+      </v-row>
+    </v-menu>
+  </div>
+
+</template>
+
+<script>
+  Vue.component('SelectExportHeader', {
+    template: '#select-export-header',
+    props: {
+      disabled: {
+        type: Boolean,
+        default: false
+      },
+    },
+    vuetify: new Vuetify(),
+    data: () => ({
+      subjectListBackup: [],
+      subjectList: [],
+      isSubjectMenuShown: false,
+      searchStr: '',
+      subjectCategoryList: [],
+      currentCate: '',
+      isMenuShown: false,
+      columnList: [],
+      headers: [
+        { "text": "员工id", "value": "employeeId" },
+        { "text": "员工姓名", "value": "employeeName" },
+        { "text": "员工序号", "value": "idSequence" },
+        { "text": "员工性别", "value": "sex" },
+        { "text": "员工年龄", "value": "age" },
+        { "text": "联系电话", "value": "contactNumber" },
+        { "text": "紧急联系电话", "value": "emergencyContactNumber" },
+        { "text": "岗位1", "value": "post" },
+        { "text": "岗位2", "value": "post2" },
+        { "text": "岗位3", "value": "post3" },
+        { "text": "政治面貌", "value": "politicalBackground" },
+        { "text": "身份证号码", "value": "icNumber" },
+        { "text": "出生日期", "value": "dateOfBirth" },
+        { "text": "毕业学校", "value": "institution" },
+        { "text": "专业", "value": "major" },
+        { "text": "学历层次", "value": "highestEducation" },
+        { "text": "教师资格证类别", "value": "teacherQualification" },
+        { "text": "教师资格证学段", "value": "teacherQualificationLeaver" },
+        { "text": "教师资格证学科", "value": "teacherQualificationSubject" },
+        { "text": "教师资格证编号", "value": "teacherCertificationNumber" },
+        { "text": "任教学段", "value": "teachingLevel" },
+        { "text": "任教学科", "value": "teachingSubject" },
+        { "text": "家庭地址", "value": "residentialAddress" },
+        { "text": "省", "value": "province" },
+        { "text": "市", "value": "city" },
+        { "text": "县", "value": "county" },
+        { "text": "入职", "value": "dateOfEntry" },
+        { "text": "到期", "value": "dateOfContractExpiration" },
+        { "text": "申请离职状态", "value": "leaveRequestStatus" },
+        { "text": "建设银行卡卡号", "value": "cardNumber" },
+        { "text": "车牌号", "value": "licensePlateNumber" },
+        { "text": "聘用形式", "value": "employmentForms" },
+        { "text": "试用期", "value": "probationPeriod" },
+        { "text": "在职状态", "value": "entryStatus" },
+        { "text": "员工状态", "value": "status" },
+        { "text": "备注", "value": "remarks" },
+        { "text": "联系人", "value": "contactPerson" },
+        { "text": "教育经历", "value": "educationExperience" },
+        { "text": "证书", "value": "certificate" },
+        { "text": "薪资卡信息", "value": "salaryCard" },
+        { "text": "社保卡信息", "value": "socialSecurity" },
+        { "text": "培训经历", "value": "trainingExperience" },
+        { "text": "工作经历", "value": "workExperience" }
+      ],
+      defaultHeader: [
+        'idSequence',
+        'employeeId', 
+        'employeeName', 
+      ]
+
+    }),
+    computed: {
+      subjectListByCate() {
+        if (!this.currentCate) {
+          return this.subjectList
+        }
+        return this.subjectList.filter(item => item.subjectCategory === this.currentCate)
+      },
+      subjectId() {
+        if (!this.value) {
+          return [];
+        }
+        return [this.value];
+      },
+    },
+    watch: {
+      defaultHeader(val) {
+        console.log(val)
+      }
+    },
+    async created() {
+    },
+    mounted() {
+    },
+    methods: {
+      confirmExport() {
+        const header = this.headers.filter(item => this.defaultHeader.includes(item.value)).map(item => item.text)
+        const value = this.headers.filter(item => this.defaultHeader.includes(item.value)).map(item => item.value)
+        this.$emit('confirm', {
+          header,
+          value
+        })
+        this.isMenuShown = false
+      }
+    }
+  })
+</script>
+<style>
+  .select-export-header-container {
+    display: inline-block;
+  }
+  .select-subject-box {
+    overflow: auto;
+  }
+  .v-btn:not(.v-btn--round).v-size--x-small {
+    padding: 0 8px;
+  }
+</style>

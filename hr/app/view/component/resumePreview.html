@@ -1,0 +1,490 @@
+<template id="resume-preview">
+  <v-skeleton-loader v-if="isResumeLoading" class="mx-auto" type="article"></v-skeleton-loader>
+  <div v-else data-op-type="mix-box">
+    <div style="font-size:24px;font-weight:bold;text-align: center;height: 30px;" data-op-type="pendants">个人信息登记表</div>
+
+    <table style="width:100%;border:1px solid;align:center;font-size:12px;" border cellspacing="0" cellpadding="0"
+      data-op-type="table">
+      <tbody class="nop-fill-box">
+        <tr>
+          <td colspan="20" width="535">
+            <p>
+              <strong>应聘岗位：</strong> {{resume.jobTitle}} &nbsp;&nbsp;&nbsp;&nbsp;NO：FSHR-FM12
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="20" width="535">
+            <p><strong>一、个人情况</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td width="73">
+            <p><strong>姓名</strong></p>
+          </td>
+          <td colspan="3" width="59">
+            <p><strong> {{ resume.user }}</strong></p>
+          </td>
+          <td colspan="4" width="57">
+            <p><strong>性 别</strong></p>
+          </td>
+          <td colspan="2" width="50">
+            <p><strong> {{ resume.gender }}</strong></p>
+          </td>
+          <td colspan="2" width="37">
+            <p><strong>年龄</strong></p>
+          </td>
+          <td colspan="2" width="45">
+            <p><strong> {{ resume.age }}</strong></p>
+          </td>
+          <td colspan="3" width="84">
+            <p><strong>民族</strong></p>
+          </td>
+          <td width="30">
+            <p><strong>                 {{ resume.ethnicity }}</strong></p>
+          </td>
+          <td colspan="2" rowspan="6" width="97">
+            <p>
+              <strong>请贴最近一年内</strong><strong>照</strong><strong>片</strong>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td width="73">
+            <p><strong>身高</strong></p>
+          </td>
+          <td colspan="3" width="59">
+            <p><strong> {{ resume.user }}</strong></p>
+          </td>
+          <td colspan="4" width="57">
+            <p><strong>体 重</strong></p>
+          </td>
+          <td colspan="2" width="50">
+            <p><strong>                 {{ resume.height }}</strong></p>
+          </td>
+          <td colspan="2" width="37">
+            <p><strong>血型</strong></p>
+          </td>
+          <td colspan="2" width="45">
+            <p><strong>                 {{ resume.bloodType }}</strong></p>
+          </td>
+          <td colspan="3" width="84">
+            <p><strong>婚姻状况</strong></p>
+          </td>
+          <td width="30">
+            <p><strong> {{ resume.maritalStatus }}</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3" width="108">
+            <p><strong>政治面貌</strong></p>
+          </td>
+          <td colspan="7" width="132">
+            <p><strong> {{ resume.politicalAffiliation }}</strong></p>
+          </td>
+          <td colspan="4" width="82">
+            <p><strong>身体状况</strong></p>
+          </td>
+          <td colspan="4" width="115">
+            <p><strong> {{ resume.physicalCondition }}</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3" width="108">
+            <p><strong>宗教信仰</strong></p>
+          </td>
+          <td colspan="7" width="132">
+            <p><strong> {{ resume.religiousBeliefs }}</strong></p>
+          </td>
+          <td colspan="4" width="82">
+            <p><strong>联系电话</strong></p>
+          </td>
+          <td colspan="4" width="115">
+            <p><strong> {{ resume.phoneNumber }}</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3" width="108">
+            <p><strong>身份证号码</strong></p>
+          </td>
+          <td colspan="7" width="132">
+            <p><strong> {{ resume.IDNumber }}</strong></p>
+          </td>
+          <td colspan="4" width="82">
+            <p><strong>Email地址</strong></p>
+          </td>
+          <td colspan="4" width="115">
+            <p><strong> {{ resume.email }}</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3" width="108">
+            <p><strong>最高学历</strong></p>
+          </td>
+          <td colspan="7" width="132">
+            <p><strong> {{ resume.highestEducation }}</strong></p>
+          </td>
+          <td colspan="4" width="82">
+            <p><strong>微信号</strong></p>
+          </td>
+          <td colspan="4" width="115">
+            <p><strong> {{ resume.wechatID }}</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3" width="108">
+            <p><strong>家庭住址</strong></p>
+          </td>
+          <td colspan="17" width="426">
+            <p><strong> {{ resume.homeAddress }}</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3" width="108">
+            <p><strong>现住址</strong></p>
+          </td>
+          <td colspan="17" width="426">
+            <p><strong> {{ resume.currentAddress }}</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3" width="108">
+            <p><strong>专业成绩排名</strong></p>
+          </td>
+          <td colspan="17" width="426">
+            <p><strong> {{ resume.academicRanking }}</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3" width="108">
+            <p><strong>意向工作地</strong></p>
+          </td>
+          <td colspan="17" width="426">
+            <p><strong> {{ resume.workplace }}</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3" width="108">
+            <p><strong>薪</strong><strong>酬期望</strong></p>
+          </td>
+          <td colspan="11" width="214">
+            <p><strong> {{ resume.salaryExpectation }}</strong></p>
+          </td>
+          <td colspan="4" width="115">
+            <p>
+              <strong>最快</strong><strong>可</strong><strong>到岗日</strong><strong>期</strong>
+            </p>
+          </td>
+          <td colspan="2" width="97">
+            <p><strong> {{ resume.earliestAvailability }}</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="20" width="535">
+            <p>
+              <strong>二、</strong><strong>教育</strong><strong>经历</strong><strong>（</strong><strong>从高中阶段开始填写</strong><strong>）</strong>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3" width="108">
+            <p><strong>起始年月</strong></p>
+          </td>
+          <td colspan="6" width="111">
+            <p><strong>学校名称</strong></p>
+          </td>
+          <td colspan="4" width="70">
+            <p><strong>专业</strong></p>
+          </td>
+          <td colspan="4" width="117">
+            <p><strong>担任职务</strong></p>
+          </td>
+          <td colspan="3" width="128">
+            <p><strong>系主任/班主任联系方式</strong></p>
+          </td>
+        </tr>        
+        <tr v-for="(item, index) in resume.education">
+          <td colspan="3" width="108">
+            <p><strong>{{item.startDate}}</strong></p>
+          </td>
+          <td colspan="6" width="111">
+            <p><strong>{{item.school}}</strong></p>
+          </td>
+          <td colspan="4" width="70">
+            <p><strong>{{item.major}}</strong></p>
+          </td>
+          <td colspan="4" width="117">
+            <p><strong>{{item.position}}</strong></p>
+          </td>
+          <td colspan="3" width="128">
+            <p><strong>{{item.teacherPhoneNumber}}</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3" width="108">
+            <p>
+              <strong>获得职称</strong><strong>/</strong><strong>资格证书</strong>
+            </p>
+          </td>
+          <td colspan="17" width="426">
+            <p><strong>{{resume.educationCertificate}}</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="20" width="535">
+            <p>
+              <strong>三</strong><strong>、</strong><strong>实习</strong><strong>工作经历</strong>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3" width="108">
+            <p><strong>起始年月</strong></p>
+          </td>
+          <td colspan="4" width="77">
+            <p><strong>任职单位名称</strong></p>
+          </td>
+          <td colspan="9" width="152">
+            <p><strong>单位联系电话</strong></p>
+          </td>
+          <td colspan="4" width="196">
+            <p><strong>工作描述及收获</strong></p>
+          </td>
+        </tr>        
+        <tr v-for="(item, index) in resume.experience">
+          <td colspan="3" width="108">
+            <p><strong>{{item.startDate}}</strong></p>
+          </td>
+          <td colspan="4" width="77">
+            <p><strong>{{item.company}}</strong></p>
+          </td>
+          <td colspan="9" width="152">
+            <p><strong>{{item.companyContact}}</strong></p>
+          </td>
+          <td colspan="4" width="196">
+            <p><strong>{{item.desc}}</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="20" width="535">
+            <p><strong>四、家庭状况（主要为直系亲属）</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2" width="96">
+            <p><strong>与本人</strong><strong>关系</strong></p>
+          </td>
+          <td colspan="4" width="66">
+            <p><strong>姓名</strong></p>
+          </td>
+          <td colspan="5" width="83">
+            <p><strong>出生年月</strong></p>
+          </td>
+          <td colspan="8" width="195">
+            <p><strong>现常住地址</strong></p>
+          </td>
+          <td width="92">
+            <p><strong>联系电话</strong></p>
+          </td>
+        </tr>
+        <tr v-for="(item, index) in resume.familyMember">
+          <td colspan="2" width="96">
+            <p><strong>{{item.relationship}}</strong></p>
+          </td>
+          <td colspan="4" width="66">
+            <p><strong>{{item.name}}</strong></p>
+          </td>
+          <td colspan="5" width="83">
+            <p><strong>{{item.birthday}}</strong></p>
+          </td>
+          <td colspan="8" width="195">
+            <p><strong>{{item.address}}</strong></p>
+          </td>
+          <td width="92">
+            <p><strong>{{item.phoneNumber}}</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="20" width="535">
+            <p>
+              <strong>五</strong><strong>、</strong><strong>请列举能提供有关填表人品性及能力资料的</strong><strong>老师</strong>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="5" width="157">
+            <p><strong>姓名</strong></p>
+          </td>
+          <td colspan="6" width="89">
+            <p><strong>职业</strong></p>
+          </td>
+          <td colspan="4" width="87">
+            <p><strong>电话</strong></p>
+          </td>
+          <td colspan="5" width="199">
+            <p><strong>地址</strong></p>
+          </td>
+        </tr>
+        <tr v-for="(item, index) in resume.teacherContact">
+          <td colspan="5" width="157">
+            <p><strong>{{item.name}}</strong></p>
+          </td>
+          <td colspan="6" width="89">
+            <p><strong>{{item.occupation}}</strong></p>
+          </td>
+          <td colspan="4" width="87">
+            <p><strong>{{item.phoneNumber}}</strong></p>
+          </td>
+          <td colspan="5" width="199">
+            <p><strong>{{item.address}}</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="20" width="535">
+            <p><strong>六、</strong><strong>在校期间社会活动情况（学生工作、社团、校外项目等）</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="20" width="535">
+            <p><strong>{{resume.studentSocialization}}</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="20" width="535">
+            <p>
+              <strong>七</strong><strong>、</strong><strong>在校期间奖励情况（获奖时间、获奖名称、获奖等级等）</strong>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="20" width="535">
+            <p><strong>{{resume.achievement}}</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="20" width="535">
+            <p>
+              <strong>八</strong><strong>、</strong><strong>谈谈您平时的社交活动或者爱好</strong>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="20" width="535">
+            <p><strong>{{resume.socialActivities}}</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="20" width="535">
+            <p>
+              <strong>九</strong><strong>、简要说出</strong><strong>您的优点和缺点分别是什么</strong>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="20" width="535">
+            <p><strong>{{resume.personality}}</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="20" width="535">
+            <p><strong>十、</strong><strong>谈谈您的职业发展方向</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="20" width="535">
+            <p><strong>{{resume.careerPlanning}}</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="20" width="535">
+            <p>
+              <strong>十一、</strong><strong>是否曾因案被捕(如曾因案被捕请说明原因)</strong><strong>和是否因违纪受到学校处分或被公司解雇</strong>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="20" width="535">
+            <p><strong>{{resume.offence}}</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="20" width="535">
+            <p><strong>本人郑重承诺：</strong></p>
+            <p>1、本申请表中我所提供的情况是正确的、属实的。如发现虚假信息，贵公司可随时与我解除劳动合同及其他一切书面协议，由此造成一切后果均由本人承担。</p>
+            <p>2、本人同意并接受公司对表中内容进行审查。</p>
+            <p>3、本人愿意接受公司的培训和试用，如试用期考核不合格或有其他不符合录用条件情形，公司有权解除劳动合同。</p>
+            <p>4、本人声明自己与原单位无保密协议或竞业限制协议，或前述协议超过法定有效期限，本人保证自己处理好与原工作单位的工作关系，如因劳动合同等出现劳动纠纷，本人愿意承担一切责任。</p>
+            <p><strong>签 &nbsp;名:
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</strong><strong>&nbsp;</strong><strong>&nbsp;&nbsp;日
+                &nbsp;期:</strong><strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</strong>
+            </p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</template>
+
+<script>
+  Vue.component('resume-preview', {
+    template: '#resume-preview',
+    props: {
+      id: {
+        type: String || Number,
+        default: ''
+      },
+    },
+    data: () => ({
+      resume: {},
+      isResumeLoading: false,
+    }),
+    computed: {
+    },
+    watch: {},
+    async created() {
+      await this.getResumeData();
+    },
+    methods: {
+      async getResumeData() {
+        this.isResumeLoading = true;
+        const { rows: [row] } = (await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'jobResumePreview',
+              actionId: 'getResumeData',
+              where: { id: this.id }
+            }
+          }
+        })).data.appData.resultData;
+        if (row) {
+          this.resume = this.formatResumeData(row);
+        }
+        this.isResumeLoading = false;
+        this.$emit('finish');
+      },
+      formatResumeData(row) {
+        const { emergencyContact, teacherContact, familyMember, experience, training, education, languageSkills, recruitmentChannel } = row;
+        return {
+          ...row,
+          education: education ? JSON.parse(education) : [],
+          experience: experience ? JSON.parse(experience) : [],
+          familyMember: training ? JSON.parse(familyMember) : [],
+          teacherContact: JSON.parse(teacherContact),
+        }
+      },
+    }
+  })
+</script>
+<style scoped>
+  table tr td {
+    padding: 8px 5px;
+  }
+
+  .table-body-container {
+    width: 100%;
+  }
+
+  .v-application .table-body-container p {
+    margin-bottom: 0;
+  }
+</style>
