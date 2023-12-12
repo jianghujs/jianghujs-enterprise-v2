@@ -1,4 +1,4 @@
-<template id="tabledata-filter-btn">
+<template id="task-filter-btn">
   <v-menu v-model="menu" :close-on-content-click="false" bottom offset-y offset-x>
     <template v-slot:activator="{ on, attrs }">
       <!-- icon筛选 -->
@@ -14,8 +14,8 @@
         <span class="headline">筛选</span>
       </v-card-title>
       <v-card-text>
-        <v-select :items="userList" label="负责人" v-model="filterOptions.taskManagerId" item-text="username" item-value="userId" class="jh-v-input mb-2" dense
-          single-line filled></v-select>
+        <v-autocomplete :items="userList" label="负责人" v-model="filterOptions.taskManagerId" item-text="username" item-value="userId" class="jh-v-input mb-2" dense
+          single-line filled></v-autocomplete>
         <v-menu ref="taskStartAtMenu" v-model="isMenuShown" :close-on-content-click="false" :nudge-right="40"
           :return-value.sync="filterOptions.taskEndAt" transition="scale-transition" offset-y min-width="auto">
           <template v-slot:activator="{ on, attrs }">
@@ -29,8 +29,7 @@
           </v-date-picker>
         </v-menu>
 
-        <v-select :items="constantObj.taskLevel" v-model="filterOptions.taskLevel" label="优先级"
-          class="jh-v-input mb-2" dense single-line filled></v-select>
+        <v-autocomplete :items="constantObj.taskLevel" v-model="filterOptions.taskLevel" label="优先级" class="jh-v-input mb-2" dense single-line filled></v-autocomplete>
         <v-switch v-model="filterOptions.taskStatus" label="显示已完成" class="jh-v-input" true-value="已完成" false-value="进行中" dense single-line
           filled></v-switch>
       </v-card-text>
@@ -44,8 +43,8 @@
 </template>
 
 <script type="module">
-  Vue.component("tabledata-filter-btn", {
-    template: '#tabledata-filter-btn',
+  Vue.component("task-filter-btn", {
+    template: '#task-filter-btn',
     props: {
       userList: Array,
       filterOptions: Object,

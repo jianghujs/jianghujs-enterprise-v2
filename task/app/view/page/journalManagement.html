@@ -43,7 +43,7 @@
           </v-btn>
           <v-btn color="success" class="elevation-0 mr-2" @click="doUiAction('exportExcel')" small outlined>导出
           </v-btn>
-          <tabledata-filter-btn :user-list="userList" :filter-options="serverSearchInput" @save="doUiAction('getTableData')" />
+          <task-filter-btn :user-list="userList" :filter-options="serverSearchInput" @save="doUiAction('getTableData')" />
           <v-spacer></v-spacer>
           <!-- 搜索过滤 -->
        
@@ -338,7 +338,7 @@
 {% block vueScript %}
 
 {% include 'common/jianghuJs/fixedTableHeightV4.html' %}
-{% include 'component/tabledata-filter-btn.html' %}
+{% include 'component/task-filter-btn.html' %}
 {% include 'common/excelUtil.html' %}
 <script type="module">
   new Vue({
