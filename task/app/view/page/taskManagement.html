@@ -47,11 +47,13 @@
           <v-spacer></v-spacer>
           <!-- 搜索过滤 -->
        
-          <v-btn-toggle v-model="selectedTaskManagerIndex" class="mr-2" color="success" small>
-            <v-btn v-for="item in taskManagerList" small>{{item.title}}</v-btn>
-          </v-btn-toggle>
-
-          <v-col cols="12" xs="8" sm="4" md="3" xl="2" class="pa-0">
+          
+          <v-col cols="12" xs="12" sm="4" md="3" xl="2" class="pa-0 text-md-right">
+            <v-btn-toggle v-model="selectedTaskManagerIndex" class="mr-2 mt-2 mt-md-0" color="success" small>
+              <v-btn v-for="item in taskManagerList" small>{{item.title}}</v-btn>
+            </v-btn-toggle>
+          </v-col>
+          <v-col cols="12" xs="12" sm="4" md="3" xl="2" class="pa-0 mt-2 mt-md-0">
             <v-text-field color="success" v-model="searchInput" prefix="搜索：" class="jh-v-input" dense filled single-line></v-text-field>
           </v-col>
         </v-row>
@@ -86,7 +88,7 @@
                 ></v-checkbox>
               </td>
               <td v-for="header in headers">
-                <a  @click="doUiAction('startUpdateItem', $event)" v-if="header.value == 'taskTitle'" :class="`${item.taskStatus=='已完成' && 'text-decoration-line-through'}`">{{item.taskTitle}}</a>
+                <a  @click="doUiAction('startUpdateItem', item)" v-if="header.value == 'taskTitle'" :class="`${item.taskStatus=='已完成' && 'text-decoration-line-through'}`">{{item.taskTitle}}</a>
                 <span v-else-if="header.value == 'taskChildList'">{{item.taskChildList.length}}</span>
                 <span v-else>{{ item[header.value] }}</span>
               </td>
