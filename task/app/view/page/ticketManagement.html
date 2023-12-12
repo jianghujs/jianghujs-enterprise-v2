@@ -133,64 +133,6 @@
               <span class="jh-input-label">参与人</span>
               <v-autocomplete multiple :items="userList" class="jh-v-input" item-text="username" item-value="userId" dense single-line filled v-model="createItem.taskMemberIdList"></v-autocomplete>
             </v-col>
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">审批标签</span>
-              <v-combobox
-                v-model="createItem.taskTag"
-                :items="[]"
-                class="jh-v-input" 
-                multiple
-                chips
-                deletable-chips
-                dense single-line filled
-              ></v-combobox>
-            </v-col>
-             
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">审批开始时间</span>
-              <!-- 时间选择 -->
-              <v-menu ref="taskStartAtMenu" v-model="isTaskStartAtMenuShown" :close-on-content-click="false" :nudge-right="40" :return-value.sync="createItem.taskStartAt" transition="scale-transition" offset-y min-width="auto">
-                <template v-slot:activator="{ on, attrs }">
-                  <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.taskStartAt" v-bind="attrs" v-on="on"></v-text-field>
-                </template>
-                <v-date-picker v-model="createItem.taskStartAt" no-title scrollable>
-                  <v-spacer></v-spacer>
-                  <v-btn text color="primary" @click="isTaskStartAtMenuShown = false">取消</v-btn>
-                  <v-btn text color="primary" @click="$refs.taskStartAtMenu.save(createItem.taskStartAt)">确定</v-btn>
-                </v-date-picker>
-              </v-menu>
-            </v-col>
-             
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">审批结束时间</span>
-              <v-menu ref="taskStartEndMenu" v-model="isTaskEndAtMenuShown" :close-on-content-click="false" :nudge-right="40" :return-value.sync="createItem.taskEndAt" transition="scale-transition" offset-y min-width="auto">
-                <template v-slot:activator="{ on, attrs }">
-                  <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.taskEndAt" v-bind="attrs" v-on="on"></v-text-field>
-                </template>
-                <v-date-picker v-model="createItem.taskEndAt" no-title scrollable>
-                  <v-spacer></v-spacer>
-                  <v-btn text color="primary" @click="isTaskEndAtMenuShown = false">取消</v-btn>
-                  <v-btn text color="primary" @click="$refs.taskStartEndMenu.save(createItem.taskEndAt)">确定</v-btn>
-                </v-date-picker>
-              </v-menu>
-            </v-col>
-            
-            
-            <v-col cols="12" sm="12" md="4"></v-col>
-              <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">审批关联的信息列表</span>
-              <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.taskRelationList"></v-text-field>
-            </v-col>
-             
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">审批关联的附件列表</span>
-              <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.taskFileList"></v-text-field>
-            </v-col>
-             
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">子审批列表todo</span>
-              <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.taskChildList"></v-text-field>
-            </v-col>
              
           </v-row>
 
@@ -240,62 +182,7 @@
               <span class="jh-input-label">参与人</span>
               <v-autocomplete multiple :items="userList" class="jh-v-input" item-text="username" item-value="userId" dense single-line filled v-model="updateItem.taskMemberIdList"></v-autocomplete>
             </v-col>
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">审批标签</span>
-              <v-combobox
-                v-model="updateItem.taskTag"
-                :items="[]"
-                class="jh-v-input" 
-                multiple
-                chips
-                deletable-chips
-                dense single-line filled
-              ></v-combobox>
-            </v-col>
      
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">审批开始时间</span>
-              <!-- 时间选择 -->
-              <v-menu ref="taskStartAtMenu" v-model="isTaskStartAtMenuShown" :close-on-content-click="false" :nudge-right="40" :return-value.sync="updateItem.taskStartAt" transition="scale-transition" offset-y min-width="auto">
-                <template v-slot:activator="{ on, attrs }">
-                  <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.taskStartAt" v-bind="attrs" v-on="on"></v-text-field>
-                </template>
-                <v-date-picker v-model="updateItem.taskStartAt" no-title scrollable>
-                  <v-spacer></v-spacer>
-                  <v-btn text color="primary" @click="isTaskStartAtMenuShown = false">取消</v-btn>
-                  <v-btn text color="primary" @click="$refs.taskStartAtMenu.save(updateItem.taskStartAt)">确定</v-btn>
-                </v-date-picker>
-              </v-menu>
-            </v-col>
-             
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">审批结束时间</span>
-              <v-menu ref="taskStartEndMenu" v-model="isTaskEndAtMenuShown" :close-on-content-click="false" :nudge-right="40" :return-value.sync="updateItem.taskEndAt" transition="scale-transition" offset-y min-width="auto">
-                <template v-slot:activator="{ on, attrs }">
-                  <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.taskEndAt" v-bind="attrs" v-on="on"></v-text-field>
-                </template>
-                <v-date-picker v-model="updateItem.taskEndAt" no-title scrollable>
-                  <v-spacer></v-spacer>
-                  <v-btn text color="primary" @click="isTaskEndAtMenuShown = false">取消</v-btn>
-                  <v-btn text color="primary" @click="$refs.taskStartEndMenu.save(updateItem.taskEndAt)">确定</v-btn>
-                </v-date-picker>
-              </v-menu>
-            </v-col>
-            <v-col cols="12" sm="12" md="4"></v-col>
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">审批关联的信息列表</span>
-              <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.taskRelationList"></v-text-field>
-            </v-col>
-             
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">审批关联的附件列表</span>
-              <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.taskFileList"></v-text-field>
-            </v-col>
-             
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">子审批列表todo</span>
-              <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.taskChildList"></v-text-field>
-            </v-col>
                        
           </v-row>
           <!-- 抽屉操作按钮 -->
@@ -394,15 +281,10 @@
         { text: "审批描述", value: "taskDesc", width: 120 },
         { text: "审批优先级", value: "taskLevel", width: 120 },
         { text: "审批标签", value: "taskTag", width: 120 },
-        { text: "审批状态：进行中,已完成,已拒绝", value: "taskStatus", width: 120 },
+        { text: "审批状态", value: "taskStatus", width: 120 },
         { text: "审批内容", value: "taskContent", width: 120 },
-        { text: "审批开始时间", value: "taskStartAt", width: 120 },
-        { text: "审批结束时间", value: "taskEndAt", width: 120 },
         { text: "负责人", value: "taskManagerId", width: 120 },
         { text: "参与人", value: "taskMemberIdList", width: 120 },
-        { text: "审批关联的信息列表", value: "taskRelationList", width: 120 },
-        { text: "审批关联的附件列表", value: "taskFileList", width: 120 },
-        { text: "子审批列表todo", value: "taskChildList", width: 120 },
         { text: "操作者", value: "operationByUser", width: 120 },
         { text: "操作时间", value: "operationAt", width: 250 },
         { text: '操作', value: 'action', align: 'center', sortable: false, width: 120, class: 'fixed', cellClass: 'fixed' },
