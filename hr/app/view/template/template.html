@@ -1,0 +1,251 @@
+{% set appId = ctx.app.config.appId %}
+{% set userId = userInfo.userId %}
+{% set username = userInfo.username %}
+{% set adminUrl = ctx.app.config.adminUrl %}
+{% set static = "/" + appId + "/public" %}
+{% set upload = "/" + appId + "/upload" %}
+{% set pageUrl = "/" + appId + "/page" %}
+
+<!-- mock -->
+{% set workplaceList = [
+  {
+    id: 'all',
+    text: '不限'
+  },   
+  {
+    id: 1,
+    text: '北京市'
+  },   
+  {
+    id: 2,
+    text: '天津市'
+  },   
+  {
+    id: 3,
+    text: '上海市'
+  }
+]%}
+
+{% set publishTimeList = [
+  {
+    id: 'all',
+    text: '不限'
+  },
+  {
+    id: 1,
+    text: '三天内'
+  },
+  {
+    id: 2,
+    text: '一周内'
+  },  
+  {
+    id: 3,
+    text: '一个月内'
+  }
+]%}
+
+{% set departmentList = [
+  {
+    id: 'all',
+    text: '不限'
+  },
+  {
+    id: 1,
+    text: '宁波分行'
+  },
+  {
+    id: 2,
+    text: '南京分行'
+  },
+  {
+    id: 3,
+    text: '杭州分行'
+  }
+]%}
+
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name=renderer content=webkit>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge，chrome=1">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta http-equiv="Cache-Control" content="max-age=7200" />
+  <!-- <meta name="referrer" content="no-referrer"> -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="keywords" content="{% block keyword %}{% endblock %}<$ site_keywords $>" />
+  <meta name="description" content="{% block description %}{% endblock %}" />
+  <!-- OGP分享协议开始 -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{% block ogp_title %}{% endblock %}">
+  <meta property="og:description" content="{% block ogp_desc %}{% endblock %}">
+  <meta property="og:pageUrl" content="<$ request.scheme $>://<$ request.META.HTTP_HOST $><$ request.path_info $>">
+
+
+  <script type="text/javascript">
+    window.appInfo = {
+      appId: '<$ ctx.app.config.appId $>',
+      upload: '/<$ ctx.app.config.appId $>/upload',
+      public: '/<$ ctx.app.config.appId $>/public',
+      userAgent: navigator.userAgent || '',
+    }
+    if (window.appInfo.userAgent.length > 127) {
+      window.appInfo.userAgent = window.appInfo.userAgent.substring(0, 126);
+    }
+  </script>
+
+  <!-- OGP分享协议结束 -->
+  <title>{% block title %}{% endblock %} - <$ ctx.app.config.appTitle $>
+  </title>
+
+  <!-- MDB -->
+  <link rel="stylesheet" href="<$ static $>/mdbootstrap/font-awesome.6.1.1.min.css" />
+  <link rel="stylesheet"
+    href="<$ static $>/mdbootstrap/roboto-font.css?family=Roboto:wght@300;400;500;700&amp;display=swap" />
+  <link rel="stylesheet" href="<$ static $>/mdbootstrap/MDB5-Pro-Advanced_4.4.0.min.css" />
+  <link rel="stylesheet" href="<$ static $>/mdbootstrap/MDB5-Pro-Advanced_4.4.0.all.min.css" />
+
+  <!-- css -->
+  {% include 'util/jianghu/jianghuUiCss.html' %}
+  {% include 'util/jianghu/jianghuCommonCss.html' %}
+
+  <!-- js -->
+  <script src="<$ static $>/lib/jquery/jquery.min.js?v=1.0.5"></script>
+  <script src="<$ static $>/lib/jquery/jquery.cookie.min.js?v=1.0.5"></script>
+  <script src="<$ static $>/lib/lodash/lodash.min.js?v=1.0.5"></script>
+  <script src='<$ static $>/lib/axios/axios.min.js'></script>
+  <script src="<$ static $>/lib/vue/vue.min.js"></script>
+
+  <style>
+    .page-item.active .page-link {
+      box-shadow: none !important;
+    }
+    @media (max-width: 768px){
+        .bg-image{
+          height: 200px !important;
+        }
+    }
+  </style>
+
+  {% block css %}{% endblock %}
+</head>
+
+<body data-mdb-target="#scrollspy" data-mdb-offset="0">
+  {% include 'utility/jianghuJs/jianghuAxiosV4.html' %}
+  {% block navBar %}
+  <!-- header -->
+  <header class="VPNav nav-bar">
+    <div class="VPNavBar">
+      <div class="jianghu-header-mobile-container">
+        <a class="VPNavBarTitle jianghu-logo-text" href="/<$ appId $>">
+          <img
+              src="<$ ctx.app.config.appLogo $>"
+              class="jianghu-header-mobile-logo"
+              alt="foison"
+          />
+        </a>
+        <div class="jianghu-header-mobile-content">
+          <nav aria-labelledby="main-nav-aria-label">
+            <a class="vt-link link VPNavBarMenuLink" href="/<$ appId $>" style="font-size: 15px !important;">职位列表</a>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </header>
+  {% endblock %}
+  {% block banner %}
+  <!-- 海报 -->
+  <div class="bg-image" style="background-image: url('<$ static $>/image/poster.jpg');height: 400px;">
+  </div>
+  {% endblock %}
+
+  {% block content %}{% endblock %}
+
+  <!--  mdb js -->
+  <script type="text/javascript" src="<$ static $>/mdbootstrap/MDB5-Pro-Advanced_4.4.0.mdb.min.js"></script>
+  <script type="text/javascript" src="<$ static $>/mdbootstrap/MDB5-Pro-Advanced_4.4.0.all.min.js"></script>
+  
+  <script type="text/javascript">
+    const pageUrl = "<$ pageUrl $>";
+    const adminUrl = "<$ adminUrl $>";
+    const userId = "<$ userId $>";
+    const username = "<$ username $>";
+
+    // 显示success alert
+    function showSuccessAlert(msg){
+        var temp = '<div class="alert alert-success fade alert-fixed show" role="alert">'      
+            temp += '<i class="fas fa-check-circle me-3"></i>'
+            temp += msg
+            temp += '</div>'
+        $('body').append(temp);
+        setTimeout(()=>{
+            $('.alert-success').remove()
+        }, 2000)
+    }
+    // 显示fail alert
+    function showFailAlert(msg){
+        var temp = '<div class="alert alert-danger fade alert-fixed show" role="alert">'      
+            temp += '<i class="fas fa-times-circle me-3"></i>'
+            temp += msg
+            temp += '</div>'
+        $('body').append(temp);
+        setTimeout(()=>{
+            $('.alert-danger').remove()
+        }, 2000)
+    }
+    // 显示loading
+    function showLoading(text){
+      $('.loading-overlay').remove();
+      var temp = `<div class="loading-overlay" style="height: 100vh; width: 100vw; position: fixed; top: 0; left: 0; z-index: 111;background-color: rgba(255,255,255,0.7);">
+        <div class="loading d-flex" style="text-align: center;
+          height: 100%;
+          justify-content: center;
+          flex-direction: row;
+          align-items: center;" data-mdb-parent-selector="#app">
+          <div class="spinner-border loading-icon" role="status"></div>
+          <span class="loading-text">${text || 'Loading...'}</span>
+        </div>
+      </div>`;
+      $('body').append(temp);
+      $(".vt-backdrop").addClass("open light");
+      $(".vt-backdrop").attr("closeable", "false");
+    }
+    // 删除loading
+    function hideLoading(){
+        $('.loading-overlay').remove()
+        $(".vt-backdrop").removeClass("open light");
+        $(".vt-backdrop").removeAttr("closeable");
+    }
+    // 全局提示
+    window.vtoast = {
+      success: ({ message }) => {
+        showSuccessAlert(message)
+      },
+      fail: ({ message }) => {
+        showFailAlert(message)
+      },
+      loading: (message) => {
+        showLoading(message)
+      },
+      hideLoading: () => {
+        hideLoading()
+      }
+    };
+  </script>
+  {% block errorReason %}
+  <script>
+    // 错误提示
+    const searchParams = new URLSearchParams(location.search.substring(1));
+    const errorInfo = JSON.parse('<$ constantUiMap.errorInfo | dump | safe $>');
+    const errorCode = searchParams.get('errorCode');
+    const errorReason = searchParams.get('errorReason');
+    if (errorCode) {
+      showFailAlert(errorInfo.contentEnum[errorCode] || errorReason)
+    }
+  </script>
+  {% endblock %}
+  {% block javascript %}{% endblock %}
+</body>

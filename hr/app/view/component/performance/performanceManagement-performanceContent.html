@@ -1,0 +1,200 @@
+<template id="performanceManagement-performanceContent">
+    <v-container class="pa-0">
+        <v-card elevation="0">
+            <v-data-table
+              disable-sort
+              :headers="headers"
+              :items="value"
+              hide-default-footer
+              :items-per-page="-1"
+              class="elevation-0 mt-0 mb-xs-4 flex-fill d-flex flex-column no-left-padding-table">
+              <!-- 表格操作按钮 -->
+              <template v-slot:item.indicator-group="{ item }">
+                <span v-if="readonly">{{ item.indicatorGroup }}</span>
+                <v-text-field 
+                  v-else
+                  v-model="item.indicatorGroup"
+                  class="jh-v-input mr-2" dense filled single-line 
+                  type="text"> 
+                </v-text-field>
+              </template>
+              <template v-slot:item.indicator="{ item }">
+                <span v-if="readonly">{{ item.indicator }}</span>
+                <v-text-field 
+                  v-else
+                  v-model="item.indicator"
+                  class="jh-v-input mr-2" dense filled single-line 
+                  type="text"> 
+                </v-text-field>
+              </template>
+              <template v-slot:item.indicator-description="{ item }">
+                <span v-if="readonly">{{ item.indicatorDescription }}</span>
+                <v-textarea
+                  v-else auto-grow
+                  v-model="item.indicatorDescription"
+                  class="jh-v-input mr-2 my-1" dense filled single-line 
+                  type="text" rows="1"> 
+                </v-textarea>
+              </template>
+              <template v-slot:item.indicator-percentage="{ item }">
+                <span v-if="readonly">{{ item.indicatorPercentage }}</span>
+                <v-text-field 
+                  v-else
+                  v-model="item.indicatorPercentage"
+                  class="jh-v-input mr-2" dense filled single-line 
+                  type="text"> 
+                </v-text-field>
+              </template>
+              <template v-slot:item.standard="{ item }">
+                <span v-if="readonly">{{ item.standard }}</span>
+                <v-text-field 
+                  v-else
+                  v-model="item.standard"
+                  class="jh-v-input mr-2" dense filled single-line 
+                  type="text"> 
+                </v-text-field>
+              </template>
+              <template v-slot:item.indicator-score="{ item }">
+                <v-text-field 
+                  v-model="item.indicatorScore"
+                  class="jh-v-input mr-2" dense filled single-line :max="item.indicatorPercentage" min="0" :prefix="'最高' + item.indicatorPercentage + '分'"
+                  type="number"> 
+                </v-text-field>
+              </template>
+
+              <!-- <template v-slot:item.action="{ item, index }">
+                <span role="button" class="error--text text--accent-2 font-weight-medium font-size-2" @click="doUiAction('deleteItem', {index})">
+                  <v-icon size="16" class="error--text">mdi-trash-can-outline</v-icon>删除
+                </span>
+              </template> -->
+
+              <template v-slot:item.action="{ item, index }">
+                <v-icon color="success" @click="startCreateItem({...item, index})">mdi-plus-circle</v-icon>
+                <v-icon color="error" @click="startDeleteItem({...item, index})">mdi-minus-circle</v-icon>
+              </template>
+            </v-data-table>
+          </v-card>
+        </v-container>
+</template>
+  
+  <script type="module">
+    Vue.component("performanceManagement-performanceContent", {
+      template: '#performanceManagement-performanceContent',
+      props: {
+        value: {
+          type: Array,
+          default: () => [],
+        },
+        readonly: {
+          type: Boolean,
+          default: false,
+        },
+        isScore: {
+          type: Boolean,
+          default: false
+        }
+      },
+      data: () => ({
+        rules: {
+          required: value => !!value || '必填',
+          loanMin: value => value <= 0 || 'Loan should be above £5000',
+          loanMax: (maxValue) => (value) => {
+            if (!value || !maxValue) return true;
+            const val = parseFloat(value);
+            const max = parseFloat(maxValue);
+            return val <= max;
+          },
+        }
+      }),
+      computed: {
+        isMobile() {
+          return window.innerWidth < 600;
+        },
+        headers() {
+          let headers = []
+          if (!this.isScore) {
+            headers = [
+              { text: "指标分组", value: "indicator-group", width: 150 },
+              { text: "指标名称", value: "indicator", width: 150 },
+              { text: "指标说明", value: "indicator-description" },
+              { text: "指标分数", value: "indicator-percentage", width: 150 },
+              { text: '操作', value: 'action', align: 'center', width: 70 },
+              // { text: "指标标准", value: "standard", width: 120 },
+            ];
+          } else {
+            headers = [
+              { text: "指标分组", value: "indicator-group", width: 90 },
+              { text: "指标名称", value: "indicator", width: 90 },
+              { text: "指标说明", value: "indicator-description", width: 200 },
+              { text: "指标打分", value: "indicator-score", width: 70 },
+            ];
+          }
+          
+          return headers;
+        }
+      },
+      watch: {
+        value: {
+          handler: function (val, oldVal) {
+            if (!val.length) {
+              setTimeout(() => {
+                this.value.push({ indicatorGroup: '', indicator:null, indicatorDescription:null, indicatorPercentage:0, standard:null })
+              }, 500);
+            }
+          },
+          deep: true,
+          immediate: true
+        }
+      },
+      created() {
+        if (this.isScore) {
+
+        }
+      },
+      async mounted() {},
+      methods: {
+        async doUiAction(uiActionId, uiActionData) {
+          switch (uiActionId) {
+            case 'addItem':
+              await this.doAddItem();
+              break;
+            case 'deleteItem':
+              await this.doDeleteItem(uiActionData);
+              break;
+            default:
+              console.error("[doUiAction] uiActionId not find", { uiActionId });
+              break;
+          }
+        },
+        // async doAddItem() {
+        //   this.$emit("input", [...this.value, { indicatorGroup: null, indicator:null, indicatorDescription:null, indicatorPercentage:null, standard:null }]);
+        // },
+        async doDeleteItem({ index }) {
+          this.value.splice(index, 1);
+        },
+        async startCreateItem({index = -1, indicatorGroup = ''}) {
+          if (index === -1) {
+            this.value.push({ indicatorGroup, indicator:null, indicatorDescription:null, indicatorPercentage:0, standard:null })
+          } else {
+            this.value.splice(index + 1, 0, { indicatorGroup, indicator:null, indicatorDescription:null, indicatorPercentage:0, standard:null })
+          }
+        },
+        async startDeleteItem({index}) {
+          this.value.splice(index, 1);
+        },
+      }
+    })
+  </script>
+  <style>
+    .add-btn {
+      width: 100%;
+      margin-top: 5px;
+      padding: 5px;
+    }
+    .jh-v-input .v-messages-outer, .jh-v-input .v-text-field__details {
+      bottom: -15px !important;
+    }
+    .no-left-padding-table.v-data-table>.v-data-table__wrapper>table>tbody>tr>td:first-child, .v-data-table>.v-data-table__wrapper>table>tfoot>tr>td:first-child, .no-left-padding-table.v-data-table>.v-data-table__wrapper>table>thead>tr>th:first-child {
+      padding-left: 0px !important;
+    }
+  </style>

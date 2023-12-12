@@ -1,0 +1,1536 @@
+{% extends 'template/jhTemplateV4.html'%}
+
+{% block vueTemplate %}
+
+<!-- 3 table 下  的单表 crud 页面 -->
+
+<!--SQL START
+-- 以下为 jianghu init 工具生成的参考 SQL，使用后删除
+-- 创建 page
+INSERT INTO `_page` (`pageId`,`pageName`,`pageType`,`sort`,`operation`,`operationByUserId`,`operationByUser`,`operationAt`) SELECT 'employeeManagement','页面','showInMenu','5','jhInsert',NULL,NULL,NULL FROM DUAL WHERE NOT EXISTS (SELECT `pageId` FROM `_page` WHERE `pageId`='employeeManagement');
+
+-- 创建 resource
+INSERT INTO `_resource` (`accessControlTable`,`resourceHook`,`pageId`,`actionId`,`desc`,`resourceType`,`appDataSchema`,`resourceData`,`requestDemo`,`responseDemo`,`operation`,`operationByUserId`,`operationByUser`,`operationAt`) SELECT NULL,NULL,'employeeManagement','selectItemList','✅查询-查询列表','sql','{}','{ \"table\": \"employee\", \"operation\": \"select\" }','','','insert',NULL,NULL,NULL FROM DUAL WHERE NOT EXISTS (SELECT `pageId` FROM `_resource` WHERE `pageId`='employeeManagement' AND `actionId`='selectItemList');
+INSERT INTO `_resource` (`accessControlTable`,`resourceHook`,`pageId`,`actionId`,`desc`,`resourceType`,`appDataSchema`,`resourceData`,`requestDemo`,`responseDemo`,`operation`,`operationByUserId`,`operationByUser`,`operationAt`) SELECT NULL,NULL,'employeeManagement','insertItem','✅查询-添加成员','sql','{}','{ \"table\": \"employee\", \"operation\": \"insert\" }','','','insert',NULL,NULL,NULL FROM DUAL WHERE NOT EXISTS (SELECT `pageId` FROM `_resource` WHERE `pageId`='employeeManagement' AND `actionId`='insertItem');
+INSERT INTO `_resource` (`accessControlTable`,`resourceHook`,`pageId`,`actionId`,`desc`,`resourceType`,`appDataSchema`,`resourceData`,`requestDemo`,`responseDemo`,`operation`,`operationByUserId`,`operationByUser`,`operationAt`) SELECT NULL,NULL,'employeeManagement','updateItem','✅查询-更新成员','sql','{}','{ \"table\": \"employee\", \"operation\": \"update\" }','','','insert',NULL,NULL,NULL FROM DUAL WHERE NOT EXISTS (SELECT `pageId` FROM `_resource` WHERE `pageId`='employeeManagement' AND `actionId`='updateItem');
+INSERT INTO `_resource` (`accessControlTable`,`resourceHook`,`pageId`,`actionId`,`desc`,`resourceType`,`appDataSchema`,`resourceData`,`requestDemo`,`responseDemo`,`operation`,`operationByUserId`,`operationByUser`,`operationAt`) SELECT NULL,NULL,'employeeManagement','deleteItem','✅查询-删除信息','sql','{}','{ \"table\": \"employee\", \"operation\": \"delete\" }','','','insert',NULL,NULL,NULL FROM DUAL WHERE NOT EXISTS (SELECT `pageId` FROM `_resource` WHERE `pageId`='employeeManagement' AND `actionId`='deleteItem');
+SQL END!-->
+
+<script type="text/html" id="app-template">
+  <div>
+    <v-app mobile-breakpoint="sm">
+      <jh-menu />
+      <v-main class="mt-15">
+        <!-- 头部内容 >>>>>>>>>>>>> -->
+        <div class="jh-page-second-bar px-8">
+          <v-row class="align-center">
+            <v-col cols="12" xs="12" sm="12" md="4" xl="3">
+              <div class="py-4 text-body-1 font-weight-bold">员工管理
+                <!-- 帮助页按钮 -->
+                <!-- 
+            <span role="button" class="success--text font-weight-regular jh-font-size-13 ml-2" @click="isHelpPageDrawerShown = true">
+              <v-icon size="13" class="success--text">mdi-help-circle-outline</v-icon>帮助
+            </span> -->
+              </div>
+            </v-col>
+          </v-row>
+        </div>
+        <!-- <<<<<<<<<<<<< 头部内容 -->
+
+        <!-- 页面主要内容 -->
+        <div class="jh-page-body-container px-8">
+          <v-row class="mb-2" dense>
+            <v-col cols="7" xs="12">
+              <v-item-group v-model="serverSearchForm.select['entryStatus']">
+                <v-card class="d-flex flex-row flex-wrap rounded-lg" style="overflow: hidden">
+                  <template v-for="(status, index) in constantObj.entryStatus" :key="index">
+                    <v-item v-slot="{ active, toggle }" :value="status.value">
+                      <v-card class="pa-2 text-center rounded-0" :color="active ? 'success' : ''"
+                        :style="{ borderRight: index ===  constantObj.entryStatus.length - 1 ? 'none' : '1px solid #F4F5F6'}"
+                        style="flex: 1;" @click="toggle">
+                        <div class="mb-0 mb-md-1">{{status.text}}</div>
+                        <div>{{status.num || 0}}</div>
+                      </v-card>
+                    </v-item>
+                  </template>
+                </v-card>
+              </v-item-group>
+            </v-col>
+            <v-col cols="3" xs="12">
+              <v-item-group v-model="serverSearchForm.select['status']">
+                <v-card class="d-flex flex-row flex-wrap rounded-lg" 
+                  style="overflow: hidden">
+                  <template v-for="(status, index) in constantObj.status" :key="index">
+                    <v-item v-slot="{ active, toggle }" :value="status.value">
+                      <v-card class="pa-2 text-center rounded-0" :color="active ? 'success' : ''"
+                        :style="{ borderRight: index ===  constantObj.status.length - 1 ? 'none' : '1px solid #F4F5F6'}"
+                        style="flex: 1;" @click="toggle">
+                        <div class="mb-0 mb-md-1">{{status.text}}</div>
+                        <div>{{status.num || 0}}</div>
+                      </v-card>
+                    </v-item>
+                  </template>
+                </v-card>
+              </v-item-group>
+            </v-col>
+            <v-col cols="2" xs="12">
+              <v-item-group v-model="serverSearchForm.select['employmentForms']">
+                <v-card class="d-flex flex-row flex-wrap rounded-lg"  style="overflow: hidden">
+                  <template v-for="(status, index) in constantObj.employmentForms" :key="index">
+                    <v-item v-slot="{ active, toggle }" :value="status.value">
+                      <v-card class="pa-2 text-center rounded-0" :color="active ? 'success' : ''"
+                        :style="{ borderRight: index ===  constantObj.employmentForms.length - 1 ? 'none' : '1px solid #F4F5F6'}"
+                        style="flex: 1;" @click="toggle">
+                        <div class="mb-0 mb-md-1">{{status.text}}</div>
+                        <div>{{status.num || 0}}</div>
+                      </v-card>
+                    </v-item>
+                  </template>
+                </v-card>
+              </v-item-group>
+            </v-col>
+          </v-row>
+
+          <v-container class="fullScreen d-flex flex-column pa-xs-0 pa-0">
+            <v-card class="rounded-lg">
+              <v-row class="ma-0 pa-4">
+                <v-col cols="12" xs="5" sm="5" md="4" class="pa-0">
+                  <select-export-header @confirm="exportExcel" :disabled="!tableData.length">
+                    <v-btn color="success" small class="elevation-0 mr-2" :loading="isExcelDownloading" :disabled="!tableData.length">
+                      <span class="d-none d-md-block">导出员工Excel</span>  
+                      <span class="d-block d-md-none">导出</span>  
+                    </v-btn>
+                  </select-export-header>
+                  <v-btn color="success" small dark class="elevation-0" @click="doUiAction('startCreateItem')">新增</v-btn>
+                </v-col>
+                <v-spacer></v-spacer>
+
+                <v-menu v-for="(item, i) in employeeWarnList" :key="i" v-if="item.list.length > 0"
+                  :nudge-width="100"
+                  offset-y
+                >
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-badge overlap bordered  class="ml-4 notice-btn"
+                      color="error"
+                      :content="item.list.length"
+                    >
+                      <v-btn color="warning"
+                        small
+                        dark
+                        v-bind="attrs"
+                        v-on="on"
+                      >
+                        {{item.text}}
+                      </v-btn>
+                    </v-badge>
+                  </template>
+
+                  <v-card style="max-height: 300px;">
+                    <v-list>
+                      <v-list-item v-for="(employee, index) in item.list">
+                        <v-list-item-content>
+                          <v-list-item-title>
+                            {{employee.employeeName}} - {{employee.days > 0 ? '距到期还有' : '已超期'}}
+                          </v-list-item-title>
+                        </v-list-item-content>
+                        <v-list-item-action>
+                          <v-badge left
+                            color="error"
+                            :content="Math.abs(employee.days)"
+                            inline
+                          >
+                            天
+                          </v-badge>
+                        </v-list-item-action>
+                      </v-list-item>
+                    </v-list>
+                  </v-card>
+                </v-menu>
+                <v-col cols="12" xs="3" sm="3" md="2" xl="2" class="pa-0 ml-4">
+                  <v-text-field v-model="searchInput" label="表格过滤" class="jh-v-input" dense filled single-line></v-text-field>
+                </v-col>
+              </v-row>
+              <v-data-table fixed-header :headers="headers" :items="tableData" :search="searchInput"
+                :footer-props="{ itemsPerPageOptions: [20, 40, 60, 100, -1] }" :items-per-page="-1" mobile-breakpoint="0"
+                :loading="isTableLoading" checkbox-color="success" class="jh-fixed-table-height elevation-0 mt-0 mb-xs-4 flex-fill d-flex flex-column"
+                :class="{'zebraLine': showTableZebraLine }">
+                <template v-slot:item.status="{ item }">
+                  {{ globalHandler.parseConstantValue('status', item.status, constantObj) }}
+                </template>
+                <template v-slot:item.employeeName="{ item }">
+                  {{ item.employeeName }}
+                  <v-tooltip v-if="item.contractDays < 30 && item.contractDays" right color="warning">
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-icon color="warning" small v-bind="attrs" v-on="on">mdi-account-alert-outline
+                      </v-icon>
+                    </template>
+                    <span>距离合同到期还有 {{item.contractDays}} 天</span>
+                  </v-tooltip>
+                </template>
+                <template v-slot:item.action="{ item }">
+                  <!-- pc端 -->
+                  <template v-if="!isMobile">
+                    <span role="button" class="success--text font-weight-medium font-size-2 mr-2" @click="doUiAction('startUpdateItem', {item})">
+                      <v-icon size="16" class="success--text">mdi-note-edit-outline</v-icon>员工详情
+                    </span>
+                    <span role="button" class="error--text font-weight-medium font-size-2 mr-2" @click="doUiAction('startDepartRequest', {item})" :disabled="['已离职', '待离职', '待入职', '放弃入职'].includes(item.entryStatus)">
+                      <v-icon size="16" class="error--text">mdi-account-minus-outline</v-icon>申请离职
+                    </span>
+                  </template>
+                  <!-- 手机端 -->
+                  <v-menu offset-y v-if="isMobile">
+                    <template v-slot:activator="{ on, attrs }">
+                      <span role="button" class="success--text font-weight-medium font-size-2"
+                        v-bind="attrs" v-on="on">
+                        操作<v-icon size="14" class="success--text">mdi-chevron-down</v-icon>
+                      </span>
+                    </template>
+                    <v-list dense>
+                      <v-list-item @click="doUiAction('startUpdateItem', {item})">
+                        <v-list-item-title>员工详情</v-list-item-title>
+                      </v-list-item>
+                      <v-list-item @click="doUiAction('startDepartRequest', {item})">
+                        <v-list-item-title>申请离职</v-list-item-title>
+                      </v-list-item>
+                    </v-list>
+                  </v-menu>
+                </template>
+                <!-- 没有数据 -->
+                <template v-slot:loading>
+                  <div class="jh-no-data">数据加载中</div>
+                </template>
+                <template v-slot:no-data>
+                  <div class="jh-no-data">暂无数据</div>
+                </template>
+                <template v-slot:no-results>
+                  <div class="jh-no-data">暂无数据</div>
+                </template>
+                <!-- 表格分页 -->
+                <template v-slot:footer.page-text="pagination">
+                  <span>{{pagination.pageStart}}-{{pagination.pageStop}}</span>
+                  <span class="ml-1">共{{pagination.itemsLength}}条</span>
+                </template>
+              </v-data-table>
+            </v-card>
+          </v-container>
+
+          <!-- 新增 -->
+          <v-navigation-drawer v-model="isCreateDrawerShown" :permanent="isCreateDrawerShown" fixed temporary right width="80%"
+            class="elevation-24">
+            <v-form v-model="isFormValid" v-if="isCreateDrawerShown" ref="form" lazy-validation>
+              <v-row no-gutters>
+                <span class="text-h7 font-weight-bold pa-4">新增信息</span>
+              </v-row>
+              <v-divider class="jh-divider"></v-divider>
+              <v-row class="mt-0 px-4">
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">员工姓名<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                  <v-text-field class="jh-v-input " dense filled single-line v-model="addItem['employeeName']" :rules="requireRules"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">员工性别</span>
+                  <v-select class="jh-v-input mr-2" dense filled single-line v-model="addItem['sex']"
+                    :items="constantObj.sex"></v-select>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">员工年龄</span>
+                  <v-text-field class="jh-v-input " dense filled single-line v-model="addItem['age']"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">联系电话</span>
+                  <v-text-field class="jh-v-input " dense filled single-line v-model="addItem['contactNumber']"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">紧急联系电话</span>
+                  <v-text-field class="jh-v-input " dense filled single-line
+                    v-model="addItem['emergencyContactNumber']"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">员工岗位</span>
+                  <v-select class="jh-v-input mr-2" dense filled single-line v-model="addItem['post']"
+                    :items="constantObj.post"></v-select>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">身份证号</span>
+                  <v-text-field class="jh-v-input " dense filled single-line v-model="addItem['icNumber']"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">出生日期</span>
+                  <v-menu class="jh-v-input" offset-y max-width="290">
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-text-field class="jh-v-input" dense filled single-line v-on="on"
+                        :value="addItem['dateOfBirth']"></v-text-field>
+                    </template>
+                    <v-date-picker color="success" elevation="20" v-model="addItem['dateOfBirth']"></v-date-picker>
+                  </v-menu>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">毕业学校</span>
+                  <v-text-field class="jh-v-input " dense filled single-line v-model="addItem['institution']"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">专业</span>
+                  <v-text-field class="jh-v-input " dense filled single-line v-model="addItem['major']"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">最高学历</span>
+                  <v-text-field class="jh-v-input " dense filled single-line
+                    v-model="addItem['highestEducation']"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">家庭住址</span>
+                  <v-text-field class="jh-v-input " dense filled single-line
+                    v-model="addItem['residentialAddress']"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">建设银行卡</span>
+                  <v-text-field class="jh-v-input " dense filled single-line v-model="addItem['cardNumber']"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">车牌号</span>
+                  <v-text-field class="jh-v-input " dense filled single-line
+                    v-model="addItem['licensePlateNumber']"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">备注</span>
+                  <v-text-field class="jh-v-input " dense filled single-line v-model="addItem['remarks']"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">员工状态<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                  <v-select class="jh-v-input mr-2" dense filled single-line v-model="addItem['status']" :rules="requireRules"
+                  :items="constantObj.status"></v-select>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">聘用形式<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                  <v-select class="jh-v-input mr-2" dense filled single-line v-model="addItem['employmentForms']" :rules="requireRules"
+                  :items="constantObj.employmentForms"></v-select>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4" v-if="addItem['employmentForms'] == '试用'">
+                  <span class="jh-input-label">试用期<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                  <v-select class="jh-v-input mr-2" dense filled single-line v-model="addItem['probationPeriod']" :rules="requireRules"
+                  :items="constantObj.probationPeriod"></v-select>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">入职状态<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                  <v-select class="jh-v-input mr-2" dense filled single-line v-model="addItem['entryStatus']" :rules="requireRules"
+                  :items="constantObj.entryStatus.filter(e => e.value != '已离职')"></v-select>
+                </v-col>
+              </v-row>
+              <v-row class="justify-end mx-0 mt-8 px-6">
+                <v-btn color="success" @click="doUiAction('createItem')"
+                  :style="{width: isMobile ? 'calc(100% - 45px)' : '200px'}"
+                  :class="{'mb-2': isMobile, 'mr-4': isMobile}">新增</v-btn>
+                <v-btn class="ml-2" @click="isCreateDrawerShown = false" :style="{width: isMobile ? 'calc(100% - 45px)' : '200px'}"
+                  :class="{'mr-4': isMobile}">取消</v-btn>
+              </v-row>
+            </v-form>
+            <!-- 抽屉关闭按钮 -->
+            <v-btn
+              elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn"
+              @click="isCreateDrawerShown = false">
+              <v-icon>mdi-close</v-icon>
+            </v-btn>
+          </v-navigation-drawer>
+          <!-- 编辑抽屉 -->
+          <v-navigation-drawer v-model="isUpdateDrawerShown" :permanent="isUpdateDrawerShown" fixed temporary right width="80%"
+            class="elevation-24">
+            <v-row no-gutters>
+              <span class="text-h7 font-weight-bold pa-4">员工：【{{editItem.employeeName}}】</span>
+            </v-row>
+            <v-divider class="jh-divider"></v-divider>
+
+            <v-row class="ma-0 mb-2" :class="{'px-6': !isMobile, 'px-4': isMobile}">
+              <v-tabs dense v-model="actionTab" class="custom-tabs">
+                <v-tab v-for="(tab, index) in tabs" :key="index" style="font-weight: 400;">{{tab.title}}</v-tab>
+              </v-tabs>
+            </v-row>
+            <v-form v-model="isFormValid" v-if="actionTab===0" ref="form" lazy-validation>
+              <v-row no-gutters>
+                <span class="text-subtitle-1 font-weight-bold pa-4 pb-0">基本信息</span>
+                <v-spacer></v-spacer>
+              </v-row>
+              <v-row class="mt-0 px-4">
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">员工编号</span>
+                  <v-text-field class="jh-v-input " dense filled single-line v-model="editItem['employeeId']"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">员工姓名</span>
+                  <v-text-field class="jh-v-input " dense filled single-line v-model="editItem['employeeName']"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">员工性别</span>
+                  <v-select class="jh-v-input mr-2" dense filled single-line v-model="editItem['sex']"
+                  :items="constantObj.sex"></v-select>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">员工年龄</span>
+                  <v-text-field class="jh-v-input " dense filled single-line v-model="editItem['age']"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">联系电话</span>
+                  <v-text-field class="jh-v-input " dense filled single-line
+                    v-model="editItem['contactNumber']"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">紧急联系电话</span>
+                  <v-text-field class="jh-v-input " dense filled single-line
+                    v-model="editItem['emergencyContactNumber']"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">身份证号</span>
+                  <v-text-field class="jh-v-input " dense filled single-line v-model="editItem['icNumber']"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">出生日期</span>
+                  <v-menu class="jh-v-input" offset-y max-width="290">
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-text-field class="jh-v-input" dense filled single-line v-on="on"
+                        :value="editItem['dateOfBirth']"></v-text-field>
+                    </template>
+                    <v-date-picker color="success" elevation="20" v-model="editItem['dateOfBirth']"></v-date-picker>
+                  </v-menu>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">毕业学校</span>
+                  <v-text-field class="jh-v-input " dense filled single-line v-model="editItem['institution']"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">专业</span>
+                  <v-text-field class="jh-v-input " dense filled single-line v-model="editItem['major']"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">最高学历</span>
+                  <v-text-field class="jh-v-input " dense filled single-line
+                    v-model="editItem['highestEducation']"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">教师资格证类别</span>
+                  <v-text-field class="jh-v-input " dense filled single-line
+                    v-model="editItem['teacherQualification']"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">教师资格证学段</span>
+                  <v-select class="jh-v-input mr-2" dense filled single-line v-model="editItem['teacherQualificationLeaver']"
+                  :items="constantObj.level"></v-select>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">教师资格证学科</span>
+                  <v-select class="jh-v-input mr-2" dense filled single-line v-model="editItem['teacherQualificationSubject']"
+                  :items="constantObj.subject"></v-select>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">教师资格证编号</span>
+                  <v-text-field class="jh-v-input " dense filled single-line
+                    v-model="editItem['teacherCertificationNumber']"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">家庭住址</span>
+                  <v-text-field class="jh-v-input " dense filled single-line
+                    v-model="editItem['residentialAddress']"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">建设银行卡</span>
+                  <v-text-field class="jh-v-input " dense filled single-line v-model="editItem['cardNumber']"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">车牌号</span>
+                  <v-text-field class="jh-v-input " dense filled single-line
+                    v-model="editItem['licensePlateNumber']"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">历史备注</span>
+                  <v-textarea class="jh-v-input " rows="2" dense filled single-line v-model="editItem['remarks']" readonly ></v-textarea>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">添加备注</span>
+                  <v-textarea class="jh-v-input " rows="2" dense filled single-line v-model="newRemarks"></v-textarea>
+                </v-col>
+              </v-row>
+
+              <v-row no-gutters>
+                <span class="text-subtitle-1 font-weight-bold pa-4 pb-0">岗位信息</span>
+                <v-spacer></v-spacer>
+              </v-row>
+
+              <v-row class="mt-0 px-4">
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">员工岗位</span>
+                  <v-select class="jh-v-input mr-2" dense filled single-line v-model="editItem['post']"
+                  :items="constantObj.post"></v-select>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">任教学段</span>
+                  <v-select class="jh-v-input mr-2" dense filled single-line v-model="editItem['teachingLevel']"
+                  :items="constantObj.level"></v-select>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">任教学科</span>
+                  <v-select class="jh-v-input mr-2" dense filled single-line v-model="editItem['teachingSubject']"
+                  :items="constantObj.subject"></v-select>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">员工状态</span>
+                  <v-select class="jh-v-input mr-2" dense filled single-line v-model="editItem['status']"
+                  :items="constantObj.status"></v-select>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">聘用形式</span>
+                  <v-select class="jh-v-input mr-2" dense filled single-line v-model="editItem['employmentForms']"
+                  :items="constantObj.employmentForms"></v-select>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4" v-if="editItem['employmentForms'] == '试用'">
+                  <span class="jh-input-label">试用期<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                  <v-select class="jh-v-input mr-2" dense filled single-line v-model="editItem['probationPeriod']" :rules="requireRules"
+                  :items="constantObj.probationPeriod"></v-select>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">入职状态</span>
+                  <v-select class="jh-v-input mr-2" dense filled single-line v-model="editItem['entryStatus']"
+                  :items="constantObj.entryStatus.filter(e => e.value != '已离职')"></v-select>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">入职日期</span>
+                  <v-menu class="jh-v-input" offset-y max-width="290">
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-text-field class="jh-v-input" dense filled single-line v-on="on"
+                        :value="editItem['dateOfEntry']"></v-text-field>
+                    </template>
+                    <v-date-picker color="success" elevation="20" v-model="editItem['dateOfEntry']"></v-date-picker>
+                  </v-menu>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">到期日期</span>
+                  <v-menu class="jh-v-input" offset-y max-width="290">
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-text-field class="jh-v-input" dense filled single-line v-on="on"
+                        :value="editItem['dateOfContractExpiration']"></v-text-field>
+                    </template>
+                    <v-date-picker color="success" elevation="20" v-model="editItem['dateOfContractExpiration']"></v-date-picker>
+                  </v-menu>
+                </v-col>
+                <!--      <v-col cols="12" sm="12" md="4">-->
+                <!--        &lt;!&ndash; 必填字段样式 demo :rules="requireRules" &ndash;&gt;-->
+                <!--            <span class="jh-input-label">学生ID</span>-->
+                <!--        <v-text-field class="jh-v-input " dense filled single-line label="学生ID" v-model="editItem.studentId" :rules="requireRules"></v-text-field>-->
+                <!--      </v-col>-->
+                <!--      &lt;!&ndash; select 字段 demo &ndash;&gt;-->
+                <!--      <v-col cols="12" sm="12" md="4">-->
+                <!--            <span class="jh-input-label">班级ID</span>-->
+                <!--        <v-select class="jh-v-input " dense filled single-line clearable label="班级ID" v-model="editItem.classId" :items="constantObj.classId"></v-select>-->
+                <!--      </v-col>-->
+                <!--      &lt;!&ndash; 日期选择 demo &ndash;&gt;-->
+                <!--      <v-col cols="12" sm="12" md="4">-->
+                <!--        <span class="jh-input-label">出生日期</span>-->
+                <!--        <v-menu class="jh-v-input " offset-y max-width="290">-->
+                <!--          <template v-slot:activator="{ on, attrs }">-->
+                <!--            <v-text-field class="jh-v-input " dense filled single-line v-on="on" label="出生日期" v-model="editItem.dateOfBirth"></v-text-field>-->
+                <!--          </template>-->
+                <!--          <v-date-picker color="success" elevation="20" v-model="editItem.dateOfBirth"></v-date-picker>-->
+                <!--        </v-menu>-->
+                <!--      </v-col>-->
+              </v-row>
+              <v-row class="justify-end mx-0 mt-8 px-6">
+                <v-btn color="success" @click="doUiAction('updateItem')">保存</v-btn>
+                <v-btn class="ml-2" @click="isUpdateDrawerShown = false">取消</v-btn>
+              </v-row>
+            </v-form>
+            <v-form v-model="isFormValid" v-if="actionTab===1" ref="form" lazy-validation>
+              <v-row no-gutters>
+                <span class="text-subtitle-1 font-weight-bold pa-4 pb-0">工资卡信息</span>
+                <v-spacer></v-spacer>
+              </v-row>
+              <v-row class="mt-0 px-4">
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">工资卡卡号</span>
+                  <v-text-field class="jh-v-input " dense filled single-line v-model="editItem['employeeName']"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">工资卡开户城市</span>
+                  <v-select class="jh-v-input mr-2" dense filled single-line v-model="editItem['sex']"
+                  :items="constantObj.sex"></v-select>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">银行名称</span>
+                  <v-text-field class="jh-v-input " dense filled single-line v-model="editItem['age']"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">工资卡开户行</span>
+                  <v-text-field class="jh-v-input " dense filled single-line
+                    v-model="editItem['contactNumber']"></v-text-field>
+                </v-col>
+
+              </v-row>
+
+              <v-row no-gutters>
+                <span class="text-subtitle-1 font-weight-bold pa-4 pb-0">社保信息</span>
+                <v-spacer></v-spacer>
+              </v-row>
+              <v-row class="mt-0 px-4">
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">是否本地首次缴纳社保</span>
+                  <v-select class="jh-v-input mr-2" dense filled single-line v-model="editItem['post']"
+                  :items="constantObj.post"></v-select>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">是否本地首次缴纳公积金</span>
+                  <v-select class="jh-v-input mr-2" dense filled single-line v-model="editItem['teachingLevel']"
+                  :items="constantObj.level"></v-select>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">个人社保账号</span>
+                  <v-select class="jh-v-input mr-2" dense filled single-line v-model="editItem['teachingSubject']"
+                  :items="constantObj.subject"></v-select>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">个人公积金账号</span>
+                  <v-select class="jh-v-input mr-2" dense filled single-line v-model="editItem['status']"
+                  :items="constantObj.status"></v-select>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">参保起始月份</span>
+                  <v-select class="jh-v-input mr-2" dense filled single-line v-model="editItem['employmentForms']"
+                  :items="constantObj.employmentForms"></v-select>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">参保方案</span>
+                  <v-select class="jh-v-input mr-2" dense filled single-line v-model="editItem['entryStatus']"
+                  :items="constantObj.entryStatus.filter(e => e.value != '已离职')"></v-select>
+                </v-col>
+
+              </v-row>
+              <v-row class="justify-end mx-0 mt-8 px-6">
+                <v-btn color="success" @click="doUiAction('updateItem')">保存</v-btn>
+                <v-btn class="ml-2" @click="isUpdateDrawerShown = false">取消</v-btn>
+              </v-row>
+            </v-form>
+            <v-form v-model="isFormValid" v-if="actionTab===2" ref="form" lazy-validation>
+              <file-list class="mt-4 px-4" :employee-id="editItem.employeeId" :employee-name="editItem.employeeName" ></file-list>
+            </v-form>
+            <!-- 抽屉关闭按钮 -->
+            <v-btn
+              elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn"
+              @click="isUpdateDrawerShown = false">
+              <v-icon>mdi-close</v-icon>
+            </v-btn>
+          </v-navigation-drawer>
+            <!-- 申请离职编辑抽屉 -->
+            <v-navigation-drawer v-model="isRequestDrawerShow" :permanent="isRequestDrawerShow" fixed temporary right width="80%"
+            class="elevation-24">
+            <v-form v-model="isFormValid" ref="form" lazy-validation>
+              <v-row no-gutters>
+                <span class="text-h7 font-weight-bold pa-4">{{editItem.employeeName}}</span>
+                <v-spacer></v-spacer>
+              </v-row>
+              <v-divider class="jh-divider"></v-divider>
+              <v-row class="mt-0 px-4">
+               <v-col cols="12" sm="12" md="4">
+                <span class="jh-input-label">员工编号</span>
+                 <v-text-field class="jh-v-input" v-model="editItem['employeeId']" readonly disabled></v-text-field>
+               </v-col>
+ 
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">员工姓名</span>
+                  <v-text-field class="jh-v-input" v-model="editItem['employeeName']" readonly disabled></v-text-field>
+                </v-col>
+ 
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">员工性别</span>
+                  <v-text-field class="jh-v-input" v-model="editItem['sex']" readonly disabled></v-text-field>
+                </v-col>
+ 
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">员工年龄</span>
+                  <v-text-field class="jh-v-input " v-model="editItem['age']" readonly disabled></v-text-field>
+                </v-col>
+ 
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">联系电话</span>
+                  <v-text-field class="jh-v-input " v-model="editItem['contactNumber']" readonly disabled></v-text-field>
+                </v-col>
+ 
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">身份证号</span>
+                  <v-text-field class="jh-v-input " v-model="editItem['icNumber']" readonly disabled></v-text-field>
+                </v-col>
+              </v-row>
+
+              <v-row class="mt-0 px-4">
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">员工岗位</span>
+                  <v-text-field class="jh-v-input " v-model="editItem['post']" readonly disabled></v-text-field>
+                </v-col>
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">任教学段</span>
+                  <v-text-field class="jh-v-input " v-model="editItem['teachingLevel']" readonly disabled></v-text-field>
+                </v-col>
+ 
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">任教学科</span>
+                  <v-text-field class="jh-v-input " v-model="editItem['teachingSubject']" readonly disabled></v-text-field>
+                </v-col>
+ 
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">员工状态</span>
+                  <v-text-field class="jh-v-input " v-model="editItem['status']" readonly disabled></v-text-field>
+                </v-col>
+ 
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">聘用形式</span>
+                  <v-text-field class="jh-v-input " v-model="editItem['employmentForms']" readonly disabled></v-text-field>
+                </v-col>
+ 
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">入职状态</span>
+                  <v-text-field class="jh-v-input " v-model="editItem['entryStatus']" readonly disabled></v-text-field>
+                </v-col>
+ 
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">入职时间</span>
+                  <v-text-field class="jh-v-input " v-model="editItem['dateOfEntry']" readonly disabled></v-text-field>
+                </v-col>
+ 
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">到期时间</span>
+                  <v-text-field class="jh-v-input " v-model="editItem['dateOfContractExpiration']" readonly disabled></v-text-field>
+                </v-col>
+                <!--      <v-col cols="12" sm="12" md="4">-->
+                <!--        &lt;!&ndash; 必填字段样式 demo :rules="requireRules" &ndash;&gt;-->
+                <!--            <span class="jh-input-label">学生ID</span>-->
+                <!--        <v-text-field class="jh-v-input " dense filled single-line label="学生ID" v-model="editItem.studentId" :rules="requireRules"></v-text-field>-->
+                <!--      </v-col>-->
+                <!--      &lt;!&ndash; select 字段 demo &ndash;&gt;-->
+                <!--      <v-col cols="12" sm="12" md="4">-->
+                <!--            <span class="jh-input-label">班级ID</span>-->
+                <!--        <v-select class="jh-v-input " dense filled single-line clearable label="班级ID" v-model="editItem.classId" :items="constantObj.classId"></v-select>-->
+                <!--      </v-col>-->
+                <!--      &lt;!&ndash; 日期选择 demo &ndash;&gt;-->
+                <!--      <v-col cols="12" sm="12" md="4">-->
+                <!--        <span class="jh-input-label">出生日期</span>-->
+                <!--        <v-menu class="jh-v-input " offset-y max-width="290">-->
+                <!--          <template v-slot:activator="{ on, attrs }">-->
+                <!--            <v-text-field class="jh-v-input " dense filled single-line v-on="on" label="出生日期" v-model="editItem.dateOfBirth"></v-text-field>-->
+                <!--          </template>-->
+                <!--          <v-date-picker color="success" elevation="20" v-model="editItem.dateOfBirth"></v-date-picker>-->
+                <!--        </v-menu>-->
+                <!--      </v-col>-->
+              </v-row>
+              <v-row no-gutters>
+                <span class="text-h7 font-weight-bold pa-4">离职备注</span>
+                <v-spacer></v-spacer>
+              </v-row>
+              <v-row class="mt-0 px-4">
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">历史备注</span>
+                  <v-textarea class="jh-v-input " rows="2" dense filled single-line v-model="editItem['remarks']" readonly ></v-textarea>
+                </v-col>
+ 
+                <v-col cols="12" sm="12" md="4">
+                 <span class="jh-input-label">添加备注</span>
+                 <v-textarea class="jh-v-input " rows="2" dense filled single-line v-model="newRemarks" :rules="requireRemarkRules"></v-textarea>
+               </v-col>
+              </v-row>
+ 
+              <v-row class="justify-end mx-0 mt-8 px-6">
+                <v-btn class="ml-2" color="success" @click="doUiAction('leaveRequest')">申请离职</v-btn>
+                <v-btn class="ml-2" @click="isRequestDrawerShow = false">取消</v-btn>
+              </v-row>
+            </v-form>
+            <!-- 抽屉关闭按钮 -->
+            <v-btn
+              elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn"
+              @click="isRequestDrawerShow = false">
+              <v-icon>mdi-close</v-icon>
+            </v-btn>
+          </v-navigation-drawer>
+        </div>
+
+        <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
+        <v-navigation-drawer v-model="isHelpPageDrawerShown" v-click-outside="drawerClickOutside" fixed temporary right width="80%" class="elevation-24">
+          <iframe style="border: 0" :src="`/${appInfo.appId}/pageDoc#employee.md`" width="100%" height="100%"></iframe>
+          <v-btn elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn" @click="isHelpPageDrawerShown = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-navigation-drawer>
+        <!-- <<<<<<<<<<<<< 帮助页抽屉 -->
+      </v-main>
+    </v-app>
+<jh-toast />
+<jh-mask />
+<jh-confirm-dialog />
+  </div>
+</script>
+
+<div id="app">
+</div>
+
+{% endblock %}
+
+{% block vueScript %}
+{% include 'common/jianghuJs/fixedTableHeightV4.html' %}
+
+{% include 'common/constant.html' %}
+{% include 'component/globalHandler.html' %}
+{% include 'component/employeeManagement/fileList.html' %}
+{% include 'component/employeeManagement/previewFileCard.html' %}
+{% include 'component/employeeManagement/previewFileGroup.html' %}
+{% include 'component/rowStatus/row-status-select.html' %}
+{% include 'component/rowStatus/row-status-switch-button.html' %}
+{% include 'component/selectExportHeader.html' %}
+<script src="/<$ ctx.app.config.appId $>/public/xlsx/xlsx.full.min.js"></script>
+<script src="/<$ ctx.app.config.appId $>/public/xlsx/Export2Excel.js"></script>
+
+
+<script type="module">
+  new Vue({
+    el: '#app',
+    template: '#app-template',
+    vuetify: new Vuetify(),
+    data: () => ({
+      isHelpPageDrawerShown: false,
+      globalHandler: new GlobalHandler(),
+      isHelpPageDrawerShown: false,
+      // 表格相关数据
+      searchText: null,
+      isFormValid: true,
+      requireRules: [
+        v => !!v || '此项为必填项',
+      ],
+      requireRemarkRules: [
+        v => !!v || '请添加离职原因',
+      ],
+      isMobile: window.innerWidth < 500,
+      constantObj: {
+        // 员工状态
+        status: [
+          { text: "全职", value: "全职" },
+          { text: "兼职", value: "兼职" },
+          { text: "实习", value: "实习" },
+        ],
+        // 聘用形式
+        employmentForms: [
+          { text: "正式", value: "正式" },
+          { text: "试用", value: "试用" },
+        ],
+        // 在职状态
+        entryStatus: [
+          { text: "在职", value: "在职" },
+          { text: "待入职", value: "待入职" },
+          { text: "放弃入职", value: "放弃入职" },
+          { text: "待离职", value: "待离职" },
+          { text: "已离职", value: "已离职" }
+        ],
+        sex: [
+          { text: '男', value: '男' },
+          { text: '女', value: '女' }
+        ],
+        boolean: [
+          { text: '是', value: '是' },
+          { text: '否', value: '否' }
+        ],
+        post: [
+          { text: "董事长", value: "董事长" },
+          { text: "校长", value: "校长" },
+          { text: "高中部副校长", value: "高中部副校长" },
+          { text: "小学部老师", value: "小学部老师" },
+          { text: "初中部老师", value: "初中部老师" },
+          { text: "高中部老师", value: "高中部老师" },
+          { text: "生活老师", value: "生活老师" },
+          { text: "电教处", value: "电教处" },
+          { text: "会计", value: "会计" },
+          { text: "行政", value: "行政" },
+          { text: "文员", value: "文员" },
+          { text: "教官", value: "教官" },
+          { text: "保安", value: "保安" },
+          { text: "厨师", value: "厨师" },
+          { text: "帮厨", value: "帮厨" },
+          { text: "面点", value: "面点" },
+          { text: "保洁", value: "保洁" }
+        ],
+        level: [
+          { text: "小学", value: "小学" },
+          { text: "初中", value: "初中" },
+          { text: "高中", value: "高中" }
+        ],
+        subject: [
+          { text: "数学", value: "数学" },
+          { text: "化学", value: "化学" },
+          { text: "物理", value: "物理" },
+          { text: "生物", value: "生物" },
+          { text: "历史", value: "历史" },
+          { text: "政治", value: "政治" },
+          { text: "地理", value: "地理" },
+          { text: "语文", value: "语文" },
+          { text: "英语", value: "英语" },
+          { text: "日语", value: "日语" },
+          { text: "信息", value: "信息" },
+          { text: "编程", value: "编程" },
+          { text: "体育", value: "体育" },
+          { text: "美术", value: "美术" },
+          { text: "书法", value: "书法" },
+          { text: "舞蹈", value: "舞蹈" },
+          { text: "音乐", value: "音乐" },
+          { text: "传媒", value: "传媒" },
+        ],
+        probationPeriod: [
+          {text: "1个月", value: "1"},
+          {text: "2个月", value: "2"},
+          {text: "3个月", value: "3"},
+          {text: "4个月", value: "4"},
+          {text: "5个月", value: "5"},
+          {text: "6个月", value: "6"},
+        ]
+      },
+      serverSearchForm: {
+        employeeName: null,
+        select: {
+          status: null,
+          employmentForms: null,
+          entryStatus: '在职',
+        },
+        searchSummary: null,
+      },
+      serverSearchInput: {
+        studentId: null,
+        classId: null
+      },
+      searchInput: null,
+      isTableLoading: true,
+      tableDataFromBackend: [],
+      showTableZebraLine: true,
+      actionTab: 0,
+      headers: [
+        { text: "员工ID", value: "employeeId", width: 80 },
+        { text: "员工姓名", value: "employeeName", width: 90 },
+        { text: "性别", value: "sex", width: 120 },
+        { text: "年龄", value: "age", width: 120 },
+        { text: "联系电话", value: "contactNumber", width: 120 },
+        { text: "岗位", value: "post", width: 150 },
+        { text: "任教学科", value: "teachingSubject", width: 150 },
+        { text: "身份证", value: "icNumber", width: 120 },
+        { text: "毕业学校", value: "institution", width: 120 },
+        { text: "最高学历", value: "highestEducation", width: 120 },
+        { text: "家庭地址", value: "residentialAddress", width: 120 },
+        { text: "入职日期", value: "dateOfEntry", width: 120 },
+        { text: "合同到期", value: "dateOfContractExpiration", width: 120 },
+        { text: "员工状态", value: "status", width: 120 },
+        { text: "聘用形式", value: "employmentForms", width: 120 },
+        { text: "入职状态", value: "entryStatus", width: 120 },
+        { text: "申请离职状态", value: "leaveRequestStatus", width: 120 },
+        { text: '操作', value: 'action', align: 'center', sortable: false, width: window.innerWidth < 500 ? 80 : 200, class: 'fixed', cellClass: 'fixed' },
+      ],
+      tabs: [
+        // { title: '岗位信息', action: 'post' },
+        // { title: '基本信息', action: 'basic' },
+        { title: '详细信息', action: 'basic' },
+        // { title: '员工合同', action: 'contract' },
+        { title: '工资社保', action: 'insurance' },
+        { title: '材料附件', action: 'material' },
+        // { title: '操作记录', action: 'record' },
+      ],
+      memberFile: {
+        basicFile: [
+          { title: '身份证原件照片', action: 'IDCard', icon: 'mdi-file-document-multiple-outline' },
+          { title: '学历证明', action: 'educationalBackground', icon: 'mdi-file-document-multiple-outline' },
+          { title: '个人证件照', action: 'documents', icon: 'mdi-file-document-multiple-outline' },
+          { title: '身份证复印件', action: 'IDCard', icon: 'mdi-file-document-multiple-outline' },
+          { title: '工资银行卡', action: 'educationalBackground', icon: 'mdi-file-document-multiple-outline' },
+          { title: '社保卡', action: 'documents', icon: 'mdi-file-document-multiple-outline' },
+          { title: '公积金', action: 'IDCard', icon: 'mdi-file-document-multiple-outline' },
+          { title: '获奖证书', action: 'educationalBackground', icon: 'mdi-file-document-multiple-outline' },
+          { title: '其他', action: 'documents', icon: 'mdi-file-document-multiple-outline' },
+        ],
+        archivesFile: [
+          { title: '劳动合同', action: 'IDCard', icon: 'mdi-file-document-multiple-outline' },
+          { title: '入职简历', action: 'educationalBackground', icon: 'mdi-file-document-multiple-outline' },
+          { title: '入职登记表', action: 'documents', icon: 'mdi-file-document-multiple-outline' },
+          { title: '入职体检单', action: 'IDCard', icon: 'mdi-file-document-multiple-outline' },
+          { title: '上家公司离职证明', action: 'educationalBackground', icon: 'mdi-file-document-multiple-outline' },
+          { title: '转正申请表', action: 'documents', icon: 'mdi-file-document-multiple-outline' },
+          { title: '其他', action: 'IDCard', icon: 'mdi-file-document-multiple-outline' },
+        ],
+        resignFile: [
+          { title: '离职审批', action: 'IDCard', icon: 'mdi-file-document-multiple-outline' },
+          { title: '离职证明', action: 'educationalBackground', icon: 'mdi-file-document-multiple-outline' },
+          { title: '其他', action: 'documents', icon: 'mdi-file-document-multiple-outline' },
+        ]
+      },
+      isUpdateDrawerShown: false,
+      editItem: {},
+      isCreateDrawerShown: false,
+      addItem: {},
+      isRequestDrawerShow: false,
+      newRemarks:'',
+      userId: '',
+      username: '',
+      employeeWarnList: [],
+      isExcelDownloading: false,
+    }),
+    computed: {
+      isMobile() {
+        return window.innerWidth < 600;
+      },
+      tableData() {
+        return this.tableDataFromBackend;
+      }
+    },
+    watch: {
+      'serverSearchForm.select': {
+        handler: function (val, oldVal) {
+          this.doUiAction('refreshTableData');
+        },
+        deep: true
+      }
+    },
+    async created() {
+      this.getContractWarnList();
+      await this.getUserInfo();
+      await this.doUiAction('refreshTableData');
+    },
+    mounted() { 
+      // 获取所有社保方案列表
+      this.getInsuranceList();
+    },
+    methods: {
+      async doUiAction(uiActionId, uiActionData) {
+        switch (uiActionId) {
+          case 'refreshTableData':
+            await this.refreshTableData();
+            await this.getStatusCount();
+            break;
+          case 'startCreateItem':
+            await this.clearItemData();
+            await this.openCreateItemDialog();
+            break;
+          case 'createItem':
+            await this.prepareValidate();
+            await this.confirmCreateItemDialog();
+            await this.doCreateItem();
+            await this.closeDrawerShow();
+            await this.refreshTableData();
+            break;
+          case 'startUpdateItem':
+            await this.prepareItemData(uiActionData);
+            await this.openUpdateDialog();
+            break;
+          case 'updateItem':
+            //   await this.prepareValidate();
+            await this.confirmUpdateItemDialog();
+            await this.doUpdateItem();
+            await this.closeDrawerShow();
+            await this.refreshTableData();
+            break;
+          case 'updateInsuranceSalaryItem':
+            await this.confirmUpdateItemDialog();
+            await this.doUpdateInsuranceSalaryItem();
+            await this.closeDrawerShow();
+            await this.refreshTableData();
+            break;
+          case 'leaveItem':
+            await this.confirmDeleteItemDialog();
+            await this.doLeaveItem(uiActionData);
+            await this.refreshTableData();
+            case 'startDepartRequest':
+            await this.prepareDepartData(uiActionData);
+            await this.openRequestDialog();
+            break;
+          case 'leaveRequest':
+            await this.confirmDepartRequestDialog();
+            await this.doUpdateEmployeeStatus();
+            await this.doCreateDepartRequest();
+            await this.closeRequestDialog();
+            await this.refreshTableData();
+            break;
+          default:
+            console.error("[doUiAction] uiActionId not find", { uiActionId });
+            break;
+        }
+      },
+
+      getHeaders(content) {
+        return this[`${content.action}Headers`] || []
+      },
+
+      // 状态筛选
+      changeStatus(filed, value) {
+        console.log(filed)
+        console.log(value)
+        // this.serverSearchForm.select = {};
+        this.serverSearchForm.select[filed] = value;
+        this.refreshTableData();
+      },
+
+      async getInsuranceList() {
+        const { rows } = (await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'employeeManagement',
+              actionId: 'getInsuranceList'
+            }
+          }
+        })).data.appData.resultData;
+        this.constantObj.insuranceScheme = rows.map(item => {
+          return {
+            label: item.schemeName,
+            value: item.schemeId
+          }
+        });
+      },
+      async getStatusCount() {
+        const { rows } = (await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'employeeManagement',
+              actionId: 'getStatusCount'
+            }
+          }
+        })).data.appData.resultData;
+        this.setSelectOptionList(rows)
+      },
+
+      /**
+       * 设置下拉框的选项列表
+       */
+      setSelectOptionList(rows) {
+        _.forIn(rows, (value, key) => {
+          const obj = _.keyBy(value, key)
+          _.forEach(this.constantObj[key], o => {
+            o.num = obj[o.value] ? obj[o.value].count : 0
+          })
+        });
+        this.$forceUpdate();
+      },
+      // =================================uiAction 公共方法 start ======================================
+      /**
+       * uiActionId:  prepareValidate
+       * description: ✅表单校验
+      */
+      async prepareValidate() {
+        if (this.$refs.form.validate() === false) {
+          window.vtoast.fail({ message: "输入有误, 请检查!" });
+          throw new Error("[prepareValidate] false");
+        }
+      },
+      /**
+       * uiActionId:  refreshTableData
+       * description: ✅获取表格数据
+      */
+      async refreshTableData() {
+        this.isTableLoading = true;
+        const where = _.omitBy(this.serverSearchForm.select, _.isNull);
+        const result = await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'employeeManagement',
+              actionId: 'selectItemList',
+              actionData: {},
+              where,
+              whereLike: {
+                employeeName: this.serverSearchForm.employeeName,
+              },
+              orderBy: [{ column: 'operationAt', order: 'desc' }]
+            }
+          }
+        });
+        const { rows, count } = result.data.appData.resultData;
+        rows.forEach(row => {
+          if (row.dateOfContractExpiration && row.entryStatus !== '已离职') {
+            row.contractDays = dayjs(row.dateOfContractExpiration).diff(dayjs(), 'day');
+          } else {
+            row.contractDays = 0;
+          }
+          
+          
+        })
+        this.tableDataFromBackend = rows;
+        console.log( this.tableDataFromBackend)
+        this.isTableLoading = false;
+        // this.setSearchConditions(rows, count);
+      },
+      async getUserInfo() {
+        const { data: { appData: { resultData: { userId, username } } } } = await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'allPage',
+              actionId: 'userInfo',
+              actionData: {},
+              where: {},
+            }
+          }
+        });
+        this.userId = userId;
+        this.username = username;
+      },
+
+
+      // =================================uiAction 公共方法 end ======================================
+
+      /**
+       * uiActionId:  startCreateItem
+       * description: ✅获取表格数据
+      */
+      async clearItemData() {
+        this.addItem = {};
+      },
+      async openCreateItemDialog() {
+        this.isCreateDrawerShown = true;
+      },
+
+      /**
+       * uiActionId:  createItem
+       * description: ✅获取表格数据
+      */
+      async confirmCreateItemDialog() {
+        if (await window.confirmDialog({ title: "新增", content: "确定新增吗？" }) === false) {
+          throw new Error("取消");
+        }
+      },
+      async doCreateItem() {
+        const { orgId, ...data } = this.addItem;
+        await window.vtoast.loading('新建员工');
+        const { rows, count } = (await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'employeeManagement',
+              actionId: 'insertItem',
+              actionData: data,
+            }
+          }
+        })).data.appData.resultData;
+        await window.vtoast.success("新建员工成功");
+        if (orgId) {
+          const member = (await window.jianghuAxios({
+            data: {
+              appData: {
+                pageId: 'employeeManagement',
+                actionId: 'getEmployee',
+                where: { id: rows[0] }
+              }
+            }
+          })).data.appData.resultData.rows[0];
+          await this.doCreateOrg({ orgId, memberId: member.employeeId })
+        }
+      },
+      async closeDrawerShow() {
+        this.isUpdateDrawerShown = false;
+        this.isCreateDrawerShown = false;
+      },
+
+      /**
+       * uiActionId:  startUpdateItem
+       * description: ✅获取表格数据
+      */
+      async prepareItemData({ item }) {
+        console.log({ item })
+        this.editItem = { ...item };
+        if (this.editItem.remarks === null) {
+          this.editItem.remarks = '';
+        }
+      },
+      async openUpdateDialog() {
+        this.isUpdateDrawerShown = true;
+      },
+      /**
+       * uiActionId:  updateItem
+       * description: ✅获取表格数据
+      */
+      async confirmUpdateItemDialog() {
+        if (await window.confirmDialog({ title: "修改", content: "确定修改吗？" }) === false) {
+          throw new Error("取消");
+        }
+      },
+      async doUpdateItem() {
+        if (this.newRemarks) {
+        this.editItem.remarks = this.newRemarks + '【' + this.userId + this.username + '】' + dayjs().format() + `\n` + this.editItem.remarks;
+      };
+      const { id, orgId, orgName, contractDays, ...data } = this.editItem;
+      // const detailData = this.buildEditItemDetailData(data)
+        await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'employeeManagement',
+              actionId: 'updateItem',
+              actionData: data,
+              where: { id }
+            }
+          }
+        })
+        this.newRemarks  = '';
+        await window.vtoast.success("修改数据成功");
+      },
+      async doUpdateInsuranceSalaryItem() {
+        const { id, salaryCard, socialSecurity } = this.editItem;
+        await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'employeeManagement',
+              actionId: 'updateItem',
+              actionData: {
+                salaryCard: JSON.stringify(salaryCard),
+                socialSecurity: JSON.stringify(socialSecurity),
+              },
+              where: { id }
+            }
+          }
+        })
+        await window.vtoast.success("修改数据成功");
+      },
+      buildEditItemDetailData(item) {
+        // 包含 基础信息 + 岗位信息
+        // 员工性别
+        // 男
+        // 员工年龄
+        // 联系电话
+        // 紧急联系电话
+        // 身份证号
+        // 出生日期
+        // 毕业学校
+        // 专业
+        // 最高学历
+        // 教师资格证类别
+        // 教师资格证学段
+        // 教师资格证学科
+        // 教师资格证编号
+        // 家庭住址
+        // 建设银行卡
+        // 车牌号
+        // 备注
+        // 员工岗位
+        // 任教学段
+        // 任教学科
+        // 员工状态
+        // 聘用形式
+        // 入职状态
+        // 入职日期
+        // 到期日期
+        return {
+          sex: item.sex,
+          age: item.age,
+          contactNumber: item.contactNumber,
+          emergencyContactNumber: item.emergencyContactNumber,
+          icNumber: item.icNumber,
+          dateOfBirth: item.dateOfBirth,
+          institution: item.institution,
+          major: item.major,
+          highestEducation: item.highestEducation,
+          teacherQualification: item.teacherQualification,
+          teacherQualificationLeaver: item.teacherQualificationLeaver,
+          teacherQualificationSubject: item.teacherQualificationSubject,
+          teacherCertificationNumber: item.teacherCertificationNumber,
+          residentialAddress: item.residentialAddress,
+          cardNumber: item.cardNumber,
+          licensePlateNumber: item.licensePlateNumber,
+          remarks: item.remarks,
+          post: item.post,
+          teachingLevel: item.teachingLevel,
+          teachingSubject: item.teachingSubject,
+          status: item.status,
+          employmentForms: item.employmentForms,
+          entryStatus: item.entryStatus,
+          dateOfEntry: item.dateOfEntry,
+          dateOfContractExpiration: item.dateOfContractExpiration,
+        }
+      }, 
+
+      /**
+       * uiActionId:  deleteItem
+       * description: ✅获取表格数据
+      */
+      async prepareDepartData({ item }) {
+        this.editItem = { ...item };
+        if (this.editItem.remarks === null) {
+          this.editItem.remarks = '';
+        }
+      },
+
+      async openRequestDialog() {
+        this.isRequestDrawerShow = true;
+      },
+
+      async confirmDepartRequestDialog() {
+        if (await window.confirmDialog({ title: "离职申请", content: "确定提交离职申请吗？" }) === false) {
+          throw new Error("取消");
+        }
+      },   
+      async doUpdateEmployeeStatus() {
+        const { id } = this.editItem;
+        const data = {
+          entryStatus: "待离职",
+          leaveRequestStatus: "审核中",
+        };
+        if (this.newRemarks) {
+          data.remarks = this.newRemarks + '【' + this.userId + this.username + '】' + dayjs().format() + `\n` + this.editItem.remarks;
+        };
+        await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'employeeManagement',
+              actionId: 'updateItem',
+              actionData: data,
+              where: { id: id }
+            }
+          }
+        });
+      },
+
+      async doCreateDepartRequest() {
+        const data = {
+          employeeId:this.editItem.employeeId,
+          employeeName:this.editItem.employeeName,
+          sex:this.editItem.sex,
+          age:this.editItem.age,
+          contactNumber:this.editItem.contactNumber,
+          icNumber:this.editItem.icNumber,
+          post:this.editItem.post,
+          teachingLevel:this.editItem.teachingLevel,
+          teachingSubject:this.editItem.teachingSubject,
+          status:this.editItem.status,
+          employmentForms:this.editItem.employmentForms,
+          dateOfEntry:this.editItem.dateOfEntry,
+          dateOfContractExpiration:this.editItem.dateOfContractExpiration,
+          entryStatus:'待离职',
+          leaveRequestStatus:'审核中',
+        };
+        if (this.newRemarks) {
+          data.remarks = this.newRemarks + '【' + this.userId + this.username + '】' + dayjs().format() + `\n` + this.editItem.remarks;
+        };
+        await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'employeeManagement',
+              actionId: 'insertDepartRequestItem',
+              actionData: data,
+            }
+          }
+        });
+        this.newRemarks  = '';
+        await window.vtoast.success("申请成功");
+      },
+
+      async closeRequestDialog() {
+        this.isRequestDrawerShow = false;
+      },
+      async getContractWarnList() {
+        const rows = (await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'employeeManagement',
+              actionId: 'getEmployeeWarnList',
+            }
+          }
+        })).data.appData.resultData;
+        this.employeeWarnList = rows;
+      },
+      async exportExcel({header, value}) {
+        this.isExcelDownloading = true;
+        // const rows = (await window.jianghuAxios({
+        //   data: {
+        //     appData: {
+        //       pageId: 'studentManagement',
+        //       actionId: 'selectItemList',
+        //       actionData: {},
+        //       where: {studentStatus:'在校'},
+        //       whereLike: {
+        //         classId: `${year}-${semester}%`
+        //       }
+        //     }
+        //   }
+        // })).data.appData.resultData.rows;
+        const rows = this.tableDataFromBackend;
+        if (!rows.length) {
+          window.vtoast.fail({ message: '没有数据' });
+          return;
+        }
+        const tHeader = header;
+        const filterVal = value;
+        const exportData = rows.map(item => {
+          const res = {}
+          filterVal.forEach(val => {
+            res[val] = item[val]
+          })
+          return res
+        })
+        const body = this.formatJson(filterVal, exportData);
+        export_json_to_excel({
+          header: tHeader,
+          data: body,
+          filename: `员工名单`,
+        });
+        this.isExcelDownloading = false;
+      },
+      formatJson(filterVal, jsonData) {
+        return jsonData.map((v) =>
+          filterVal.map((j) => {
+            return v[j];
+          })
+        );
+      },
+
+    }
+  })
+</script>
+
+<style scoped>
+  .theme--light.v-card.success, .theme--light.v-card.success div {
+    color: white !important;
+  }
+  .notice-btn .v-badge__wrapper span{
+    inset: auto -12px calc(100% - 12px) auto !important;
+  }
+</style>
+{% endblock %}

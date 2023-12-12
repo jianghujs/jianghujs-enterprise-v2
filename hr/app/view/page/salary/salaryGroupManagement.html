@@ -1,0 +1,528 @@
+{% extends 'template/jhTemplateV4.html'%}
+
+{% block vueTemplate %}
+
+
+<script type="text/html" id="app-template">
+  <div>
+    <v-app mobile-breakpoint="sm">
+      <jh-menu />
+      <v-main class="d-flex flex-column" style="margin-top: 60px">
+        <!-- 头部内容 >>>>>>>>>>>>> -->
+          <div class="jh-page-second-bar px-8">
+            <v-row class="align-center">
+              <v-col cols="12" xs="12" sm="12" md="4" xl="3">
+                <div class="py-4 text-body-1 font-weight-bold">薪资组
+                  <!-- 帮助页按钮 -->
+                  <!-- 
+            <span role="button" class="success--text font-weight-regular jh-font-size-13 ml-2" @click="isHelpPageDrawerShown = true">
+              <v-icon size="13" class="success--text">mdi-help-circle-outline</v-icon>帮助
+            </span> -->
+                </div>
+              </v-col>
+            </v-row>
+          </div>
+
+          <!-- 页面主要内容 -->
+          <div class="jh-page-body-container px-8">
+            <v-container class="fullScreen d-flex flex-column pa-xs-0 pa-0">
+            <v-card>
+            <v-row class="ma-0 pa-4">
+
+              <v-col cols="12" xs="4" sm="4" md="4" xl="4" class="pa-0">
+                <v-btn color="success" dark small class="elevation-0 mr-2" @click="doUiAction('startCreateItem')">新增</v-btn>
+              </v-col>
+
+              <v-spacer></v-spacer>
+
+              <v-col cols="12" xs="3" sm="3" md="2" xl="2" class="pa-0">
+                <v-text-field v-model="searchInput" label="表格过滤" class="jh-v-input" dense filled single-line></v-text-field>
+              </v-col>
+            </v-row>
+            <v-data-table 
+              fixed-header
+              :headers="headers"
+              :items="tableData"
+              :search="searchInput"
+              :footer-props="{ itemsPerPageOptions: [20, 40, 60, 100, -1] }"
+              :items-per-page="-1"
+              mobile-breakpoint="0"
+              :loading="isTableLoading"
+              checkbox-color="success"
+              class="jh-fixed-table-height elevation-0 mt-0 mb-xs-4 flex-fill d-flex flex-column"
+            >
+              <template v-slot:item.employeeIds="{ item }">
+                {{ item.employeeIds | formatEmployeeName(constantObj.employeeList) }}
+              </template>
+              <template v-slot:item.action="{ item }">
+                <!-- pc端 -->
+                <template v-if="!isMobile">
+                  <span role="button" class="success--text font-weight-medium font-size-2 mr-2" @click="doUiAction('startUpdateItem', {item})">
+                    <v-icon size="16" class="success--text">mdi-note-edit-outline</v-icon>修改
+                  </span>
+                  <span role="button" class="error--text text--accent-2 font-weight-medium font-size-2" @click="doUiAction('deleteItem', {item})">
+                    <v-icon size="16" class="error--text">mdi-trash-can-outline</v-icon>删除
+                  </span>
+                </template>
+                <!-- 手机端 -->
+                <v-menu offset-y v-if="isMobile">
+                  <template v-slot:activator="{ on, attrs }">
+                    <span role="button" class="success--text font-weight-medium font-size-2"
+                      v-bind="attrs" v-on="on">
+                      操作<v-icon size="14" class="success--text">mdi-chevron-down</v-icon>
+                    </span>
+                  </template>
+                  <v-list dense>
+                    <v-list-item @click="doUiAction('startUpdateItem', {item})">
+                      <v-list-item-title>修改</v-list-item-title>
+                    </v-list-item>
+                    <v-list-item @click="doUiAction('deleteItem', {item})">
+                      <v-list-item-title>删除</v-list-item-title>
+                    </v-list-item>
+                  </v-list>
+                </v-menu>
+              </template>
+                
+              <!-- 没有数据 -->
+              <template v-slot:loading>
+                <div class="jh-no-data">数据加载中</div>
+              </template>
+              <template v-slot:no-data>
+                <div class="jh-no-data">暂无数据</div>
+              </template>
+              <template v-slot:no-results>
+                <div class="jh-no-data">暂无数据</div>
+              </template>
+              <!-- 表格分页 -->
+              <template v-slot:footer.page-text="pagination">
+                <span>{{pagination.pageStart}}-{{pagination.pageStop}}</span>
+                <span class="ml-1">共{{pagination.itemsLength}}条</span>
+              </template>
+            </v-data-table>
+            </v-card>
+            </v-container>
+
+            <!-- 新增 -->
+            <v-navigation-drawer v-model="isCreateDrawerShown" :permanent="isCreateDrawerShown" fixed temporary right width="80%" class="elevation-24">
+              <v-form v-model="isFormValid" v-if="isCreateDrawerShown" ref="form" lazy-validation>
+              <v-row no-gutters>
+                <span class="text-h7 font-weight-bold pa-4">新增信息</span>
+              </v-row>
+              <v-divider class="jh-divider"></v-divider>
+              <v-row class="mt-0 px-4">
+                  
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">薪资组名称<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                  <v-text-field class="jh-v-input " dense filled single-line v-model="addItem['groupName']" :rules="requireRules"></v-text-field>
+                </v-col>
+                  
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">部门范围</span>
+                  <v-text-field class="jh-v-input " dense filled single-line v-model="addItem['deptIds']"></v-text-field>
+                </v-col>
+                  
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">员工范围<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                  <v-autocomplete
+                    v-model="addItem.employeeIds"
+                    :items="constantObj.employeeList"
+                    dense filled single-line
+                    multiple
+                    small
+                    hide-details :rules="requireRules"
+                  ></v-autocomplete>
+                </v-col>
+                  
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">月计薪标准<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                  <v-text-field class="jh-v-input " dense filled single-line v-model="addItem['salaryStandard']" readonly :rules="requireRules"></v-text-field>
+                </v-col>
+                  
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">转正、调薪月规则<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                  <v-text-field class="jh-v-input " dense filled single-line v-model="addItem['changeRule']" readonly :rules="requireRules"></v-text-field>
+                </v-col>
+                  
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">计税规则<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                  <v-select class="jh-v-input " dense filled single-line v-model="addItem.ruleId" :items="constantObj.salaryTaxRuleList" :rules="requireRules"></v-select>
+                </v-col>
+                  
+              </v-row>
+              <v-row class="justify-end mx-0 mt-8 px-6">
+                <v-btn color="success" @click="doUiAction('createItem')">新增</v-btn>
+                <v-btn class="ml-2" @click="isCreateDrawerShown = false">取消</v-btn>
+              </v-row>
+              </v-form>
+              <!-- 抽屉关闭按钮 -->
+              <v-btn
+                elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn"
+                @click="isCreateDrawerShown = false">
+                <v-icon>mdi-close</v-icon>
+              </v-btn>
+            </v-navigation-drawer>
+
+            <!-- 编辑抽屉 -->
+            <v-navigation-drawer v-model="isUpdateDrawerShown" :permanent="isUpdateDrawerShown" fixed temporary right width="80%" class="elevation-24">
+              <v-form v-model="isFormValid" v-if="isUpdateDrawerShown" ref="form" lazy-validation>
+              <v-row no-gutters>
+                <span class="text-h7 font-weight-bold pa-4">编辑信息</span>
+              </v-row>
+              <v-divider class="jh-divider"></v-divider>
+              <v-row class="mt-0 px-4">
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">薪资组名称<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                  <v-text-field class="jh-v-input " dense filled single-line v-model="editItem['groupName']" :rules="requireRules"></v-text-field>
+                </v-col>
+                  
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">部门范围</span>
+                  <v-text-field class="jh-v-input " dense filled single-line v-model="editItem['deptIds']"></v-text-field>
+                </v-col>
+                  
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">员工范围<span class="red--text text--accent-2 ml-1">*必填</span></span>
+
+                  <v-autocomplete
+                    v-model="editItem.employeeIds"
+                    :items="constantObj.employeeList"
+                    dense filled single-line
+                    multiple
+                    small
+                    hide-details :rules="requireRules"
+                  ></v-autocomplete>
+                </v-col>
+                  
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">月计薪标准<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                  <v-text-field class="jh-v-input " dense filled single-line v-model="editItem['salaryStandard']" readonly :rules="requireRules"></v-text-field>
+                </v-col>
+                  
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">转正、调薪月规则<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                  <v-text-field class="jh-v-input " dense filled single-line v-model="editItem['changeRule']" readonly :rules="requireRules"></v-text-field>
+                </v-col>
+                  
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">计税规则<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                  <v-select class="jh-v-input " dense filled single-line v-model="editItem.ruleId" :items="constantObj.salaryTaxRuleList" :rules="requireRules"></v-select>
+                </v-col>
+              </v-row>
+              <v-row class="justify-end mx-0 mt-8 px-6">
+                <v-btn color="success" @click="doUiAction('updateItem')">保存</v-btn>
+                <v-btn class="ml-2" @click="isUpdateDrawerShown = false">取消</v-btn>
+              </v-row>
+              </v-form>
+              <!-- 抽屉关闭按钮 -->
+              <v-btn
+                elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn"
+                @click="isUpdateDrawerShown = false">
+                <v-icon>mdi-close</v-icon>
+              </v-btn>
+            </v-navigation-drawer>
+          </div>
+
+          <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
+          <v-navigation-drawer v-model="isHelpPageDrawerShown" v-click-outside="drawerClickOutside" fixed temporary right width="80%" class="elevation-24">
+            <iframe style="border: 0" :src="`/${appInfo.appId}/pageDoc#waitting.md`" width="100%" height="100%"></iframe>
+            <v-btn elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn" @click="isHelpPageDrawerShown = false">
+              <v-icon>mdi-close</v-icon>
+            </v-btn>
+          </v-navigation-drawer>
+          <!-- <<<<<<<<<<<<< 帮助页抽屉 -->
+      </v-main>
+    </v-app>
+<jh-toast />
+<jh-mask />
+<jh-confirm-dialog />
+  </div>
+</script>
+
+<div id="app">
+</div>
+
+{% endblock %}
+
+{% block vueScript %}
+{% include 'common/jianghuJs/fixedTableHeightV4.html' %}
+
+<script type="module">
+new Vue({
+  el: '#app',
+  template: '#app-template',
+  vuetify: new Vuetify(),
+  filters: {
+    formatEmployeeName: function (value, employeeList) {
+      if (!value) return ''
+      return employeeList.filter(e => value.includes(e.value)).map(e => e.text).join(', ')
+    },
+  },
+  data: () => ({
+      isHelpPageDrawerShown: false,
+      // 表格相关数据
+    isFormValid: true,
+    requireRules: [
+      v => !!v || 'This is required',
+    ],
+    constantObj: {
+      employeeList: [],
+    },
+
+    serverSearchInput: {
+      studentId: null,
+      classId: null
+    },
+    searchInput: null,
+    isTableLoading: true,
+    tableDataFromBackend: [],
+    headers: [
+      {text: "薪资组名称", value: "groupName", width: 120}, 
+      {text: "部门范围", value: "deptIds", width: 120}, 
+      {text: "员工范围", value: "employeeIds", width: 120}, 
+      {text: "月计薪标准", value: "salaryStandard", width: 120}, 
+      {text: "转正、调薪月规则", value: "changeRule", width: 250}, 
+      {text: "计税规则id", value: "ruleId", width: 120}, 
+      {text: "创建时间", value: "createTime", width: 150}, 
+      {text: "创建人", value: "createUserId", width: 120}, 
+      {text: '操作', value: 'action', align: 'center', sortable: false, width: window.innerWidth < 500 ? 80 : 120, class: 'fixed', cellClass: 'fixed'},
+    ],
+    isUpdateDrawerShown: false,
+    editItem: {},
+    isCreateDrawerShown: false,
+    addItem: {}
+  }),
+  computed: {
+    isMobile() {
+      return window.innerWidth < 600;
+    },
+    tableData() {
+      return this.tableDataFromBackend;
+    }
+  },
+  watch: {},
+  async created() {
+    this.doUiAction('refreshTableData');
+    this.doUiAction('getSalaryTaxRuleList');
+    this.getEmployeeList();
+  },
+  mounted() {},
+  methods: {
+    async doUiAction(uiActionId, uiActionData) {
+      switch (uiActionId) {
+        case 'refreshTableData':
+          await this.refreshTableData();
+          break;
+        case 'getSalaryTaxRuleList':
+          await this.getSalaryTaxRuleList();
+          break;
+        case 'startCreateItem':
+          await this.clearItemData();
+          await this.openCreateItemDialog();
+          break;
+        case 'createItem':
+          await this.prepareValidate();
+          await this.confirmCreateItemDialog();
+          await this.doCreateItem();
+          await this.closeDrawerShow();
+          await this.refreshTableData();
+          break;
+        case 'startUpdateItem':
+          await this.prepareItemData(uiActionData);
+          await this.openUpdateDialog();
+          break;
+        case 'updateItem':
+          await this.prepareValidate();
+          await this.confirmUpdateItemDialog();
+          await this.doUpdateItem();
+          await this.closeDrawerShow();
+          await this.refreshTableData();
+          break;
+        case 'deleteItem':
+          await this.confirmDeleteItemDialog();
+          await this.doDeleteItem(uiActionData);
+          await this.refreshTableData();
+          break;
+        default:
+          console.error("[doUiAction] uiActionId not find", { uiActionId });
+          break;
+      }
+    },
+    // =================================uiAction 公共方法 start ======================================
+    /**
+     * uiActionId:  prepareValidate
+     * description: ✅表单校验
+    */
+    async prepareValidate() {
+      if (this.$refs.form.validate() === false) {
+        window.vtoast.fail({ message: "输入有误, 请检查!" });
+        throw new Error("[prepareValidate] false");
+      }
+    },
+
+    /**
+     * uiActionId:  refreshTableData
+     * description: ✅获取表格数据
+    */
+    async refreshTableData() {
+      this.isTableLoading = true;
+      const serverSearchInput = _.pickBy(this.serverSearchInput, value=> !!value);
+      const result = await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'salaryGroupManagement',
+            actionId: 'selectItemList',
+            actionData: {},
+            where: {},
+            whereLike: serverSearchInput,
+            orderBy: [{column: 'operationAt', order: 'desc'}]
+          }
+        }
+      });
+      const { rows } = result.data.appData.resultData;
+      rows.forEach(item => {
+        item.createTime = dayjs(item.createTime).format('YYYY-MM-DD HH:mm:ss');
+        item.employeeIds = item.employeeIds.split(',');
+        console.log(item.employeeIds)
+      });
+      this.tableDataFromBackend = rows;
+      this.isTableLoading = false;
+    },
+    // =================================uiAction 公共方法 end ======================================
+
+    async getSalaryTaxRuleList() {
+      const result = await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'salaryGroupManagement',
+            actionId: 'getSalaryTaxRuleList',
+            actionData: {},
+          }
+        }
+      });
+      const { rows } = result.data.appData.resultData;
+      this.constantObj.salaryTaxRuleList = rows.map(item => ({text: item.ruleName, value: item.ruleId}));
+    },
+    async getEmployeeList() {
+      const result = await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'salaryGroupManagement',
+            actionId: 'getEmployeeList',
+            actionData: {},
+          }
+        }
+      });
+      const { rows } = result.data.appData.resultData;
+      this.constantObj.employeeList = rows.map(item => ({text: item.employeeName, value: item.employeeId}));
+    },
+
+    /**
+     * uiActionId:  startCreateItem
+     * description: ✅获取表格数据
+    */
+    async clearItemData() {
+      this.addItem = {
+        salaryStandard: 21.75,
+        changeRule: '按转正/调薪前后的工资混合计算',
+        employeeIds: '',
+      };
+    },
+    async openCreateItemDialog() {
+      this.isCreateDrawerShown = true;
+    },
+
+    /**
+     * uiActionId:  createItem
+     * description: ✅获取表格数据
+    */
+    async confirmCreateItemDialog() {
+      if (await window.confirmDialog({title: "新增", content: "确定新增吗？"}) === false) {
+        throw new Error("取消");
+      }
+    },
+    async doCreateItem() {
+      const { id, employeeIds, ...data } = this.addItem;
+      await window.vtoast.loading("新增数据");
+      await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'salaryGroupManagement',
+            actionId: 'insertItem',
+            actionData: {...data, employeeIds: employeeIds.join(',')}
+          }
+        }
+      })
+      await window.vtoast.success("新增数据成功");
+    },
+    async closeDrawerShow() {
+      this.isUpdateDrawerShown = false;
+      this.isCreateDrawerShown = false;
+    },
+
+    /**
+     * uiActionId:  startUpdateItem
+     * description: ✅获取表格数据
+    */
+    async prepareItemData({item}) {
+      this.editItem = {...item};
+    },
+    async openUpdateDialog() {
+      this.isUpdateDrawerShown = true;
+    },
+    /**
+     * uiActionId:  updateItem
+     * description: ✅获取表格数据
+    */
+    async confirmUpdateItemDialog() {
+      if (await window.confirmDialog({title: "修改", content: "确定修改吗？"}) === false) {
+        throw new Error("取消");
+      }
+    },
+    async doUpdateItem() {
+      const { id, employeeIds, ...data } = this.editItem;
+      await window.vtoast.loading("修改数据");
+      await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'salaryGroupManagement',
+            actionId: 'updateItem',
+            actionData: {...data, employeeIds: employeeIds.filter(e => this.constantObj.employeeList.some(a => a.value === e)).join(',')},
+            where: {id}
+          }
+        }
+      })
+      await window.vtoast.success("修改数据成功");
+    },
+
+    /**
+     * uiActionId:  deleteItem
+     * description: ✅获取表格数据
+    */
+    async confirmDeleteItemDialog() {
+      if (await window.confirmDialog({title: "删除", content: "确定删除吗？"}) === false) {
+        throw new Error("取消");
+      }
+    },
+    async doDeleteItem({item}) {
+      const { id } = item;
+      await window.vtoast.loading("删除数据");
+      await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'salaryGroupManagement',
+            actionId: 'deleteItem',
+            actionData: {},
+            where: { id: id }
+          }
+        }
+      });
+      await window.vtoast.success("删除数据成功");
+    },
+  }
+})
+</script>
+
+<style scoped>
+</style>
+{% endblock %}

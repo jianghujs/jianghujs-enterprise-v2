@@ -1,0 +1,173 @@
+<template id="preview-file-card"> 
+  <div>
+    <v-card v-for="(itemList, contractFileType, index) in fileList" outlined class="my-2">
+      <v-card-title class="pl-4" style="font-size: 20px; font-weight: 500;">{{ contractFileType }}</v-card-title>
+      <v-card-text style="display: flex; flex-flow: wrap;">
+        <v-card v-for="item in itemList" width="250px" class="mr-2 mb-2" outlined>
+          <v-img
+            :src="previewPrefix + item.downloadPath"
+            class="white--text align-end"
+            gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
+            height="150px"
+          >
+            <v-card-title v-text="item.filename"></v-card-title>
+          </v-img>
+
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn icon small v-if="item.downloadPath" @click="doUiAction('previewFile', { item })">
+              <v-icon>mdi-eye</v-icon>
+            </v-btn>
+            <v-btn icon small class="mr-2" v-if="item.downloadPath" @click="doUiAction('downloadFile', { item })">
+              <v-icon>mdi-download</v-icon>
+            </v-btn>
+            <slot name="action" :item="item"></slot>
+          </v-card-actions>
+        </v-card>
+      </v-card-text>
+    </v-card>
+
+
+    <!-- 文件预览 -->
+    <v-overlay :value="previewOverlay" @click="previewOverlay = false" :opacity="0.85">
+      <v-icon style="position: fixed; right: 10px; top: 5px; z-index: 50000" large color="white"
+        @click="previewOverlay = false">
+        mdi-close-circle
+      </v-icon>
+      <v-icon style="position: fixed; right: 50px; top: 5px; z-index: 50000" large color="white"
+        @click="doUiAction('downloadPreviewFile')">
+        mdi-download
+      </v-icon>
+      <iframe v-if="previewFileType === 'pdf'" :src="'/<$ ctx.app.config.appId $>/public/pdf/web/viewer.html?file=' + previewFileUrl" frameborder="0"
+        style="width: 75vw; height: 100vh; padding: 50px 0 0 0;"></iframe>
+
+      <v-img v-if="previewFileType === 'img'" max-height="80vw" max-width="75vw"  :src="previewFileUrl"></v-img>
+    </v-overlay>
+  </div>
+</template>
+
+
+<script type="module">
+  Vue.component("PreviewFileCard", {
+    template: '#preview-file-card',
+    props: {  
+      fileList: {
+        type: Object,
+        default: () => {},
+      }
+    },
+    mounted() {
+    },
+    data: () => ({
+      previewPrefix: `/<$ ctx.app.config.appId $>/upload`,
+      previewOverlay: false,
+      previewFileUrl: null,
+      previewFileBase64: '',
+      previewFilename: '',
+      previewFileType: '',
+      downloadPath: '',
+
+    }),
+    methods: {
+      async doUiAction(uiActionId, uiActionData) {
+        switch (uiActionId) {
+          case 'previewFile':
+            await this.previewFile(uiActionData);
+            break;
+          case 'downloadFile':
+            await this.downloadFile(uiActionData);
+            break;
+          case 'downloadPreviewFile':
+            await this.downloadPreviewFile(uiActionData);
+            break;
+          default:
+            console.error("[doUiAction] uiActionId not find", { uiActionId });
+            break;
+        }
+      },
+      
+      /**
+       * uiActionId: downloadFile
+       * description: ✅下载
+       * main:   [{"function":"downloadFile"}]
+       */
+      async downloadFile({ item }) {
+        const { filename, downloadPath } = item;
+        window.vtoast.loading('文件下载进度0.00%');
+        const buffer = await window.jianghuAxios.httpDownloadByStream({ downloadPath, filename,
+          onProgress: (total, loaded)=> {
+            const progress = Number((loaded * 100 / total).toFixed(2));
+            window.vtoast.loading(`文件下载进度${progress}%`);
+            if (progress === 100) {
+              window.vtoast.success('文件下载成功');
+            }
+          }
+        }).catch(err => {
+          window.vtoast.fail({ message: err.errorReason });
+          throw err;
+        });
+        window.jianghuAxios.downloadBufferToChrome({ buffer, filename });
+      },
+      /**
+       * uiActionId: previewFile
+       * description: ✅预览文件
+       * main:   [{"function":"previewFile"}]
+       */
+      async previewFile({ item }) {
+        const { filename, downloadPath, binarySize } = item;
+        if (binarySize > 7 * 1024) {
+          window.vtoast.fail('文件大于7M, 不支持预览!');
+          // 中断uiAction
+          return false;
+        }
+        this.filename = filename;
+        if (/\.(gif|jpg|jpeg|png|GIF|JPG|PNG)$/.test(filename)) {
+          this.previewFileType = 'img';
+          this.previewFileUrl = `/<$ ctx.app.config.appId $>/upload${downloadPath}`;
+        }
+        if (/\.(pdf|PDF)$/.test(filename)) {
+          this.previewFileType = 'pdf';
+          this.previewFileUrl = encodeURIComponent(`/<$ ctx.app.config.appId $>/upload${downloadPath}`);
+        }
+        this.previewFilename = filename;
+        this.previewOverlay = true;
+        this.downloadPath = downloadPath;
+
+      },
+
+      /**
+       * uiActionId: downloadPreviewFile
+       * description: ✅下载正在预览的文件
+       * main:   [{"function":"downloadPreviewFile"}]
+      */
+      async downloadPreviewFile() {
+        const oReq = new XMLHttpRequest();
+        const url = `/<$ ctx.app.config.appId $>/upload${this.downloadPath}`;
+        const filename = this.previewFilename;
+        oReq.open("GET", url, true);
+        oReq.responseType = "arraybuffer";
+        oReq.onprogress = function (event) {
+          if (event.lengthComputable) {
+            const progress = Number((event.loaded * 100 / event.total).toFixed(2));
+            window.vtoast.loading(`文件下载进度${progress}%`);
+            if (progress === 100) {
+              window.vtoast.success('文件下载成功');
+            }
+          }
+        }
+        oReq.onload = function (oEvent) {
+          const buffer = oReq.response;
+          let url = window.URL.createObjectURL(new Blob( [buffer], {type: "arraybuffer"}) )
+          const link = document.createElement('a');
+          link.style.display = 'none';
+          link.href = url;
+          link.setAttribute('download', filename);
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        };
+        oReq.send(null);
+      },
+    }
+  })
+</script>

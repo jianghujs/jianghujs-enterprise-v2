@@ -1,0 +1,54 @@
+<template id="row-status-select">
+  <v-select
+    class="jh-v-input"
+    :class="{'bg-white': bgWhite}"
+    v-model="value"
+    :items="items"
+    prefix="状态:"
+    hide-details dense filled
+    :multiple="multiple"
+    persistent-hint
+    @change="$emit('update-value', $event)"
+  ></v-select>
+
+</template>
+
+<script>
+  Vue.component('row-status-select', {
+    template: '#row-status-select',
+    props: {
+      id: String,
+      value: {
+        type: Array,
+        default: () => {
+          return ['正常']
+        }
+      },
+      multiple: {
+        type: Boolean,
+        default: true
+      },
+      bgWhite: {
+        type: Boolean,
+        default: true
+      },
+    },
+    vuetify: new Vuetify(),
+    data: () => ({
+      
+      items: [
+        { text: "正常", value: "正常" },
+        { text: "草稿", value: "草稿" },
+        { text: "回收站", value: "回收站" },
+      ],
+    }),
+    computed: {
+    },
+    watch: {
+    },
+    created() {
+    },
+    methods: {
+    }
+  })
+</script>
