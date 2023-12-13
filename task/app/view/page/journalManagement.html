@@ -43,15 +43,7 @@
           </v-btn>
           <v-btn color="success" class="elevation-0 mr-2" @click="doUiAction('exportExcel')" small outlined>导出
           </v-btn>
-          <task-filter-btn :user-list="userList" :filter-options="serverSearchInput" @save="doUiAction('getTableData')" />
           <v-spacer></v-spacer>
-          <!-- 搜索过滤 -->
-       
-          <v-btn-toggle v-model="selected" class="mr-2" color="success" small>
-            <v-btn small>全部</v-btn>
-            <v-btn small>我负责的</v-btn>
-            <v-btn small>我参与的</v-btn>
-          </v-btn-toggle>
 
           <v-col cols="12" xs="8" sm="4" md="3" xl="2" class="pa-0">
             <v-text-field color="success" v-model="searchInput" prefix="搜索：" class="jh-v-input" dense filled single-line></v-text-field>
@@ -107,91 +99,16 @@
           <!-- 抽屉表单 -->
           <!-- <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.xxxId" :rules="validationRules.requireRules"></v-text-field> -->
           <v-row class="mt-0 px-4">
-             
-             
+         
             <v-col cols="12" sm="12" md="4">
               <span class="jh-input-label"><span class="red--text">*</span>日志名称</span>
               <v-text-field :rules="validationRules.requireRules" class="jh-v-input" dense single-line filled v-model="createItem.taskTitle"></v-text-field>
             </v-col>
              
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">日志描述</span>
-              <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.taskDesc"></v-text-field>
+            <v-col cols="12" sm="12" md="12">
+              <span class="jh-input-label"><span class="red--text">*</span>日志内容
+              <v-textarea :rules="validationRules.requireRules" class="jh-v-input" dense single-line filled v-model="createItem.taskContent"></v-textarea>
             </v-col>
-             
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">日志优先级</span>
-              <v-autocomplete :items="constantObj.taskLevel" class="jh-v-input" dense single-line filled v-model="createItem.taskLevel"></v-autocomplete>
-            </v-col>
-
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">负责人</span>
-              <v-autocomplete :items="userList" class="jh-v-input" item-text="username" item-value="userId" dense single-line filled v-model="createItem.taskManagerId"></v-autocomplete>
-            </v-col>
-             
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">参与人</span>
-              <v-autocomplete multiple :items="userList" class="jh-v-input" item-text="username" item-value="userId" dense single-line filled v-model="createItem.taskMemberIdList"></v-autocomplete>
-            </v-col>
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">日志标签</span>
-              <v-combobox
-                v-model="createItem.taskTag"
-                :items="[]"
-                class="jh-v-input" 
-                multiple
-                chips
-                deletable-chips
-                dense single-line filled
-              ></v-combobox>
-            </v-col>
-             
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">日志开始时间</span>
-              <!-- 时间选择 -->
-              <v-menu ref="taskStartAtMenu" v-model="isTaskStartAtMenuShown" :close-on-content-click="false" :nudge-right="40" :return-value.sync="createItem.taskStartAt" transition="scale-transition" offset-y min-width="auto">
-                <template v-slot:activator="{ on, attrs }">
-                  <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.taskStartAt" v-bind="attrs" v-on="on"></v-text-field>
-                </template>
-                <v-date-picker v-model="createItem.taskStartAt" no-title scrollable>
-                  <v-spacer></v-spacer>
-                  <v-btn text color="primary" @click="isTaskStartAtMenuShown = false">取消</v-btn>
-                  <v-btn text color="primary" @click="$refs.taskStartAtMenu.save(createItem.taskStartAt)">确定</v-btn>
-                </v-date-picker>
-              </v-menu>
-            </v-col>
-             
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">日志结束时间</span>
-              <v-menu ref="taskStartEndMenu" v-model="isTaskEndAtMenuShown" :close-on-content-click="false" :nudge-right="40" :return-value.sync="createItem.taskEndAt" transition="scale-transition" offset-y min-width="auto">
-                <template v-slot:activator="{ on, attrs }">
-                  <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.taskEndAt" v-bind="attrs" v-on="on"></v-text-field>
-                </template>
-                <v-date-picker v-model="createItem.taskEndAt" no-title scrollable>
-                  <v-spacer></v-spacer>
-                  <v-btn text color="primary" @click="isTaskEndAtMenuShown = false">取消</v-btn>
-                  <v-btn text color="primary" @click="$refs.taskStartEndMenu.save(createItem.taskEndAt)">确定</v-btn>
-                </v-date-picker>
-              </v-menu>
-            </v-col>
-            
-            
-            <v-col cols="12" sm="12" md="4"></v-col>
-              <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">日志关联的信息列表</span>
-              <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.taskRelationList"></v-text-field>
-            </v-col>
-             
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">日志关联的附件列表</span>
-              <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.taskFileList"></v-text-field>
-            </v-col>
-             
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">子日志列表todo</span>
-              <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.taskChildList"></v-text-field>
-            </v-col>
-             
           </v-row>
 
           <!-- 抽屉操作按钮 -->
@@ -222,81 +139,10 @@
               <v-text-field :rules="validationRules.requireRules" class="jh-v-input" dense single-line filled v-model="updateItem.taskTitle"></v-text-field>
             </v-col>
              
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">日志描述
-              <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.taskDesc"></v-text-field>
+            <v-col cols="12" sm="12" md="12">
+              <span class="jh-input-label"><span class="red--text">*</span>日志内容
+              <v-textarea :rules="validationRules.requireRules" class="jh-v-input" dense single-line filled v-model="updateItem.taskContent"></v-textarea>
             </v-col>
-             
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">日志优先级</span>
-              <v-autocomplete :items="constantObj.taskLevel" class="jh-v-input" dense single-line filled v-model="updateItem.taskLevel"></v-autocomplete>
-            </v-col>
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">负责人</span>
-              <v-autocomplete :items="userList" class="jh-v-input" item-text="username" item-value="userId" dense single-line filled v-model="updateItem.taskManagerId"></v-autocomplete>
-            </v-col>
-             
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">参与人</span>
-              <v-autocomplete multiple :items="userList" class="jh-v-input" item-text="username" item-value="userId" dense single-line filled v-model="updateItem.taskMemberIdList"></v-autocomplete>
-            </v-col>
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">日志标签</span>
-              <v-combobox
-                v-model="updateItem.taskTag"
-                :items="[]"
-                class="jh-v-input" 
-                multiple
-                chips
-                deletable-chips
-                dense single-line filled
-              ></v-combobox>
-            </v-col>
-     
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">日志开始时间</span>
-              <!-- 时间选择 -->
-              <v-menu ref="taskStartAtMenu" v-model="isTaskStartAtMenuShown" :close-on-content-click="false" :nudge-right="40" :return-value.sync="updateItem.taskStartAt" transition="scale-transition" offset-y min-width="auto">
-                <template v-slot:activator="{ on, attrs }">
-                  <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.taskStartAt" v-bind="attrs" v-on="on"></v-text-field>
-                </template>
-                <v-date-picker v-model="updateItem.taskStartAt" no-title scrollable>
-                  <v-spacer></v-spacer>
-                  <v-btn text color="primary" @click="isTaskStartAtMenuShown = false">取消</v-btn>
-                  <v-btn text color="primary" @click="$refs.taskStartAtMenu.save(updateItem.taskStartAt)">确定</v-btn>
-                </v-date-picker>
-              </v-menu>
-            </v-col>
-             
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">日志结束时间</span>
-              <v-menu ref="taskStartEndMenu" v-model="isTaskEndAtMenuShown" :close-on-content-click="false" :nudge-right="40" :return-value.sync="updateItem.taskEndAt" transition="scale-transition" offset-y min-width="auto">
-                <template v-slot:activator="{ on, attrs }">
-                  <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.taskEndAt" v-bind="attrs" v-on="on"></v-text-field>
-                </template>
-                <v-date-picker v-model="updateItem.taskEndAt" no-title scrollable>
-                  <v-spacer></v-spacer>
-                  <v-btn text color="primary" @click="isTaskEndAtMenuShown = false">取消</v-btn>
-                  <v-btn text color="primary" @click="$refs.taskStartEndMenu.save(updateItem.taskEndAt)">确定</v-btn>
-                </v-date-picker>
-              </v-menu>
-            </v-col>
-            <v-col cols="12" sm="12" md="4"></v-col>
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">日志关联的信息列表</span>
-              <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.taskRelationList"></v-text-field>
-            </v-col>
-             
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">日志关联的附件列表</span>
-              <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.taskFileList"></v-text-field>
-            </v-col>
-             
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">子日志列表todo</span>
-              <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.taskChildList"></v-text-field>
-            </v-col>
-                       
           </v-row>
           <!-- 抽屉操作按钮 -->
           <v-row class="justify-end mx-0 mt-8 px-6">
@@ -338,7 +184,6 @@
 {% block vueScript %}
 
 {% include 'common/jianghuJs/fixedTableHeightV4.html' %}
-{% include 'component/task-filter-btn.html' %}
 {% include 'common/excelUtil.html' %}
 <script type="module">
   new Vue({
@@ -391,18 +236,8 @@
       headers: [
         { text: "日志ID", value: "taskId", width: 120 },
         { text: "日志名称", value: "taskTitle", width: 120 },
-        { text: "日志描述", value: "taskDesc", width: 120 },
-        { text: "日志优先级", value: "taskLevel", width: 120 },
-        { text: "日志标签", value: "taskTag", width: 120 },
-        { text: "日志状态：进行中,已完成,已拒绝", value: "taskStatus", width: 120 },
         { text: "日志内容", value: "taskContent", width: 120 },
-        { text: "日志开始时间", value: "taskStartAt", width: 120 },
-        { text: "日志结束时间", value: "taskEndAt", width: 120 },
-        { text: "负责人", value: "taskManagerId", width: 120 },
-        { text: "参与人", value: "taskMemberIdList", width: 120 },
-        { text: "日志关联的信息列表", value: "taskRelationList", width: 120 },
-        { text: "日志关联的附件列表", value: "taskFileList", width: 120 },
-        { text: "子日志列表todo", value: "taskChildList", width: 120 },
+       
         { text: "操作者", value: "operationByUser", width: 120 },
         { text: "操作时间", value: "operationAt", width: 250 },
         { text: '操作', value: 'action', align: 'center', sortable: false, width: 120, class: 'fixed', cellClass: 'fixed' },
@@ -526,11 +361,7 @@
       // ---------- 新增数据 uiAction >>>>>>>>>> --------
       async prepareCreateFormData() {
         const { userId } = window.userInfo;
-        this.createItem = {
-          taskLevel: null,
-          taskManagerId: userId,
-          taskMemberIdList: [userId],
-        };
+        this.createItem = {};
       },
 
       async openCreateDrawer() {
