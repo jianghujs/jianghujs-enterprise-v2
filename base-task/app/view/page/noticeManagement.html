@@ -41,6 +41,23 @@
           <!-- 新增按钮 -->
           <v-btn color="success" class="elevation-0 mr-2" @click="doUiAction('startCreateItem')" small>新建公告
           </v-btn>
+          <v-menu v-model="isMoreMenuShown" bottom offset-y offset-x>
+            <template v-slot:activator="{ on, attrs }">
+              <!-- icon筛选 -->
+              <v-btn outlined color="success" class="elevation-0 mr-2" v-bind="attrs" v-on="on" small>更多
+                <v-icon size="14">
+                  mdi-chevron-down
+                </v-icon>
+              </v-btn>
+             
+            </template>
+        
+            <v-card class="py-2">
+              <v-list-item @click="doUiAction('updateAllTaskReadStatus')">全部标记为已读</v-list-item>
+              <v-list-item @click="doUiAction('deleteAllTask')">删除全部已读信息</v-list-item>
+            </v-card>
+          </v-menu>
+
           <v-spacer></v-spacer>
           <!-- 搜索过滤 -->
           <v-col cols="12" xs="8" sm="4" md="3" xl="2" class="pa-0 d-flex align-center">
@@ -104,8 +121,8 @@
               <v-text-field :rules="validationRules.requireRules" :rules="validationRules.requireRules" class="jh-v-input" dense single-line filled v-model="createItem.taskTitle"></v-text-field>
             </v-col>
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">通知范围</span>
-              <v-autocomplete multiple :items="userList" class="jh-v-input" item-text="username" item-value="userId" dense single-line filled v-model="createItem.taskMemberIdList"></v-autocomplete>
+              <span class="jh-input-label"><span class="red--text">*</span>通知范围</span>
+              <v-autocomplete :rules="validationRules.requireRules" multiple :items="userList" class="jh-v-input" item-text="username" item-value="userId" dense single-line filled v-model="createItem.taskMemberIdList"></v-autocomplete>
             </v-col>
 
             <v-col cols="12" sm="12" md="12">
@@ -136,10 +153,10 @@
           <v-divider class="jh-divider"></v-divider>
           <!-- 抽屉表单 -->
           <!-- <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.xxxId" :rules="validationRules.requireRules"></v-text-field> -->
-          <v-row class="mt-0 px-4">
+          <div class="mt-0 pa-4">
             <p class="text-h6">{{viewItem.taskTitle}}</p>
             <p>{{viewItem.taskContent}}</p>
-          </v-row>
+          </div>
 
         <!-- 抽屉关闭按钮 -->
         <v-btn elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn" @click="isViewDrawerShown = false">
@@ -215,6 +232,7 @@
       serverSearchInput: {
         taskType: '通知',
         taskReadStatus: '否',
+        taskManagerId: window.userInfo.userId
       },
       searchInput: null,
       isTableLoading: true,
@@ -237,6 +255,8 @@
       userList: [],
       isViewDrawerShown: false,
       viewItem: {},
+
+      isMoreMenuShown: false,
     }),
     watch: {
       isHelpPageDrawerShown(val) {
@@ -277,6 +297,15 @@
             await this.updateTaskReadStatus(uiActionData);
             await this.getTableData();
             break;
+          case 'updateAllTaskReadStatus':
+            await this.updateAllTaskReadStatus(uiActionData);
+            await this.getTableData();
+            break;
+          case 'deleteAllTask':
+            await this.confirmDeleteAllTaskReadDialog();
+            await this.deleteAllTask(uiActionData);
+            await this.getTableData();
+            break;
           default:
             console.error("[doUiAction] uiActionId not find", { uiActionId });
             break;
@@ -295,7 +324,7 @@
         const rows = (await window.jianghuAxios({
           data: {
             appData: {
-              pageId: 'taskManagement',
+              pageId: 'noticeManagement',
               actionId: 'selectItemList',
               actionData: {},
               where: backendSearchData,
@@ -353,18 +382,9 @@
         await window.jianghuAxios({
           data: {
             appData: {
-              pageId: 'taskManagement',
-              actionId: 'insertItem',
-              actionData: {
-                taskType: '通知',
-                ...this.createActionData
-              },
-              bizIdGenerate: {
-                tableName: "task",
-                prefix: "TZ",
-                type: "idSequence",
-                bizId: "taskId",
-              },
+              pageId: 'noticeManagement',
+              actionId: 'addNotice',
+              actionData: this.createActionData,
             }
           }
         })
@@ -391,7 +411,7 @@
         await window.jianghuAxios({
           data: {
             appData: {
-              pageId: 'taskManagement',
+              pageId: 'noticeManagement',
               actionId: 'updateItem',
               actionData: updateItem,
               where: { id }
@@ -400,9 +420,42 @@
         })
       },
       // ---------- <<<<<<<<<<<<< 查看通知 ----------
+      // ---------- 更多操作 >>>>>>>>>>>>> ----------
+      async updateAllTaskReadStatus() {
+        await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'noticeManagement',
+              actionId: 'updateAllNotReadNotice',
+              actionData: {},
+            }
+          }
+        })
+      },
+      async deleteAllTask() {
+        await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'noticeManagement',
+              actionId: 'deleteAllReadNotice',
+            }
+          }
+        })
+        await window.vtoast.success("删除全部已读通知成功");
+      },
+      async confirmDeleteAllTaskReadDialog() {
+        if (await window.confirmDialog({ title: "删除", content: "确定删除已读吗？" }) === false) {
+          throw new Error("[confirmCreateFormDialog] 否");
+        }
+      },
+      // ---------- <<<<<<<<<<<<< 更多操作 ----------
     }
   })
 </script>
 
 <style scoped>
-</style>{% endblock %}
+  .v-btn.filter-btn:not(.v-btn--round).v-size--default {
+    height: auto;
+  }
+</style>
+{% endblock %}
