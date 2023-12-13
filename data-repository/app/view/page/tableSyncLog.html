@@ -156,5 +156,10 @@ new Vue({
 })
 </script>
 
-
+<style scope>
+  /* bugfix：table内容向上滚动时， loading状态条被fixed第一列遮挡 */
+  .v-data-table--fixed-header>.v-data-table__wrapper>table>thead>tr.v-data-table__progress>th{
+    top: 43px;
+  }
+</style>
 {% endblock %}
