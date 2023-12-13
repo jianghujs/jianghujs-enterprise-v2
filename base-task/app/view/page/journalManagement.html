@@ -104,6 +104,10 @@
               <span class="jh-input-label"><span class="red--text">*</span>日志名称</span>
               <v-text-field :rules="validationRules.requireRules" class="jh-v-input" dense single-line filled v-model="createItem.taskTitle"></v-text-field>
             </v-col>
+            <v-col cols="12" sm="12" md="4">
+              <span class="jh-input-label"><span class="red--text">*</span>发给谁</span>
+              <v-autocomplete :rules="validationRules.requireRules" multiple :items="userList" class="jh-v-input" item-text="username" item-value="userId" dense single-line filled v-model="createItem.taskMemberIdList"></v-autocomplete>
+            </v-col>
              
             <v-col cols="12" sm="12" md="12">
               <span class="jh-input-label"><span class="red--text">*</span>日志内容
@@ -138,7 +142,11 @@
               <span class="jh-input-label"><span class="red--text">*</span>日志名称</span>
               <v-text-field :rules="validationRules.requireRules" class="jh-v-input" dense single-line filled v-model="updateItem.taskTitle"></v-text-field>
             </v-col>
-             
+            <v-col cols="12" sm="12" md="4">
+              <span class="jh-input-label"><span class="red--text">*</span>发给谁</span>
+              <v-autocomplete :rules="validationRules.requireRules" multiple :items="userList" class="jh-v-input" item-text="username" item-value="userId" dense single-line filled v-model="updateItem.taskMemberIdList"></v-autocomplete>
+              
+            </v-col>
             <v-col cols="12" sm="12" md="12">
               <span class="jh-input-label"><span class="red--text">*</span>日志内容
               <v-textarea :rules="validationRules.requireRules" class="jh-v-input" dense single-line filled v-model="updateItem.taskContent"></v-textarea>
@@ -225,7 +233,7 @@
       currentSceneId: null,
       serverSearchInput: {
         taskType: '日志',
-        taskManagerId: null,
+        taskManagerId: window.userInfo.userId,
         taskEndAt: null,
         taskLevel: null,
         taskStatus: null,
@@ -237,7 +245,7 @@
         { text: "日志ID", value: "taskId", width: 120 },
         { text: "日志名称", value: "taskTitle", width: 120 },
         { text: "日志内容", value: "taskContent", width: 120 },
-       
+
         { text: "操作者", value: "operationByUser", width: 120 },
         { text: "操作时间", value: "operationAt", width: 250 },
         { text: '操作', value: 'action', align: 'center', sortable: false, width: 120, class: 'fixed', cellClass: 'fixed' },
@@ -342,6 +350,10 @@
             }
           }
         })).data.appData.resultData.rows;
+
+        rows.forEach(row=> {
+          row.taskMemberIdList = (row.taskMemberIdList || '').split(',')
+        })
         this.tableData = rows;
         this.isTableLoading = false;
       },
@@ -383,21 +395,22 @@
 
       prepareDoCreateItem() {
         const { id, ...data } = this.createItem;
+
+        data.taskType = '日志'
+        data.taskManagerId = window.userInfo.userId
+        data.taskMemberIdList = data.taskMemberIdList.join(',')
         this.createActionData = data;
       },
 
       async doCreateItem() {
         await window.jhMask.show();
         await window.vtoast.loading("新增数据");
-        await window.jianghuAxios({
+        const result = await window.jianghuAxios({
           data: {
             appData: {
               pageId: 'taskManagement',
               actionId: 'insertItem',
-              actionData: {
-                taskType: '日志',
-                ...this.createActionData
-              },
+              actionData: this.createActionData,
               bizIdGenerate: {
                 tableName: "task",
                 prefix: "RW",
@@ -406,6 +419,10 @@
               },
             }
           }
+        })
+        await this.addNotice({
+          ...this.createActionData,
+          businessId: result.data.appData.resultData.rows[0]
         })
         await window.jhMask.hide();
         await window.vtoast.success("新增数据成功");
@@ -441,6 +458,7 @@
       async prepareDoUpdateItem() {
         const { id, ...data } = this.updateItem;
         this.updateItemId = id;
+        data.taskMemberIdList = data.taskMemberIdList.join(',')
         this.updateActionData = data;
       },
 
@@ -458,6 +476,7 @@
           }
         })
 
+        await this.addNotice(this.uiActionData)
         await window.jhMask.hide();
         await window.vtoast.success("修改数据成功");
       },
@@ -510,6 +529,17 @@
         };
         excelUtil.exportData(params);
       },
+      async addNotice(item) {
+        await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'noticeManagement',
+              actionId: 'addNotice',
+              actionData: item,
+            }
+          }
+        })
+      }
     }
   })
 </script>

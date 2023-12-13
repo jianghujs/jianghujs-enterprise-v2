@@ -79,6 +79,10 @@
           :class="{'zebraLine': isTableZebraLineShown }"
           fixed-header
           class="jh-fixed-table-height elevation-0 mt-0 mb-xs-4">
+          taskContent
+          <template v-slot:item.taskContent="{ item }">
+            <div v-html="item.taskContent"></div>
+          </template>
           <!-- 表格操作按钮 -->
           <template v-slot:item.action="{ item }">
             <span role="button" class="red--text font-weight-medium font-size-2" @click="doUiAction('deleteItem', item)">
