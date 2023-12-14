@@ -79,7 +79,7 @@
           :class="{'zebraLine': isTableZebraLineShown }"
           fixed-header
           class="jh-fixed-table-height elevation-0 mt-0 mb-xs-4">
-          taskContent
+       
           <template v-slot:item.taskDesc="{ item }">
             <div v-html="item.taskDesc" @click="doUiAction('viewItem', { item })"></div>
           </template>
@@ -149,30 +149,17 @@
       </v-navigation-drawer>
       
 
-      <!-- 查看抽屉 -->
-      <v-navigation-drawer v-if="isViewDrawerShown" v-model="isViewDrawerShown" :permanent="isViewDrawerShown" fixed temporary right width="80%" class="elevation-24">
-          <v-row no-gutters>
-          <span class="text-h7 font-weight-bold pa-4">查看通知</span>
-          </v-row>
-          <v-divider class="jh-divider"></v-divider>
-          <!-- 抽屉表单 -->
-          <!-- <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.xxxId" :rules="validationRules.requireRules"></v-text-field> -->
-          <div class="mt-0 pa-4">
-            <p class="text-h6">{{viewItem.taskTitle}}</p>
-            <p>{{viewItem.taskContent}}</p>
-          </div>
-
-        <!-- 抽屉关闭按钮 -->
-        <v-btn elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn" @click="isViewDrawerShown = false">
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
-      </v-navigation-drawer>
+      
         <!-- 抽屉关闭按钮 -->
         <v-btn elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn" @click="isViewDrawerShown = false">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </v-navigation-drawer>
       <!-- <<<<<<<<<<<<< 页面内容 -->
+
+      <view-journal-detail-drawer ref="journalDetail" />
+      <view-task-detail-drawer ref="taskDetail" />
+      <view-notice-detail-drawer ref="noticeDetail" />
     </div>
 
     <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
@@ -201,6 +188,10 @@
 {% block vueScript %}
 
 {% include 'common/jianghuJs/fixedTableHeightV4.html' %}
+{% include 'component/view-journal-detail-drawer.html' %}
+{% include 'component/view-notice-detail-drawer.html' %}
+{% include 'component/view-task-detail-drawer.html' %}
+
 <script type="module">
   new Vue({
     el: '#app',
@@ -243,7 +234,7 @@
       tableData: [],
       headers: [
         { text: "通知名称", value: "taskTitle", width: 120 },
-        { text: "通知描述", value: "taskDesc", width: 120 },
+        { text: "通知描述", value: "taskDesc", width: 200 },
         { text: "创建时间", value: "taskCreateAt", width: 250 },
         { text: "操作", value: "action", width: 150 },
 
@@ -269,15 +260,18 @@
       },
     },
     async created() {
-      this.getPageParams()
     },
     mounted() {
-      this.doUiAction('getTableData');
-      this.doUiAction('getUserList');
+      this.doUiAction('initPageData');
     },
     methods: {
       async doUiAction(uiActionId, uiActionData) {
         switch (uiActionId) {
+          case 'initPageData':
+            await this.getTableData();
+            await this.getUserList();
+            await this.getPageParams();
+            break;
           case 'getTableData':
             await this.getTableData();
             break;
@@ -304,7 +298,6 @@
           case 'viewItem':
             await this.doViewItem(uiActionData);
             await this.updateTaskReadStatus(uiActionData);
-            await this.getTableData();
             break;
           case 'updateAllTaskReadStatus':
             await this.updateAllTaskReadStatus(uiActionData);
@@ -434,15 +427,16 @@
 
       // ---------- 查看通知 >>>>>>>>>>>>> ----------
       async doViewItem({ item }) {
-        if (item.taskContent.includes('href')) {
+        if ((item.taskContent || '').includes('href')) {
           throw new Error("跳转页面")
         }
-        this.viewItem = item
-        this.isViewDrawerShown = true
+        this.taskId = item.taskBizId
+        await this.open()
       },
       async updateTaskReadStatus({ item }) {
         if (item.taskReadStatus == '是') return;
         await this.updateItem(item.id, { taskReadStatus: '是' })
+        await this.getTableData();
       },
       async updateItem(id, updateItem) {
         await window.jianghuAxios({
@@ -486,17 +480,31 @@
         }
       },
       // ---------- <<<<<<<<<<<<< 更多操作 ----------
-      // 页面参数处理
-      getPageParams() {
+      
+      // ---------- 初始化页面时参数处理 >>>>>>>>>>>>> ----------
+      async getPageParams() {
         var queryString = window.location.search;
         var urlParams = new URLSearchParams(queryString);
         var taskId = urlParams.get('taskId');
+        this.taskId = taskId;
         if (taskId) {
-          this.taskId = taskId;
-          const taskItem = this.tableData.find(item => item.taskId == taskId);
-          this.doUiAction('viewItem', taskItem)
+          await this.open()
+        };
+      },
+      async open() {
+        const taskId = this.taskId
+        // 判断是taskId，弹出不同的抽屉
+        if (taskId.includes('RW')) {
+          this.$refs.taskDetail.doUiAction('open', { taskId })
+        } else if(taskId.includes('SP')) {
+          this.$refs.ticketDetail.doUiAction('open', { taskId })
+        } else if(taskId.includes('RZ')) {
+          this.$refs.journalDetail.doUiAction('open', { taskId })
+        } else if(taskId.includes('TZ')) {
+          this.$refs.noticeDetail.doUiAction('open', { taskId })
         }
       },
+      // ---------- <<<<<<<<<<<<< 初始化页面时参数处理 ----------
     }
   })
 </script>

@@ -338,6 +338,7 @@
         </v-btn>
       </v-navigation-drawer>
       <!-- <<<<<<<<<<<<< 页面内容 -->
+      <view-task-detail-drawer />
     </div>
 
     <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
@@ -369,6 +370,7 @@
 {% include 'component/task-filter-btn.html' %}
 {% include 'component/task-child-list.html' %}
 {% include 'common/excelUtil.html' %}
+{% include 'component/view-task-detail-drawer.html' %}
 <script type="module">
   new Vue({
     el: '#app',
@@ -409,7 +411,7 @@
       currentSceneId: null,
       serverSearchInput: {
         taskType: '任务',
-        taskManagerId: null,
+        taskManagerId: window.userInfo.userId,
         taskEndAt: null,
         taskLevel: null,
         taskStatus: null,
@@ -418,7 +420,7 @@
       isTableLoading: true,
       tableData: [],
       headers: [
-        { text: "任务名称", value: "taskTitle", width: 120 },
+        { text: "任务名称", value: "taskTitle", width: 200 },
         { text: "任务描述", value: "taskDesc", width: 120 },
         { text: "任务优先级", value: "taskLevel", width: 120 },
         { text: "任务标签", value: "taskTag", width: 120 },
@@ -472,7 +474,7 @@
     },
     async created() {
       // 测试代码
-      this.doUiAction('startCreateItem')
+      // this.doUiAction('startCreateItem')
     },
     mounted() {
       this.doUiAction('getTableData');
@@ -585,6 +587,7 @@
           taskManagerId: userId,
           taskMemberIdList: [userId],
           taskChildList: [],
+          taskTitle: `任务${+new Date()}`
         };
       },
 
@@ -610,21 +613,20 @@
 
         data.taskMemberIdList = data.taskMemberIdList.join(',')
         data.taskChildList = JSON.stringify(data.taskChildList)
+        data.taskCreateAt = dayjs().format('YYYY-MM-DD HH:mm:ss')
+        data.taskType = '任务'
         this.createActionData = data;
       },
 
       async doCreateItem() {
         await window.jhMask.show();
         await window.vtoast.loading("新增数据");
-        await window.jianghuAxios({
+        const result = await window.jianghuAxios({
           data: {
             appData: {
               pageId: 'taskManagement',
               actionId: 'insertItem',
-              actionData: {
-                taskType: '任务',
-                ...this.createActionData
-              },
+              actionData: this.createActionData,
               bizIdGenerate: {
                 tableName: "task",
                 prefix: "RW",
@@ -633,6 +635,10 @@
               },
             }
           }
+        })
+        await this.addNotice({
+          ...this.createActionData,
+          rowId: result.data.appData.resultData.rows[0]
         })
         await window.jhMask.hide();
         await window.vtoast.success("新增数据成功");
@@ -686,6 +692,10 @@
           }
         })
 
+        await this.addNotice({
+          rowId: this.updateItemId,
+          ...this.updateActionData
+        })
         await window.jhMask.hide();
         await window.vtoast.success("修改数据成功");
       },
@@ -750,6 +760,19 @@
           }
         })
       },
+      // ---------- 添加通知 >>>>>>>>>>>>> ----------
+      async addNotice(item) {
+        await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'noticeManagement',
+              actionId: 'addNotice',
+              actionData: item,
+            }
+          }
+        })
+      },
+      // ---------- <<<<<<<<<<<<< 添加通知 ----------
     }
   })
 </script>

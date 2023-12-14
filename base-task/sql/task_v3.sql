@@ -46,3 +46,19 @@ CREATE TABLE `notice` (
   `operationAt` varchar(255) DEFAULT NULL COMMENT '操作时间',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='通知表';
+
+
+CREATE TABLE `task_template` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `idSequence` int(11) DEFAULT NULL COMMENT '自增ID;1001++',
+  `taskTemplateId` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '任务模板ID;',
+  `taskTemplateName` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '任务模板名称;',
+  `taskTemplateForm` text COLLATE utf8mb4_bin COMMENT 'form表单;',
+  `taskTemplatePersonList` text COLLATE utf8mb4_bin COMMENT '审批人列表;',
+  `taskTemplateCreateAt` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '任务模板创建时间;',
+  `operation` varchar(255) COLLATE utf8mb4_bin DEFAULT 'insert' COMMENT '操作: insert, update, jhInsert, jhUpdate, jhDelete jhRestore',
+  `operationByUserId` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '操作者userId',
+  `operationByUser` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '操作者用户名',
+  `operationAt` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '操作时间',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=DYNAMIC COMMENT='任务模板表;';

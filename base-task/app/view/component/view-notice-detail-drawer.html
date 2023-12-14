@@ -1,16 +1,15 @@
-<template id="view-journal-detail-drawer">
+<template id="view-notice-detail-drawer">
   <v-navigation-drawer v-model="isDrawerShown" :permanent="isDrawerShown" fixed temporary right width="80%"
     class="elevation-24">
     <!-- 抽屉标题 -->
     <v-row no-gutters>
-      <span class="text-h7 font-weight-bold pa-4">查看日志</span>
+      <span class="text-h7 font-weight-bold pa-4">查看通知</span>
     </v-row>
     <v-divider class="jh-divider"></v-divider>
-
+    <!-- 抽屉表单 -->
     <v-progress-linear v-if="isLoading" indeterminate color="primary"></v-progress-linear>
 
 
-    <!-- 抽屉表单 -->
     <v-row v-else class="mt-0 pa-4">
       <v-col cols="12" sm="12" md="4">
         <span class="jh-input-label grey--text">创建人</span>
@@ -29,6 +28,7 @@
         <div>{{detail.taskContent}}</div>
       </v-col>
     </v-row>
+
     <!-- 抽屉关闭按钮 -->
     <v-btn elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn"
       @click="isDrawerShown = false">
@@ -38,8 +38,8 @@
 </template>
 
 <script type="module">
-  Vue.component("view-journal-detail-drawer", {
-    template: '#view-journal-detail-drawer',
+  Vue.component("view-notice-detail-drawer", {
+    template: '#view-notice-detail-drawer',
     data: () => ({
       isDrawerShown: false,
       detail: {},

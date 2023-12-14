@@ -9,11 +9,10 @@ const actionDataScheme = Object.freeze({
   addNotice: {
     type: 'object',
     additionalProperties: true,
-    required: [ 'taskMemberIdList', 'taskTitle', 'taskContent' ],
+    required: [ 'taskMemberIdList', 'taskTitle' ],
     properties: {
       taskMemberIdList: { type: [ 'string', 'array' ], },
       taskTitle: { type: 'string', },
-      taskContent: { type: 'string', },
     }
   },
 });
@@ -26,6 +25,13 @@ class NoticeService extends Service {
     const { jianghuKnex, knex } = this.app;
     const { username } = this.ctx.userInfo;
     let { rowId, taskMemberIdList, taskTitle, taskContent, taskType, taskDesc } = actionData;
+
+    let taskBizId = null
+    // 根据rowId查task的taskId
+    if (rowId) {
+      const task = await jianghuKnex(tableEnum.task).where({ id: rowId }).first();
+      taskBizId = task.taskId
+    }
     
     // 判断taskMemberIdList是否为数组
     if(!_.isArray(taskMemberIdList)) {
@@ -40,17 +46,18 @@ class NoticeService extends Service {
     idSequence--;
 
     // 判断taskType类型
+    // Tips: 传href就是跳转其他业务页面，不传就是在当前页看
     switch(taskType) {
       case '任务':
-        taskDesc = `${username} 邀请您参与<a target="_blank" href="/task/page/taskManagement?rowId=${rowId}">《${taskTitle}》</a>任务，请及时查看`;
+        taskDesc = `${username} 邀请您参与<a>《${taskTitle}》</a>任务，请及时查看`;
         taskTitle = '任务邀请提醒';
         break;
       case '审批':
-        taskDesc = `${username} 邀请您参与<a target="_blank" href="/task/page/ticketManagement?rowId=${rowId}">《${taskTitle}》</a>审批，请及时查看`;
+        taskDesc = `${username} 邀请您参与<a>《${taskTitle}》</a>审批，请及时查看`;
         taskTitle = '审批邀请提醒';
         break;
       case '日志':
-        taskDesc = `${username} 将<a target="_blank" href="/task/page/journalManagement?rowId=${rowId}">《${taskTitle}》</a>日志发送给您，请及时查看`;
+        taskDesc = `${username} 将<a>《${taskTitle}》</a>日志发送给您，请及时查看`;
         taskTitle = '日志邀请提醒';
         break;
       default:
@@ -63,6 +70,7 @@ class NoticeService extends Service {
 
       idSequence++
       return {
+        taskBizId: taskBizId || `TZ${idSequence}`,
         taskTitle,
         taskContent,
         taskDesc,

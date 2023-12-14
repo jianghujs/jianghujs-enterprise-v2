@@ -1,20 +1,18 @@
-<template id="view-journal-detail-drawer">
+<template id="view-task-detail-drawer">
   <v-navigation-drawer v-model="isDrawerShown" :permanent="isDrawerShown" fixed temporary right width="80%"
     class="elevation-24">
+
     <!-- 抽屉标题 -->
     <v-row no-gutters>
-      <span class="text-h7 font-weight-bold pa-4">查看日志</span>
+      <span class="text-h7 font-weight-bold pa-4">查看任务</span>
     </v-row>
     <v-divider class="jh-divider"></v-divider>
-
     <v-progress-linear v-if="isLoading" indeterminate color="primary"></v-progress-linear>
 
-
-    <!-- 抽屉表单 -->
     <v-row v-else class="mt-0 pa-4">
       <v-col cols="12" sm="12" md="4">
-        <span class="jh-input-label grey--text">创建人</span>
-        <div>{{detail.taskManagerId}}</div>
+        <span class="jh-input-label grey--text">任务名称</span>
+        <div>{{detail.taskTitle}}</div>
       </v-col>
       <v-col cols="12" sm="12" md="4">
         <span class="jh-input-label grey--text">创建时间</span>
@@ -25,8 +23,9 @@
         <div>{{detail.taskMemberIdList}}</div>
       </v-col>
       <v-col cols="12" sm="12" md="12">
-        <span class="jh-input-label grey--text">内容</span>
-        <div>{{detail.taskContent}}</div>
+        <span class="jh-input-label grey--text">子任务</span>
+    
+        <task-child-list readonly :initial-todos="detail.taskChildList"></task-child-list>
       </v-col>
     </v-row>
     <!-- 抽屉关闭按钮 -->
@@ -37,9 +36,11 @@
   </v-navigation-drawer>
 </template>
 
+{% include 'component/task-child-list.html' %}
 <script type="module">
-  Vue.component("view-journal-detail-drawer", {
-    template: '#view-journal-detail-drawer',
+  
+  Vue.component("view-task-detail-drawer", {
+    template: '#view-task-detail-drawer',
     data: () => ({
       isDrawerShown: false,
       detail: {},
@@ -78,7 +79,9 @@
         })).data.appData.resultData.rows;
         this.isLoading = false;
 
-        this.detail = rows[0] || {}
+        const row = rows[0] || {}
+        row.taskChildList = JSON.parse(row.taskChildList || '[]')
+        this.detail = row
       },
     },
   })
