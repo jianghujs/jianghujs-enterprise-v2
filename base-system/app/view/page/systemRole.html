@@ -42,7 +42,7 @@
                     <v-tabs-slider color="success"></v-tabs-slider>
     
                     <v-tab
-                      v-for="item in constantObj.tabList"
+                      v-for="item in tabList"
                       :key="item"
                       class="ml-0"
                     >
@@ -133,7 +133,7 @@
                       <v-col cols="12" v-for="(app, index) in appData" :key="index" class="pa-2">
                         <v-card outlined class="pa-1">
                           <v-row no-gutters>
-                            <v-col cols="12">
+                            <v-col cols="12" class="d-flex align-center">
                               <v-badge
                                 dot
                                 inline
@@ -141,16 +141,26 @@
                               >
                                 <span class="body-2">{{app.appName}}</span> 
                               </v-badge>
-                            </v-col>
-                            <v-col cols="3" v-for="page in app.appPageList.filter(e => !['help', 'login', 'manual'].includes(e.pageId))">
+                              <v-chip x-small>{{app.appId}}</v-chip>
                               <v-checkbox
                                 v-model="activePageList"
-                                :label="page.pageName"
-                                :value="app.appId + '|' + page.pageId"
-                                class="jh-v-input mt-0"
+                                label="管理员"
+                                :value="app.appId + '|*'"
+                                class="jh-v-input mt-0 d-inline-block"
                                 hide-details
                               ></v-checkbox>
                             </v-col>
+                            <template v-if="!activePageList.includes(app.appId + '|*')">
+                              <v-col cols="3" v-for="page in app.appPageList.filter(e => !['help', 'login', 'manual'].includes(e.pageId))">
+                                <v-checkbox
+                                  v-model="activePageList"
+                                  :label="page.pageName"
+                                  :value="app.appId + '|' + page.pageId"
+                                  class="jh-v-input mt-0"
+                                  hide-details
+                                ></v-checkbox>
+                              </v-col>
+                            </template>
                           </v-row>
                         </v-card>
                       </v-col>
@@ -325,12 +335,20 @@ new Vue({
 
     activePageList: [],
   },
+  computed: {
+    tabList() {
+      if (this.activeRole == 'supperAdmin') {
+        return this.constantObj.tabList.slice(0, 1);
+      }
+      return this.constantObj.tabList;
+    }
+  },
   watch: {
     tabActive(val) {
       if (val == 1) {
         this.doUiAction('getUserGroupRolePage');
       }
-    }
+    },
   },
   async created() {
   },
@@ -451,6 +469,9 @@ new Vue({
     changeRole(role) {
       console.log('role', role)
       this.activeRole = role;
+      if (role == 'supperAdmin') {
+        this.tabActive = 0;
+      }
       if (this.tabActive == 1) {
         this.getUserGroupRolePage();
         return;
@@ -588,22 +609,43 @@ new Vue({
       window.location.href = url;
     },
     async doUpdateUserGroupRolePage() {
-      const updateData = this.activePageList.map(e => {
+      const activePageList = this.clearActivePageList();
+      const updateList = [];
+      activePageList.forEach(e => {
         const [appId, pageId] = e.split('|');
-        return {appId, pageId};
+        // 过滤脏数据
+        if (pageId != '*' && !this.appData.find(e => e.appId == appId).appPageList.some(e => e.pageId == pageId)) {
+          return;
+        } 
+        updateList.push({appId, pageId});
       })
+      console.log('updateList', updateList)
       await window.vtoast.loading("正在保存");
       await window.jianghuAxios({
         data: {
           appData: {
             pageId: 'systemRole',
             actionId: 'updateUserGroupRolePage',
-            actionData: {dataList: updateData, role: this.activeRole},
+            actionData: {dataList: updateList, role: this.activeRole},
           }
         }
       })
       await window.vtoast.success("保存成功");
-    }
+    },
+
+    // 如果指定应用存在管理员权限，则删除其他权限
+    clearActivePageList() {
+      const activePageList = this.activePageList.filter(e => e.includes('|*'));
+      const otherPageList = this.activePageList.filter(e => !e.includes('|*'));
+      const otherList = [];
+      otherPageList.forEach(e => {
+        const [appId, pageId] = e.split('|');
+        if (!activePageList.includes(appId + '|*')) {
+          otherList.push(e);
+        }
+      })
+      return [...activePageList, ...otherList];
+    },
   }
 })
 </script>

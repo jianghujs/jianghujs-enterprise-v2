@@ -32,7 +32,7 @@
                 <v-btn color="success" icon x-small>
                   <v-icon @click="doUiAction('startUpdateItem', item)">mdi-note-edit-outline</v-icon>
                 </v-btn>
-                <v-btn color="error" icon x-small class="ml-1">
+                <v-btn color="error" icon x-small class="ml-1" v-if="item.roleId != 'supperAdmin'">
                   <v-icon @click="doUiAction('deleteItem', item)">mdi-trash-can-outline</v-icon>
                 </v-btn>
                 
@@ -113,7 +113,7 @@
              
             <v-col cols="12" sm="12" md="4">
               <span class="jh-input-label">roleId</span>
-              <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.roleId"></v-text-field>
+              <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.roleId" :disabled="updateItem.roleId == 'supperAdmin'"></v-text-field>
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
