@@ -20,7 +20,7 @@ module.exports = appInfo => {
     appTitle: '人资',
     // appLogo: `${appId}/public/logo.png`,
     appLogo: `/${appId}/public/logo.png`,
-    appType: 'single',
+    appType: 'multiApp',
     appDirectoryLink: 'http://127.0.0.1:7273/directory',
     indexPage: `/${appId}/page/workbench`,
     loginPage: `/${appId}/page/login`,
