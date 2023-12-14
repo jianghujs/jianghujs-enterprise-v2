@@ -90,7 +90,7 @@ class UtilService extends Service {
       return;
     }
 
-    const targetTable = `${sourceDatabase}__${sourceTable}`;
+    const targetTable = tableSyncConfig.targetTable || `${sourceDatabase}__${sourceTable}`;
     const DELETETriggerName = `${targetTable}_DELETE`;
     await jianghuKnex.raw(`DROP TRIGGER IF EXISTS ${sourceDatabase}.${DELETETriggerName};`);
     const INSERTTriggerName = `${targetTable}_INSERT`;
@@ -190,7 +190,7 @@ class UtilService extends Service {
     const lastSyncTime = dayjs().format();
     for (const tableSyncConfig of tableSyncConfigList) {
       const {sourceDatabase, sourceTable} = tableSyncConfig;
-      let targetTable = `${sourceDatabase}__${sourceTable}`;
+      let targetTable = tableSyncConfig.targetTable || `${sourceDatabase}__${sourceTable}`;
       if (sourceDatabase.startsWith('{')) {
         const {name} = JSON.parse(sourceDatabase);
         targetTable = `${name.toLowerCase()}__${sourceTable}`;
@@ -233,7 +233,7 @@ class UtilService extends Service {
       let sourceConnection = {...this.app.config.knex.client.connection, database: sourceDatabase};
 
       let outsideMode = false
-      let targetTable = `${sourceDatabase}__${sourceTable}`;
+      let targetTable = tableSyncConfig.targetTable || `${sourceDatabase}__${sourceTable}`;
       let sourceDatabaseInDb = sourceDatabase;
       if (sourceDatabase.startsWith('{')) {
         outsideMode = true
@@ -328,7 +328,7 @@ class UtilService extends Service {
     if (sourceDatabase.startsWith('{')) {
       return;
     }
-    const targetTable = `${sourceDatabase}__${sourceTable}`;
+    const targetTable = tableSyncConfig.targetTable || `${sourceDatabase}__${sourceTable}`;
 
     const columnListSelect = await jianghuKnex('information_schema.COLUMNS')
       .where({TABLE_SCHEMA: sourceDatabase, TABLE_NAME: sourceTable})
