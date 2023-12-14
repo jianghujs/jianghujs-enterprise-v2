@@ -25,6 +25,9 @@ class NoticeService extends Service {
     const { jianghuKnex, knex } = this.app;
     const { username } = this.ctx.userInfo;
     let { rowId, taskMemberIdList, taskTitle, taskContent, taskType, taskDesc } = actionData;
+
+    // 根据rowId查task的taskId
+    const task = await jianghuKnex(tableEnum.task).where({ id: rowId }).first();
     
     // 判断taskMemberIdList是否为数组
     if(!_.isArray(taskMemberIdList)) {
@@ -63,6 +66,7 @@ class NoticeService extends Service {
 
       idSequence++
       return {
+        taskBizId: task.taskId,
         taskTitle,
         taskContent,
         taskDesc,

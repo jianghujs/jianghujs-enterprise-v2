@@ -426,7 +426,7 @@
         if ((item.taskContent || '').includes('href')) {
           throw new Error("跳转页面")
         }
-        await this.open(item)
+        await this.open(item.taskBizId)
       },
       async updateTaskReadStatus({ item }) {
         if (item.taskReadStatus == '是') return;
@@ -480,47 +480,22 @@
       async getPageParams() {
         var queryString = window.location.search;
         var urlParams = new URLSearchParams(queryString);
-        var rowId = urlParams.get('rowId');
-        this.rowId = rowId;
-        if (rowId) {
-          await this.getTaskDetail()
-          await this.open()
+        var taskId = urlParams.get('taskId');
+        this.taskId = taskId;
+        if (taskId) {
+          await this.open(taskId)
         };
       },
-      async getTaskDetail() {
-        const rows = (await window.jianghuAxios({
-          data: {
-            appData: {
-              pageId: 'noticeManagement',
-              actionId: 'selectItemList',
-              actionData: {},
-              where: { id: this.rowId },
-              orderBy: [{ column: 'operationAt', order: 'desc' }]
-            }
-          }
-        })).data.appData.resultData.rows;
-
-        this.rowDetail = rows[0] || {}
-      },
-      async open(item) {
-        if (!item) item = this.rowDetail
-        // 判断是taskType，弹出不同的抽屉
-        const { taskType } = item
-        switch (taskType) {
-          case '任务':
-            this.$refs.taskDetail.doUiAction('open', { item })
-            break;
-          case '审批':
-            this.$refs.ticketDetail.doUiAction('open', { item })
-            break;
-          case '日志':
-            this.$refs.journalDetail.doUiAction('open', { item })
-            break;
-          case '通知':
-            this.$refs.noticeDetail.doUiAction('open', { item })
-            break;
-          default:
-            break;
+      async open(taskId) {
+        // 判断是taskId，弹出不同的抽屉
+        if (taskId.includes('RW')) {
+          this.$refs.taskDetail.doUiAction('open', { taskId })
+        } else if(taskId.includes('SP')) {
+          this.$refs.ticketDetail.doUiAction('open', { taskId })
+        } else if(taskId.includes('RZ')) {
+          this.$refs.journalDetail.doUiAction('open', { taskId })
+        } else if(taskId.includes('TZ')) {
+          this.$refs.noticeDetail.doUiAction('open', { taskId })
         }
       },
       // ---------- <<<<<<<<<<<<< 初始化页面时参数处理 ----------
