@@ -11,7 +11,7 @@ const eggJianghuPath = path.join(eggJianghuPathTemp, '../');
 module.exports = appInfo => {
   assert(appInfo);
 
-  const appId = 'jianghu-hr';
+  const appId = 'hr';
   const uploadDir = path.join(appInfo.baseDir, 'upload');
   const downloadBasePath = `/${appId}/upload`;
 
@@ -21,7 +21,7 @@ module.exports = appInfo => {
     // appLogo: `${appId}/public/logo.png`,
     appLogo: `/${appId}/public/logo.png`,
     appType: 'single',
-    appDirectoryLink: '/',
+    appDirectoryLink: 'http://127.0.0.1:7273/directory',
     indexPage: `/${appId}/page/workbench`,
     loginPage: `/${appId}/page/login`,
     helpPage: `/${appId}/page/help`,

@@ -5,7 +5,7 @@ const path = require('path');
 module.exports = appInfo => {
 
   return {
-    appDirectoryLink: 'http://127.0.0.1:7007/directory',
+    appDirectoryLink: 'http://127.0.0.1:7273/directory',
     static: {
       maxAge: 0,
       buffer: false,

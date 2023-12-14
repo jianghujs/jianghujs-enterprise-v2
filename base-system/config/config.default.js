@@ -9,14 +9,14 @@ const eggJianghuDir = path.join(eggJianghuDirResolve, '../');
 
 module.exports = appInfo => {
 
-  const appId = 'user_app_management';
+  const appId = 'system';
 
   return {
     appId,
     appTitle: '江湖演示-企业级-账号权限管理',
     appLogo: `${appId}/public/img/logo.png`,
     appType: 'multiApp',
-    appDirectoryLink: 'http://127.0.0.1:7007/directory',
+    appDirectoryLink: 'http://127.0.0.1:7273/directory',
     indexPage: `/${appId}/page/appManagement`,
     loginPage: `/${appId}/page/login`,
     helpPage: `/${appId}/page/help`,

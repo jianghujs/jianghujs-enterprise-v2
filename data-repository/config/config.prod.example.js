@@ -6,7 +6,7 @@ module.exports = appInfo => {
 
   return {
     dataSyncStatus: '启用', // 是否启用同步，启用/禁用
-    appDirectoryLink: 'https://panshi.openjianghu.org',
+    appDirectoryLink: 'http://127.0.0.1:7273/directory',
     jiangHuConfig: {
       packageIdCheck: true,
       updateRequestDemoAndResponseDemo: false,
