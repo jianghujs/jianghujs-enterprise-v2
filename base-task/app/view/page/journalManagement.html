@@ -131,9 +131,9 @@
         <v-form ref="updateForm" lazy-validation>
           <!-- 抽屉标题 -->
           <v-row no-gutters>
-<span class="text-h7 font-weight-bold pa-4">修改信息</span>
-</v-row>
-<v-divider class="jh-divider"></v-divider>
+          <span class="text-h7 font-weight-bold pa-4">修改信息</span>
+          </v-row>
+          <v-divider class="jh-divider"></v-divider>
           <!-- 抽屉表单 -->
           <v-row class="mt-0 px-4">
             <!-- <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.xxxId" :rules="validationRules.requireRules"></v-text-field> -->
@@ -164,6 +164,8 @@
         </v-btn>
       </v-navigation-drawer>
       <!-- <<<<<<<<<<<<< 页面内容 -->
+
+      <view-journal-detail-drawer ref="journalDetail" />
     </div>
 
     <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
@@ -193,6 +195,7 @@
 
 {% include 'common/jianghuJs/fixedTableHeightV4.html' %}
 {% include 'common/excelUtil.html' %}
+{% include 'component/view-journal-detail-drawer.html' %}
 <script type="module">
   new Vue({
     el: '#app',
@@ -277,12 +280,15 @@
     async created() {
     },
     mounted() {
-      this.doUiAction('getTableData');
-      this.doUiAction('getUserList');
+      this.doUiAction('initPageData');
     },
     methods: {
       async doUiAction(uiActionId, uiActionData) {
         switch (uiActionId) {
+          case 'initPageData':
+            await this.getTableData();
+            await this.getUserList();
+            break;
           case 'getTableData':
             await this.getTableData();
             break;
@@ -373,7 +379,13 @@
       // ---------- 新增数据 uiAction >>>>>>>>>> --------
       async prepareCreateFormData() {
         const { userId } = window.userInfo;
-        this.createItem = {};
+        // this.createItem = {};
+        // Tips: 测试数据
+        this.createItem = {
+          taskTitle: `日志${+new Date()}`,
+          taskMemberIdList: ['admin'],
+          taskContent: `日志${+new Date()}`,
+        };
       },
 
       async openCreateDrawer() {
@@ -422,7 +434,7 @@
         })
         await this.addNotice({
           ...this.createActionData,
-          businessId: result.data.appData.resultData.rows[0]
+          rowId: result.data.appData.resultData.rows[0]
         })
         await window.jhMask.hide();
         await window.vtoast.success("新增数据成功");
@@ -539,7 +551,7 @@
             }
           }
         })
-      }
+      },
     }
   })
 </script>

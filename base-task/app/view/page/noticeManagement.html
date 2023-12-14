@@ -60,8 +60,8 @@
 
           <v-spacer></v-spacer>
           <!-- 搜索过滤 -->
-          <v-col cols="12" xs="8" sm="4" md="3" xl="2" class="pa-0 d-flex align-center">
-            <v-switch false-value="否" true-value="是" v-model="serverSearchInput.taskReadStatus" color="success" class="jh-v-input mr-3" label="是否显示已读" dense filled single-line @change="doUiAction('getTableData')"></v-switch>
+          <v-col cols="12" xs="8" sm="4" md="4" xl="3" class="pa-0 d-flex align-center">
+            <v-switch false-value="否" true-value="是" v-model="serverSearchInput.taskReadStatus" color="success" class="jh-v-input mr-3" label="显示已读" dense filled single-line @change="doUiAction('getTableData')"></v-switch>
 
             <v-text-field color="success" v-model="searchInput" prefix="搜索：" class="jh-v-input" dense filled single-line></v-text-field>
           </v-col>
@@ -80,18 +80,18 @@
           fixed-header
           class="jh-fixed-table-height elevation-0 mt-0 mb-xs-4">
           taskContent
-          <template v-slot:item.taskContent="{ item }">
-            <div v-html="item.taskContent"></div>
+          <template v-slot:item.taskDesc="{ item }">
+            <div v-html="item.taskDesc" @click="doUiAction('viewItem', { item })"></div>
           </template>
           <!-- 表格操作按钮 -->
           <template v-slot:item.action="{ item }">
-            <span role="button" class="red--text font-weight-medium font-size-2" @click="doUiAction('deleteItem', item)">
+            <span role="button" class="red--text font-weight-medium font-size-2" @click="doUiAction('deleteItem', { item })">
               <v-icon size="16" class="red--text">mdi-trash-can-outline</v-icon>删除
             </span>
           </template>
-          <template v-slot:item.taskTitle="{ item }">
+          <!-- <template v-slot:item.taskTitle="{ item }">
             <a @click="doUiAction('viewItem', { item })">{{item.taskTitle}}</a>
-          </template>
+          </template> -->
           <!-- 没有数据 -->
           <template v-slot:loading>
             <div class="jh-no-data">数据加载中</div>
@@ -243,9 +243,8 @@
       tableData: [],
       headers: [
         { text: "通知名称", value: "taskTitle", width: 120 },
-        { text: "通知内容", value: "taskContent", width: 120 },
-        { text: "操作者", value: "operationByUser", width: 120 },
-        { text: "操作时间", value: "operationAt", width: 250 },
+        { text: "通知描述", value: "taskDesc", width: 120 },
+        { text: "创建时间", value: "taskCreateAt", width: 250 },
         { text: "操作", value: "action", width: 150 },
 
       ],
@@ -270,6 +269,7 @@
       },
     },
     async created() {
+      this.getPageParams()
     },
     mounted() {
       this.doUiAction('getTableData');
@@ -293,6 +293,11 @@
             await this.closeCreateDrawer();
             await this.getTableData();
             break;
+          case 'deleteItem':
+            await this.confirmDeleteDialog();
+            await this.doDeleteItem(uiActionData);
+            await this.getTableData();
+            break;
           case 'getUserList':
             await this.getUserList();
             break;
@@ -306,7 +311,7 @@
             await this.getTableData();
             break;
           case 'deleteAllTask':
-            await this.confirmDeleteAllTaskReadDialog();
+            await this.confirmDeleteDialog();
             await this.deleteAllTask(uiActionData);
             await this.getTableData();
             break;
@@ -355,7 +360,13 @@
 
       // ---------- 新增数据 uiAction >>>>>>>>>> --------
       async prepareCreateFormData() {
-        this.createItem = {};
+        // Tips: 测试数据
+        this.createItem = {
+          taskTitle: `公告${+new Date()}`,
+          taskMemberIdList: ['admin'],
+          taskContent: `公告${+new Date()}`,
+        };
+        // this.createItem = {}
       },
 
       async openCreateDrawer() {
@@ -402,8 +413,30 @@
       },
       // ---------- <<<<<<<<<<< 新增数据 uiAction ---------
 
+      // ---------- 删除通知 >>>>>>>>>>>>> ----------
+      async doDeleteItem( { item }) {
+        const { id } = item;
+        await window.jhMask.show();
+        await window.vtoast.loading("删除数据");
+        await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'noticeManagement',
+              actionId: 'deleteItem',
+              where: { id }
+            }
+          }
+        })
+        await window.jhMask.hide();
+        await window.vtoast.success("删除数据成功");
+      },
+      // ---------- <<<<<<<<<<<<< 删除通知 ----------
+
       // ---------- 查看通知 >>>>>>>>>>>>> ----------
       async doViewItem({ item }) {
+        if (item.taskContent.includes('href')) {
+          throw new Error("跳转页面")
+        }
         this.viewItem = item
         this.isViewDrawerShown = true
       },
@@ -447,12 +480,23 @@
         })
         await window.vtoast.success("删除全部已读通知成功");
       },
-      async confirmDeleteAllTaskReadDialog() {
-        if (await window.confirmDialog({ title: "删除", content: "确定删除已读吗？" }) === false) {
+      async confirmDeleteDialog() {
+        if (await window.confirmDialog({ title: "删除", content: "确定删除吗？" }) === false) {
           throw new Error("[confirmCreateFormDialog] 否");
         }
       },
       // ---------- <<<<<<<<<<<<< 更多操作 ----------
+      // 页面参数处理
+      getPageParams() {
+        var queryString = window.location.search;
+        var urlParams = new URLSearchParams(queryString);
+        var taskId = urlParams.get('taskId');
+        if (taskId) {
+          this.taskId = taskId;
+          const taskItem = this.tableData.find(item => item.taskId == taskId);
+          this.doUiAction('viewItem', taskItem)
+        }
+      },
     }
   })
 </script>

@@ -11,7 +11,7 @@ const actionDataScheme = Object.freeze({
     additionalProperties: true,
     required: [ 'taskMemberIdList', 'taskTitle', 'taskContent' ],
     properties: {
-      taskMemberIdList: { type: 'string', },
+      taskMemberIdList: { type: [ 'string', 'array' ], },
       taskTitle: { type: 'string', },
       taskContent: { type: 'string', },
     }
@@ -25,9 +25,13 @@ class NoticeService extends Service {
 
     const { jianghuKnex, knex } = this.app;
     const { username } = this.ctx.userInfo;
-    let { taskMemberIdList, taskTitle, taskContent, taskType } = actionData;
+    let { rowId, taskMemberIdList, taskTitle, taskContent, taskType, taskDesc } = actionData;
+    
+    // 判断taskMemberIdList是否为数组
+    if(!_.isArray(taskMemberIdList)) {
+      taskMemberIdList = taskMemberIdList.split(',')
+    }
 
-    taskMemberIdList = taskMemberIdList.split(',')
     let idSequence = await idGenerateUtil.idPlus({
       knex,
       tableName: 'task',
@@ -38,19 +42,19 @@ class NoticeService extends Service {
     // 判断taskType类型
     switch(taskType) {
       case '任务':
-        taskContent = `${username}邀请您参与<a href="">《${taskTitle}》</a>任务，请及时查看`;
+        taskDesc = `${username} 邀请您参与<a target="_blank" href="/task/page/taskManagement?rowId=${rowId}">《${taskTitle}》</a>任务，请及时查看`;
         taskTitle = '任务邀请提醒';
         break;
       case '审批':
-        taskContent = `${username}邀请您参与<a href="">《${taskTitle}》</a>审批，请及时查看`;
+        taskDesc = `${username} 邀请您参与<a target="_blank" href="/task/page/ticketManagement?rowId=${rowId}">《${taskTitle}》</a>审批，请及时查看`;
         taskTitle = '审批邀请提醒';
         break;
       case '日志':
-        taskContent = `${username}邀请您参与<a href="">《${taskTitle}》</a>日志，请及时查看`;
+        taskDesc = `${username} 将<a target="_blank" href="/task/page/journalManagement?rowId=${rowId}">《${taskTitle}》</a>日志发送给您，请及时查看`;
         taskTitle = '日志邀请提醒';
         break;
       default:
-        taskContent = `有一个新公告 《${taskTitle}》 ，请及时查看，请及时查看`;
+        taskDesc = `有一个新公告 <a>《${taskTitle}》</a> ，请及时查看`;
         taskTitle = '公告提醒';
         break;
     }
@@ -61,6 +65,7 @@ class NoticeService extends Service {
       return {
         taskTitle,
         taskContent,
+        taskDesc,
         taskManagerId: item,
         idSequence,
         taskType: '通知',
