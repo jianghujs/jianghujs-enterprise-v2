@@ -13,7 +13,7 @@ module.exports = appInfo => {
 
   return {
     appId,
-    appTitle: '企业级-数据中心管理',
+    appTitle: '数据中心',
     appLogo: `${appId}/public/img/logo.png`,
     appType: 'single', // single: 单应用; multiApp: 多应用
     appDirectoryLink: 'http://127.0.0.1:7273/directory',

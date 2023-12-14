@@ -13,7 +13,7 @@ module.exports = appInfo => {
 
   return {
     appId,
-    appTitle: '江湖演示-企业级-账号权限管理',
+    appTitle: '系统管理',
     appLogo: `${appId}/public/img/logo.png`,
     appType: 'multiApp',
     appDirectoryLink: 'http://127.0.0.1:7273/directory',

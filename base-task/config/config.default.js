@@ -15,7 +15,7 @@ module.exports = appInfo => {
   return {
     appId,
     projectId,
-    appTitle: '江湖演示-企业级-办公应用',
+    appTitle: '办公应用',
     appLogo: `${appId}/public/img/logo.png`,
     appType: 'multiApp',
     appDirectoryLink: null,
