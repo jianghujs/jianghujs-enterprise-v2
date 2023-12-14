@@ -1,52 +1,52 @@
 'use strict';
 
 const path = require('path');
+const assert = require('assert');
 
 const { middleware, middlewareMatch } = require('@jianghujs/jianghu/config/middlewareConfig');
 
-const eggJianghuDirResolve = require.resolve('@jianghujs/jianghu');
-const eggJianghuDir = path.join(eggJianghuDirResolve, '../');
+const eggJianghuPathTemp = require.resolve('@jianghujs/jianghu');
+const eggJianghuPath = path.join(eggJianghuPathTemp, '../');
 
 module.exports = appInfo => {
+  assert(appInfo);
 
-  const appId = 'system';
+  const appId = 'bi';
+  const uploadDir = path.join(appInfo.baseDir, 'upload');
+  const downloadBasePath = `/${appId}/upload`;
 
   return {
     appId,
-    appTitle: '系统管理',
+    appTitle: '数据统计',
     appLogo: `${appId}/public/img/logo.png`,
-    appType: 'multiApp',
-    appDirectoryLink: 'http://127.0.0.1:7273/directory',
-    indexPage: `/${appId}/page/appManagement`,
+    appType: 'single',
+    appDirectoryLink: '/',
+    indexPage: `/${appId}/page/studentManagement`,
     loginPage: `/${appId}/page/login`,
     helpPage: `/${appId}/page/help`,
-
-    uploadDir: path.join(appInfo.baseDir, 'upload'),
-    downloadBasePath: `/${appId}/upload`,
-
+    uploadDir,
+    downloadBasePath,
     primaryColor: "#4caf50",
     primaryColorA80: "#EEF7EE",
-
     static: {
-      dynamic: true,
+      maxAge: 0,
+      buffer: false,
       preload: false,
-      maxAge: 31536000,
-      buffer: true,
+      maxFiles: 0,
       dir: [
         { prefix: `/${appId}/public/`, dir: path.join(appInfo.baseDir, 'app/public') },
-        { prefix: `/${appId}/public/`, dir: path.join(eggJianghuDir, 'app/public') },
+        { prefix: `/${appId}/public/`, dir: path.join(eggJianghuPath, 'app/public') },
+        { prefix: `/${appId}/upload/`, dir: uploadDir },
       ],
     },
-
     view: {
       defaultViewEngine: 'nunjucks',
       mapping: { '.html': 'nunjucks' },
       root: [
         path.join(appInfo.baseDir, 'app/view'),
-        path.join(eggJianghuDir, 'app/view'),
+        path.join(eggJianghuPath, 'app/view'),
       ].join(','),
     },
-
     middleware,
     ...middlewareMatch,
   };

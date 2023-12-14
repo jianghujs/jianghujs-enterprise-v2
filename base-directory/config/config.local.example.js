@@ -5,7 +5,7 @@ const path = require('path');
 module.exports = appInfo => {
 
   return {
-    appDirectoryLink: 'http://127.0.0.1:7007/directory',
+    appDirectoryLink: 'http://127.0.0.1:7273/directory',
     debug: true,
     jiangHuConfig: {
       packageIdCheck: false,
@@ -28,7 +28,7 @@ module.exports = appInfo => {
           port: 3306,
           user: 'root',
           password: '123456',
-          database: 'jh_enterprise_v2_base',
+          database: 'jh_enterprise_v2_directory',
         },
         pool: { min: 0, max: 100 },
         acquireConnectionTimeout: 30000,

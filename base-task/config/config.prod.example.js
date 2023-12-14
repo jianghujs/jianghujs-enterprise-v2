@@ -5,7 +5,7 @@ const path = require('path');
 module.exports = appInfo => {
 
   return {
-    appDirectoryLink: 'https://panshi.openjianghu.org',
+    appDirectoryLink: 'http://127.0.0.1:7273/directory',
     jiangHuConfig: {
       packageIdCheck: true,
       updateRequestDemoAndResponseDemo: false,
@@ -18,7 +18,7 @@ module.exports = appInfo => {
           port: '3306',
           user: 'root',
           password: '123456',
-          database: 'jianghujs_enterprise_task',
+          database: 'jh_enterprise_v2_task',
         },
         pool: { min: 0, max: 100 },
         acquireConnectionTimeout: 30000,

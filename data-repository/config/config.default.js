@@ -9,14 +9,14 @@ const eggJianghuDir = path.join(eggJianghuDirResolve, '../');
 
 module.exports = appInfo => {
 
-  const appId = 'data_repository';
+  const appId = 'data-repository';
 
   return {
     appId,
-    appTitle: '江湖演示-企业级-数据中心管理',
+    appTitle: '数据中心',
     appLogo: `${appId}/public/img/logo.png`,
     appType: 'single', // single: 单应用; multiApp: 多应用
-    appDirectoryLink: 'http://127.0.0.1:7007/directory',
+    appDirectoryLink: 'http://127.0.0.1:7273/directory',
     indexPage: `/${appId}/page/tableSyncConfig`,
     loginPage: `/${appId}/page/login`,
     helpPage: `/${appId}/page/help`,

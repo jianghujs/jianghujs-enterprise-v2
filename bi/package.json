@@ -1,5 +1,5 @@
 {
-  "name": "jianghujs_enterprise_work",
+  "name": "jianghujs-1table-crud",
   "version": "1.0.0",
   "description": "",
   "private": true,
@@ -10,11 +10,10 @@
   "dependencies": {
     "@jianghujs/jianghu": "5.0.6",
     "dayjs": "1.11.0",
-    "dotenv": "^16.3.1",
     "egg": "^2.15.1",
     "egg-scripts": "^2.11.0",
     "lodash": "4.17.21",
-    "md5-node": "^1.0.1"
+    "node-xlsx": "^0.21.0"
   },
   "devDependencies": {
     "autod": "^3.0.1",
@@ -25,21 +24,12 @@
   "engines": {
     "node": ">=10.0.0"
   },
-  "scripts": {
-    "start": "egg-scripts start --workers=2 --daemon  --port=7274 --title=jh-enterprise-v2-directory",
-    "stop": "egg-scripts stop --title=jh-enterprise-v2-directory",
-    "dev": "egg-bin dev --port=7274",
+  "scripts": { 
+    "start": "egg-scripts start --workers=2 --daemon --port=7201 --title=jh-enterprise-v2-bi",
+    "stop": "egg-scripts stop --title=jh-enterprise-v2-bi",
+    "dev": "egg-bin dev --port=7201",
     "debug": "egg-bin debug",
-    "test": "npm run lint -- --fix && npm run test-local",
-    "test-local": "egg-bin test",
-    "cov": "egg-bin cov",
-    "lint": "eslint .",
-    "ci": "npm run lint && npm run cov",
     "autod": "autod"
-  },
-  "repository": {
-    "type": "git",
-    "url": ""
   },
   "author": "",
   "license": "Apache-2.0"

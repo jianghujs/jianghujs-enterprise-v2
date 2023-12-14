@@ -8,7 +8,7 @@
     "framework": "@jianghujs/jianghu"
   },
   "dependencies": {
-    "@jianghujs/jianghu": "4.1.0",
+    "@jianghujs/jianghu": "5.0.6",
     "dayjs": "1.11.0",
     "egg": "^2.15.1",
     "egg-scripts": "^2.11.0",
@@ -31,9 +31,9 @@
     "node": ">=10.0.0"
   },
   "scripts": {
-    "start": "egg-scripts start --workers=2 --daemon  --port=7303 --title=jianghu-hr",
-    "stop": "egg-scripts stop --title=jianghu-hr",
-    "dev": "egg-bin dev --port=7303",
+    "start": "egg-scripts start --workers=2 --daemon  --port=7276 --title=jh-enterprise-v2-hr",
+    "stop": "egg-scripts stop --title=jh-enterprise-v2-hr",
+    "dev": "egg-bin dev --port=7276",
     "debug": "egg-bin debug",
     "test": "npm run lint -- --fix && npm run test-local",
     "test-local": "egg-bin test",
