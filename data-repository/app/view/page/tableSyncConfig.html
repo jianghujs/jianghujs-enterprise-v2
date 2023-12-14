@@ -142,7 +142,7 @@
               </v-col>
               <v-col cols="12" sm="12" md="6">
                 <span class="jh-input-label">同步-目标表<span class="red--text text--accent-2 ml-1"></span></span>
-                <v-text-field class="jh-v-input" :placeholder="`${createItem.sourceDatabase}_${createItem.sourceTable}`" dense single-line filled v-model="createItem.targetTable"></v-text-field>
+                <v-text-field class="jh-v-input" :placeholder="`${createItem.sourceDatabase}__${createItem.sourceTable}`" dense single-line filled v-model="createItem.targetTable"></v-text-field>
               </v-col>
               <v-col cols="12" class="pa-0"></v-col>
               <v-col cols="12" sm="12" md="4">
@@ -188,7 +188,7 @@
               </v-col>
               <v-col cols="12" sm="12" md="6">
                 <span class="jh-input-label">同步-目标表<span class="red--text text--accent-2 ml-1"></span></span>
-                <v-text-field class="jh-v-input" :placeholder="`${updateItem.sourceDatabase}_${updateItem.sourceTable}`" dense single-line filled v-model="updateItem.targetTable"></v-text-field>
+                <v-text-field class="jh-v-input" :placeholder="`${updateItem.sourceDatabase}__${updateItem.sourceTable}`" dense single-line filled v-model="updateItem.targetTable"></v-text-field>
               </v-col>
               <v-col cols="12" class="pa-0"></v-col>
               <v-col cols="12" sm="12" md="4">
@@ -451,7 +451,7 @@ new Vue({
     prepareDoCreateItem() {
       const {id, ...data} = this.createItem;
       if (!data.targetTable){
-        data.targetTable = `${data.sourceDatabase}_${data.sourceTable}`;
+        data.targetTable = `${data.sourceDatabase}__${data.sourceTable}`;
       }
       this.createActionData = data;
     },
@@ -502,7 +502,7 @@ new Vue({
     async prepareDoUpdateItem() {
       const {id, ...data} = this.updateItem;
       if (!data.targetTable){
-        data.targetTable = `${data.sourceDatabase}_${data.sourceTable}`;
+        data.targetTable = `${data.sourceDatabase}__${data.sourceTable}`;
       }
       this.updateItemId = id;
       this.updateActionData = data;

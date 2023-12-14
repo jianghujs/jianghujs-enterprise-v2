@@ -405,6 +405,7 @@ class UtilService extends Service {
     // 过滤 knex 连接失败的外部表同步配置
     tableSyncConfigList = tableSyncConfigList.filter(o => !o.sourceDatabase.startsWith('{') || outsideKnexMap[o.sourceDatabase])
     tableSyncConfigList = await this.tableExistCheck({tableSyncConfigList, allTableMap, targetDatabase});
+    tableSyncConfigList.forEach(o => o.targetTable = o.targetTable || `${o.sourceDatabase}__${o.sourceTable}`);
 
     const triggerList = await jianghuKnex('information_schema.triggers')
       .whereNotIn('TRIGGER_SCHEMA', ['sys'])
@@ -415,7 +416,7 @@ class UtilService extends Service {
         TRIGGER_SCHEMA: sourceDatabase,
         TRIGGER_NAME: triggerName, EVENT_MANIPULATION: triggerEvent,
       } = trigger;
-      const tableSyncConfigExist = tableSyncConfigList.find(item => triggerName === `${item.sourceDatabase}__${item.sourceTable}_${triggerEvent}`);
+      const tableSyncConfigExist = tableSyncConfigList.find(item => triggerName === `${item.targetTable}_${triggerEvent}`);
       if (!tableSyncConfigExist) {
         await jianghuKnex.raw(`DROP TRIGGER IF EXISTS ${sourceDatabase}.${triggerName};`);
         logger.warn(`[${triggerName}]`, '无用的mysql trigger, 执行删除逻辑;');
