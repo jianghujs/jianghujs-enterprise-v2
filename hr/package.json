@@ -31,9 +31,9 @@
     "node": ">=10.0.0"
   },
   "scripts": {
-    "start": "egg-scripts start --workers=2 --daemon  --port=7303 --title=jianghu-hr",
-    "stop": "egg-scripts stop --title=jianghu-hr",
-    "dev": "egg-bin dev --port=7303",
+    "start": "egg-scripts start --workers=2 --daemon  --port=7276 --title=jh-enterprise-v2--hr",
+    "stop": "egg-scripts stop --title=jh-enterprise-v2--hr",
+    "dev": "egg-bin dev --port=7276",
     "debug": "egg-bin debug",
     "test": "npm run lint -- --fix && npm run test-local",
     "test-local": "egg-bin test",

@@ -25,9 +25,9 @@
     "node": ">=10.0.0"
   },
   "scripts": {
-    "start": "egg-scripts start --workers=2 --daemon  --port=7261 --title=jianghujs-enterprise-data_repository",
-    "stop": "egg-scripts stop --title=jianghujs-enterprise-data_repository",
-    "dev": "egg-bin dev --port=7261",
+    "start": "egg-scripts start --workers=2 --daemon  --port=7271 --title=jh-enterprise-v2-data-repository",
+    "stop": "egg-scripts stop --title=jh-enterprise-v2-data-repository",
+    "dev": "egg-bin dev --port=7271",
     "debug": "egg-bin debug",
     "test": "npm run lint -- --fix && npm run test-local",
     "test-local": "egg-bin test",
