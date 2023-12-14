@@ -409,6 +409,7 @@
         const { id, ...data } = this.createItem;
 
         data.taskType = '日志'
+        data.taskCreateAt = dayjs().format('YYYY-MM-DD HH:mm:ss')
         data.taskManagerId = window.userInfo.userId
         data.taskMemberIdList = data.taskMemberIdList.join(',')
         this.createActionData = data;

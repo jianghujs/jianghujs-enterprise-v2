@@ -262,12 +262,16 @@
     async created() {
     },
     mounted() {
-      this.doUiAction('getTableData');
-      this.doUiAction('getUserList');
+      this.doUiAction('initPageData');
     },
     methods: {
       async doUiAction(uiActionId, uiActionData) {
         switch (uiActionId) {
+          case 'initPageData':
+            await this.getTableData();
+            await this.getUserList();
+            await this.getPageParams();
+            break;
           case 'getTableData':
             await this.getTableData();
             break;
@@ -426,7 +430,8 @@
         if ((item.taskContent || '').includes('href')) {
           throw new Error("跳转页面")
         }
-        await this.open(item.taskBizId)
+        this.taskId = item.taskBizId
+        await this.open()
       },
       async updateTaskReadStatus({ item }) {
         if (item.taskReadStatus == '是') return;
@@ -483,10 +488,11 @@
         var taskId = urlParams.get('taskId');
         this.taskId = taskId;
         if (taskId) {
-          await this.open(taskId)
+          await this.open()
         };
       },
-      async open(taskId) {
+      async open() {
+        const taskId = this.taskId
         // 判断是taskId，弹出不同的抽屉
         if (taskId.includes('RW')) {
           this.$refs.taskDetail.doUiAction('open', { taskId })

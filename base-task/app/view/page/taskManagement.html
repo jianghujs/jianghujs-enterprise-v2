@@ -613,6 +613,7 @@
 
         data.taskMemberIdList = data.taskMemberIdList.join(',')
         data.taskChildList = JSON.stringify(data.taskChildList)
+        data.taskCreateAt = dayjs().format('YYYY-MM-DD HH:mm:ss')
         data.taskType = '任务'
         this.createActionData = data;
       },

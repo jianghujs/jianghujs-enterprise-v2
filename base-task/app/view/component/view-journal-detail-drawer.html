@@ -6,30 +6,29 @@
       <span class="text-h7 font-weight-bold pa-4">查看日志</span>
     </v-row>
     <v-divider class="jh-divider"></v-divider>
-    
+
     <v-progress-linear v-if="isLoading" indeterminate color="primary"></v-progress-linear>
-    
-    <v-form v-else ref="updateForm" lazy-validation>
-      <!-- 抽屉表单 -->
-      <v-row class="mt-0 px-4">
-        <!-- <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.xxxId" :rules="validationRules.requireRules"></v-text-field> -->
 
-        <v-col cols="12" sm="12" md="4">
-          <span class="jh-input-label"><span class="red--text">*</span>日志名称</span>
-          <v-text-field class="jh-v-input" dense single-line filled v-model="detail.taskTitle" readonly></v-text-field>
-        </v-col>
-        <v-col cols="12" sm="12" md="4">
-          <span class="jh-input-label"><span class="red--text">*</span>发给谁</span>
-          <v-text-field class="jh-v-input" dense single-line filled v-model="detail.taskMemberIdList"
-            readonly></v-text-field>
 
-        </v-col>
-        <v-col cols="12" sm="12" md="12">
-          <span class="jh-input-label"><span class="red--text">*</span>日志内容
-            <v-textarea class="jh-v-input" dense single-line filled v-model="detail.taskContent" readonly></v-textarea>
-        </v-col>
-      </v-row>
-    </v-form>
+    <!-- 抽屉表单 -->
+    <v-row v-else class="mt-0 pa-4">
+      <v-col cols="12" sm="12" md="4">
+        <span class="jh-input-label grey--text">创建人</span>
+        <div>{{detail.taskManagerId}}</div>
+      </v-col>
+      <v-col cols="12" sm="12" md="4">
+        <span class="jh-input-label grey--text">创建时间</span>
+        <div>{{detail.taskCreateAt}}</div>
+      </v-col>
+      <v-col cols="12" sm="12" md="4">
+        <span class="jh-input-label grey--text">发给谁</span>
+        <div>{{detail.taskMemberIdList}}</div>
+      </v-col>
+      <v-col cols="12" sm="12" md="12">
+        <span class="jh-input-label grey--text">内容</span>
+        <div>{{detail.taskContent}}</div>
+      </v-col>
+    </v-row>
     <!-- 抽屉关闭按钮 -->
     <v-btn elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn"
       @click="isDrawerShown = false">
