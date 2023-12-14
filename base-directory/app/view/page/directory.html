@@ -28,18 +28,18 @@
                 <!-- 目录 -->
                 <v-col cols="12" xs="12" sm="4" md="3" xl="2" class="pr-sm-2">
                   <v-card flat class="pa-6 jh-directory-card">
-                    <div class="jh-card-body">
+                    <div class="jh-card-body px-6 px-sm-0">
                       <v-skeleton-loader
                         type="list-item-three-line, list-item-three-line, list-item-three-line"
                         v-if="isDirectoryLoading"
                       ></v-skeleton-loader>
                       <template v-else>
                         <div class="d-flex align-center">
-                          <span class="font-weight-medium text-subtitle-2">目录</span>
+                          <span class="font-weight-medium text-subtitle-1">目录</span>
                         </div>
                         <div class="mt-4">
-                          <div class="mb-2" v-for="(value, key) in directoryList" :key="key">
-                            <a class="text--secondary jh-font-size-14 text-decoration-none" :href="`#${value[0].appGroupName}-${key}`">{{value[0].appGroupName}}</a>
+                          <div class="mb-2" v-for="(value, index) in directoryList" :key="index">
+                            <a class="jh-font-size-14 text-decoration-none" :class="activeDirectory === value[0].appGroupName ? 'success--text' : 'text--secondary'" :href="`#${value[0].appGroupName}`" @click="activeDirectory = value[0].appGroupName">{{value[0].appGroupName}}</a>
                           </div> 
                         </div>
                       </template>
@@ -50,22 +50,42 @@
                 <!-- 应用 -->
                 <v-col cols="12" xs="12" sm="8" md="9" xl="10">
                   <v-card flat class="pa-6 jh-list-card">
-                    <div class="jh-card-body">
+                    <div class="jh-card-body px-6 px-sm-0">
                       <v-skeleton-loader
                         type="list-item-three-line, list-item-three-line, list-item-three-line"
                         v-if="isDirectoryLoading"
                       ></v-skeleton-loader>
                       <template v-else>
-                        <div class="mb-6" v-for="(value, key) in directoryList" :key="key">
-                          <div class="font-weight-medium text-subtitle-1 mb-1" :id="`${value[0].appGroupName}-${key}`">{{value[0].appGroupName}}</div>
+                        <div class="mb-6" v-for="(value, index) in directoryList" :key="index">
+                          <div class="font-weight-medium text-subtitle-1 mb-1" :id="`${value[0].appGroupName}`">{{value[0].appGroupName}}</div>
                           <v-row dense>
-                            <v-col cols="3" xs="12"
+                            <v-col cols="12" xs="12" sm="12" md="4" xl="3"
                               v-for="(item, i) in value"  
                               :key="item.appId + '-' + item.loginId + '-' + item.appGroupNumber + '-' + item.appGroupItemSort + '-' + i"
-                              @click="doUiAction('jump', item.url)">
+                             >
                               <v-card class="rounded-lg pa-4 jh-app-card" role="button">
-                                <div class="font-weight-medium text-subtitle-2">{{item.displayName}}</div>
-                                <div class="text--secondary jh-font-size-13 mt-2">{{item.description}}</div>
+                                <div class="px-4 px-sm-0">
+                                  <div class="d-flex align-center justify-space-between">
+                                    <div class="d-flex align-center" @click="item.childPage.length === 0 && doUiAction('jump', item.url)">
+                                      <!-- icon -->
+                                      <div class="jh-app-icon">
+                                        <div v-if="item.appIcon" v-html='item.appIcon'></div>
+                                        <svg v-else t="1702548638970" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="13380" width="200" height="200"><path d="M864 144.014222H559.985778a16.042667 16.042667 0 0 0-15.985778 15.985778v304.014222c0 8.789333 7.196444 15.985778 16.014222 15.985778h303.985778c8.817778 0 16.014222-7.196444 16.014222-16.014222V160.028444a16.042667 16.042667 0 0 0-16.014222-16.014222z m0 399.985778H559.985778a16.042667 16.042667 0 0 0-15.985778 16.014222v303.985778c0 8.817778 7.196444 16.014222 16.014222 16.014222h303.985778c8.817778 0 16.014222-7.224889 16.014222-16.014222V559.985778a16.042667 16.042667 0 0 0-16.014222-15.985778zM463.985778 143.985778H160.028444a16.042667 16.042667 0 0 0-16.014222 16.014222v304.014222c0 8.789333 7.224889 15.985778 16.014222 15.985778h304.014223c8.789333 0 15.985778-7.196444 15.985777-16.014222V160.028444a16.042667 16.042667 0 0 0-16.014222-16.014222z m0 400.014222H160.028444a16.042667 16.042667 0 0 0-16.014222 16.014222v303.985778c0 8.817778 7.224889 16.014222 16.014222 16.014222h304.014223c8.789333 0 15.985778-7.224889 15.985777-16.014222V559.985778a16.042667 16.042667 0 0 0-16.014222-15.985778z" fill="#333333" fill-opacity=".65" p-id="13381"></path></svg>
+                                      </div>
+                                      <!-- app name -->
+                                      <div class="font-weight-medium text-subtitle-2 mx-3">{{item.displayName}}</div>
+                                    </div>
+                                    <!-- 展开收起 -->
+                                    <template v-if="item.childPage.length > 0">
+                                      <v-icon size="16" class="success--text" v-if="!_.includes(expandApp, item.appId)" @click="doUiAction('changeExpandApp', { item, actionType: 'expand' })">mdi-plus</v-icon>
+                                      <v-icon size="16" class="success--text" v-else @click="doUiAction('changeExpandApp', { item, actionType: 'collapse' })">mdi-minus</v-icon>
+                                    </template>
+                                  </div>
+                                  <!-- 子页面 -->
+                                  <div class="mt-2" v-if="_.includes(expandApp, item.appId)">
+                                    <div v-for="(childPage, childIndex) in item.childPage"  key="childIndex" class="text--secondary jh-font-size-13 text-truncate mb-1"  @click="doUiAction('jump', childPage.url)"><span>{{childPage.displayName}}</span></div>
+                                  </div>
+                                </div>
                               </v-card>
                             </v-col>
                           </v-row> 
@@ -114,7 +134,8 @@
       
       isDirectoryLoading: true,
       directoryList: null,
-      selectedUrlItem: null,
+      activeDirectory: null,
+      expandApp: []
     },
     computed: { },
     watch: { },
@@ -127,6 +148,9 @@
         switch(uiActionId){
           case 'getTableData':
             await this.getTableData();
+            break;
+          case 'changeExpandApp':
+            await this.changeExpandApp(uiActionData);
             break;
           case 'jump':
             await this.jump(uiActionData);
@@ -151,12 +175,29 @@
             }
           }
         });
-        this.directoryList = _
-        .chain(result.data.appData.resultData.rows)
-        .sortBy('appGroupItemSort')
-        .groupBy('appGroupNumber')
-        .value();
+
+        const data = result.data.appData.resultData.rows;
+        const groupData = _.chain(data).sortBy('appGroupNumber').groupBy('appGroupName').value();
+        this.directoryList = _.map(groupData, value => {
+          const appGroup = _.chain(value).groupBy('appId').value();
+          return _.sortBy(_.map(appGroup, list => {
+            return {
+              ...list[0],
+              childPage: list.slice(1)
+            }
+          }), 'appGroupItemSort')
+        })
+        this.expandApp = _.uniq(_.map(data, 'appId'));
+
         this.isDirectoryLoading = false;
+      },
+      changeExpandApp(funObj){
+        const { item, actionType } = funObj;
+        if(actionType === 'collapse'){
+          this.expandApp.splice(_.indexOf(this.expandApp, item.appId), 1)
+        }else if(actionType === 'expand'){
+          this.expandApp.push(item.appId);
+        }
       },
       jump(url) {
         window.open(url);
@@ -170,12 +211,7 @@
     min-height: calc(100vh - 151px);
   }
   .jh-directory-card{
-    height: calc(100vh - 92px);
     border-right: 1px solid #F4F5F6 !important;
-  }
-  .jh-list-card{
-    height: calc(100vh - 92px);
-    min-height: calc(100vh - 92px);
   }
   .jh-card-body{
     height: calc(100vh - 167px);
@@ -183,5 +219,20 @@
   .jh-app-card{
     box-shadow: 0 1px 20px 0 rgb(0 0 0 / 3%) !important;
   }
+  .jh-app-icon svg{
+    width: 30px;
+    height: 30px;
+  }
+
+  /* 移动端适配 >>>>>>>>>>>>> */
+  @media (max-width: 600px){
+    .jh-wrapper-card{
+      min-height: auto;
+    }
+    .jh-card-body{
+      height: auto;
+    }
+  }
+  /* <<<<<<<<<<<<< 移动端适配 */
 </style>
 {% endblock %}
