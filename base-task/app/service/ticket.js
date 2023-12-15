@@ -40,6 +40,7 @@ class TicketService extends Service {
       userAudit.remark = remark;
       userAudit.operationAt = dayjs().format('YYYY-MM-DD HH:mm:ss');
     }
+    const updateTaskData = {}
 
     // 只要有一个拒绝,就更新task状态
     const isAnyRefuse = auditConfig.some(item => item.status === '拒绝');
@@ -49,7 +50,6 @@ class TicketService extends Service {
 
     // 判断是否所有人都已经审核,并且status都是同意
     const isAllAudited = auditConfig.every(item => item.status === '同意');
-    const updateTaskData = {}
     if (isAllAudited) {
       updateTaskData.taskStatus = '已完成';
     }
