@@ -11,7 +11,7 @@
       <div class="jh-page-second-bar px-8">
         <v-row class="align-center">
           <v-col cols="12" xs="12" sm="12" md="4" xl="3">
-            <div class="py-4 text-body-1 font-weight-bold">角色权限控制
+            <div class="py-4 text-body-1 font-weight-bold">组织权限控制
               <!-- 帮助页按钮 -->
               <span role="button" class="success--text font-weight-regular jh-font-size-13 ml-2" @click="isHelpPageDrawerShown = true">
                 <v-icon size="13" class="success--text">mdi-help-circle-outline</v-icon>帮助
@@ -27,7 +27,7 @@
         <v-row no-gutters>
           <v-col cols="3" md="3" xl="2" class="pr-2">
             <v-card class="rounded-lg" style="overflow: hidden;">
-              <select-role-list @change-role="changeRole"></select-role-list>
+              <select-group-tree @change-active="changeActiveGroup" @change-group-list="constantObj.groupList = $event"></select-group-tree>
             </v-card>
           </v-col>
           <v-col cols="9" md="9" xl="10">
@@ -52,13 +52,21 @@
                 </v-col>
                 <!--搜索过滤-->
                 <v-col cols="12" sm="4" md="4" xl="2" class="pt-4 pr-4">
-                  <v-text-field v-if="tabActive == 0" color="success" v-model="searchInput" prefix="搜索：" class="jh-v-input" dense filled single-line></v-text-field>
-                  <v-btn color="success" small v-else @click="doUiAction('updateUserGroupRolePage')">保存</v-btn>
+                  <v-btn color="success" small v-if="tabActive == 1" :loading="isAppLoading" @click="doUiAction('updateUserGroupRolePage')">保存</v-btn>
                 </v-col>
               </v-row>
 
               <v-tabs-items v-model="tabActive">
                 <v-tab-item>
+                  <v-row class="ma-0 pa-4">
+                    <!-- 新增按钮 -->
+                    <v-btn color="success" small @click="doUiAction('startCreateItem')">新增</v-btn>
+                    <v-spacer></v-spacer>
+                    <!--搜索过滤-->
+                    <v-col cols="12" sm="4" md="4" xl="2" class="pa-0">
+                      <v-text-field v-model="searchInput" prefix="搜索：" class="jh-v-input" dense filled single-line></v-text-field>
+                    </v-col>
+                  </v-row>
                   <!--表格-->
                   <v-data-table
                     :headers="headers"
@@ -107,8 +115,8 @@
                       </template>
                     </template>
                     <!-- 应用类型 -->
-                    <template v-slot:item.appType="{ item }">
-                      {{ getDisplayText({displayObj: constantObj.appType, displayValue: item.appType}) }}
+                    <template v-slot:item.roleName="{ item }">
+                      {{ item.roleId == '*' ? '默认角色' : item.roleName }}
                     </template>
                     <!--没有数据-->
                     <template v-slot:loading>
@@ -128,48 +136,7 @@
                   </v-data-table>
                 </v-tab-item>
                 <v-tab-item>
-                  <div class="right-container-box">
-                    <v-row class="ma-0"> 
-                      <v-col cols="12" v-for="(app, index) in appData" :key="index" class="pa-2">
-                        <v-card outlined class="pa-1">
-                          <v-row no-gutters>
-                            <v-col cols="12" class="d-flex align-center">
-                              <v-badge
-                                dot
-                                inline
-                                left
-                              >
-                                <span class="body-2">{{app.appName}}</span> 
-                              </v-badge>
-                              <v-chip x-small>{{app.appId}}</v-chip>
-                              <v-checkbox
-                                v-model="activePageList"
-                                label="管理员"
-                                :value="app.appId + '|*'"
-                                class="jh-v-input mt-0 d-inline-block"
-                                hide-details
-                              ></v-checkbox>
-                            </v-col>
-                            <template v-if="!activePageList.includes(app.appId + '|*')">
-                              <v-col cols="3" v-for="page in app.appPageList.filter(e => !['help', 'login', 'manual'].includes(e.pageId))">
-                                <v-checkbox
-                                  v-model="activePageList"
-                                  :label="page.pageName"
-                                  :value="app.appId + '|' + page.pageId"
-                                  class="jh-v-input mt-0"
-                                  hide-details
-                                ></v-checkbox>
-                              </v-col>
-                            </template>
-                          </v-row>
-                        </v-card>
-                      </v-col>
-                    </v-row>
-                  </div>
-
-                  <v-overlay :value="isAppLoading" color="white" dark absolute :opacity="0.7">
-                    <v-progress-circular indeterminate size="32" color="grey"></v-progress-circular>
-                  </v-overlay>
+                  <group-role-page :app-list="constantObj.appList" :role-list="constantObj.roleList" :loading="isAppLoading" v-model="activePageList" :group="activeGroup" @change-role="changeRole" @refresh-role-list="getRoleData"></group-role-page>
                 </v-tab-item>
               </v-tabs-items>
             </v-card>
@@ -188,16 +155,16 @@
             <!--抽屉表单主体-->
             <v-row class="mt-0 px-4">
               <v-col cols="12" sm="12" md="4">
-                <span class="jh-input-label">应用ID<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-text-field class="jh-v-input" dense single-line filled label="应用ID" v-model="createItem.appId" :rules="validationRules.requireRules"></v-text-field>
+                <span class="jh-input-label">组织<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                <v-select class="jh-v-input" dense single-line filled v-model="createItem.groupId" :items="constantObj.groupList" :rules="validationRules.requireRules" disabled></v-select>
               </v-col>
               <v-col cols="12" sm="12" md="4">
-                <span class="jh-input-label">应用名<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-text-field class="jh-v-input" dense single-line filled label="应用名" v-model="createItem.appName" :rules="validationRules.requireRules"></v-text-field>
+                <span class="jh-input-label">选择用户<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                <v-select class="jh-v-input" dense single-line filled v-model="createItem.userId" :items="constantObj.userList" :rules="validationRules.requireRules"></v-select>
               </v-col>
               <v-col cols="12" sm="12" md="4">
-                <span class="jh-input-label">应用类型<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-text-field class="jh-v-input" dense single-line filled label="应用类型" v-model="createItem.appType" :rules="validationRules.requireRules"></v-text-field>
+                <span class="jh-input-label">选择用户<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                <v-select class="jh-v-input" dense single-line filled v-model="createItem.roleId" :items="constantObj.roleList" item-value="roleId" item-text="roleName" :rules="validationRules.requireRules"></v-select>
               </v-col>
             </v-row>
             <!--抽屉操作按钮-->
@@ -224,16 +191,16 @@
             <!--抽屉表单主体-->
             <v-row class="mt-0 px-4">
               <v-col cols="12" sm="12" md="4">
-                <span class="jh-input-label">应用ID</span>
-                <v-text-field class="jh-v-input" dense single-line filled label="应用ID" v-model="updateItem.appId" disabled></v-text-field>
+                <span class="jh-input-label">组织<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                <v-select class="jh-v-input" dense single-line filled v-model="updateItem.groupId" :items="constantObj.groupList" :rules="validationRules.requireRules" disabled></v-select>
               </v-col>
               <v-col cols="12" sm="12" md="4">
-                <span class="jh-input-label">应用名<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-text-field class="jh-v-input" dense single-line filled label="应用名" v-model="updateItem.appName" :rules="validationRules.requireRules"></v-text-field>
+                <span class="jh-input-label">选择用户<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                <v-select class="jh-v-input" dense single-line filled v-model="updateItem.userId" :items="constantObj.userList" :rules="validationRules.requireRules"></v-select>
               </v-col>
               <v-col cols="12" sm="12" md="4">
-                <span class="jh-input-label">应用类型<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-text-field class="jh-v-input" dense single-line filled label="应用类型" v-model="updateItem.appType" :rules="validationRules.requireRules"></v-text-field>
+                <span class="jh-input-label">选择用户<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                <v-select class="jh-v-input" dense single-line filled v-model="updateItem.roleId" :items="constantObj.roleList" item-value="roleId" item-text="roleName" :rules="validationRules.requireRules"></v-select>
               </v-col>
             </v-row>
             <!--抽屉操作按钮-->
@@ -253,7 +220,7 @@
       <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
       <v-navigation-drawer v-model="isHelpPageDrawerShown" v-click-outside="drawerClickOutside" fixed temporary right width="80%" class="elevation-24">
         <iframe
-          style="border: 0" :src="`/${appInfo.appId}/pageDoc#2.appManagement.md`" width="100%"
+          style="border: 0" :src="`/${appInfo.appId}/pageDoc#2.enterpriseGroup.md`" width="100%"
           height="100%"></iframe>
 
         <v-btn
@@ -283,7 +250,8 @@
 
 <!-- 加载页面组件 >>>>>>>>>>>>> -->
 {% include 'common/jianghuJs/fixedTableHeightV4.html' %}
-{% include 'component/select-role-list.html' %}
+{% include 'component/select-group-tree.html' %}
+{% include 'component/group-role-page.html' %}
 <!-- <<<<<<<<<<<<< 加载页面组件 -->
 
 <script type="module">
@@ -303,17 +271,19 @@ new Vue({
     },
     constantObj: {
       appType: [{"value": "internal", "text": "内部应用"}, {"value": "external", "text": "外部应用"}],
-      tabList: ['角色员工', '角色权限'],
+      tabList: ['组织员工', '组织权限'],
+      userList: [],
+      appList: [],
+      groupList: []
     },
     searchInput: null,
     isTableLoading: true,
     isAppLoading: true,
-    tableData: [],
-    appData: [],
+    tableDataBackUp: [],
     headers: [
       {text: "用户", value: "username"},
       {text: "角色", value: "roleName"},
-      {text: "用户组", value: "groupId"},
+      {text: "用户组", value: "groupName"},
       {text: "操作人", value: "operationByUser"},
       {text: "操作时间", value: "operationAt"},
       {text: '操作', value: 'action', align: 'center', sortable: false, width: window.innerWidth < 500 ? 80 : 200, class: 'fixed', cellClass: 'fixed'},
@@ -331,17 +301,23 @@ new Vue({
     deleteItemId: null,
 
     tabActive: 0,
-    activeRole: null,
+    activeGroup: null,
+    activeGroupPath: null,
+    activeRole: '*',
 
     activePageList: [],
+    authType: 'group'
   },
   computed: {
     tabList() {
-      if (this.activeRole == 'supperAdmin') {
+      if (this.activeGroup == 'supperAdmin') {
         return this.constantObj.tabList.slice(0, 1);
       }
       return this.constantObj.tabList;
-    }
+    },
+    tableData() {
+      return this.tableDataBackUp.filter(e => (e.groupPath || '').startsWith(this.activeGroupPath || ''));
+    },
   },
   watch: {
     tabActive(val) {
@@ -349,12 +325,15 @@ new Vue({
         this.doUiAction('getUserGroupRolePage');
       }
     },
+    activePageList(val) {
+      console.log('activePageList', val)
+    }
   },
   async created() {
   },
   mounted() {
     // this.doUiAction('getTableData');
-    this.doUiAction('getAppData');
+    this.doUiAction('pageConstantData');
   },
   methods: {
     async doUiAction(uiActionId, uiActionData) {
@@ -362,8 +341,9 @@ new Vue({
         case 'getTableData':
           await this.getTableData();
           break;
-        case 'getAppData':
+        case 'pageConstantData':
           await this.getAppData();
+          await this.getUserData();
           break;
         case 'getUserGroupRolePage':
           await this.getUserGroupRolePage();
@@ -409,19 +389,31 @@ new Vue({
     },
     async getTableData() {
       this.isTableLoading = true;
-      const result = await window.jianghuAxios({
+      const whereLike = {};
+      const whereIn = {};
+      if (this.activeGroupPath) {
+        whereLike.groupPath = `${this.activeGroupPath}%`;
+      } else {
+        whereIn.groupId = this.constantObj.groupList.map(e => e.value);
+      }
+      const rows = (await window.jianghuAxios({
         data: {
           appData: {
-            pageId: 'systemRole',
+            pageId: 'enterpriseGroup',
             actionId: 'selectItemList',
             actionData: {},
-            where: {roleId: this.activeRole},
+            whereLike,
+            whereIn,
             orderBy: [{column: 'userId', order: 'asc'}]
           }
         }
-      });
+      })).data.appData.resultData.rows;
 
-      this.tableData = result.data.appData.resultData.rows;
+      rows.forEach(row => {
+        row.operationAt = dayjs(row.operationAt).format('YYYY-MM-DD HH:mm:ss');
+      })
+
+      this.tableDataBackUp = rows;
       this.isTableLoading = false;
     },
     async getAppData() {
@@ -429,7 +421,7 @@ new Vue({
       const rows = (await window.jianghuAxios({
         data: {
           appData: {
-            pageId: 'systemRole',
+            pageId: 'enterpriseGroup',
             actionId: 'selectAppList',
             actionData: {},
             where: {},
@@ -440,7 +432,43 @@ new Vue({
       rows.forEach(row => {
         row.appPageList = JSON.parse(row.appPageList || '[]');
       })
-      this.appData = rows;
+      this.constantObj.appList = rows;
+      this.isAppLoading = false;
+    },
+    async getUserData() {
+      this.isAppLoading = true;
+      const rows = (await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'enterpriseGroup',
+            actionId: 'getUserData',
+            actionData: {},
+            where: {},
+            orderBy: [{column: 'userId', order: 'asc'}]
+          }
+        }
+      })).data.appData.resultData.rows
+      this.constantObj.userList = rows.map(e => ({text: e.username, value: e.userId}));
+      this.isAppLoading = false;
+    },
+    async getRoleData() {
+      this.isAppLoading = true;
+      const rows = (await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'enterpriseGroup-groupRolePage',
+            actionId: 'selectRoleList',
+            actionData: {},
+            whereLike: {roleId: `%${this.activeGroup}-%`},
+            orderBy: [{column: 'operationAt', order: 'desc'}]
+          }
+        }
+      })).data.appData.resultData.rows;
+
+      rows.forEach(row => {
+        row.operationAt = dayjs(row.operationAt).format('YYYY-MM-DD HH:mm:ss');
+      })
+      this.constantObj.roleList = [{roleId: '*', roleName: '默认角色'}, ...rows];
       this.isAppLoading = false;
     },
     async getUserGroupRolePage() {
@@ -448,10 +476,10 @@ new Vue({
       const rows = (await window.jianghuAxios({
         data: {
           appData: {
-            pageId: 'systemRole',
+            pageId: 'enterpriseGroup',
             actionId: 'getUserGroupRolePage',
             actionData: {},
-            where: {role: this.activeRole},
+            where: {group: this.activeGroup, role: this.activeRole},
             orderBy: [{column: 'id', order: 'asc'}]
           }
         }
@@ -466,21 +494,27 @@ new Vue({
       this.activePageList = pageList;
       this.isAppLoading = false;
     },
-    changeRole(role) {
-      console.log('role', role)
-      this.activeRole = role;
-      if (role == 'supperAdmin') {
-        this.tabActive = 0;
-      }
+    changeActiveGroup(item) {
+      console.log('group', item)
+      this.activeGroup = item.groupId;
+      this.activeGroupPath = item.groupPath;
+      this.getRoleData();
       if (this.tabActive == 1) {
         this.getUserGroupRolePage();
         return;
       }
       this.getTableData();
     },
+    changeRole(role) {
+      this.activeRole = role;
+      this.getUserGroupRolePage();
+    },
     // ---------- 新增数据 uiAction >>>>>>>>>> --------
     async prepareCreateFormData() {
-      this.createItem = {};
+      this.createItem = {
+        groupId: this.activeGroup,
+        roleId: '*',
+      };
     },
 
     async openCreateDrawer() {
@@ -501,7 +535,7 @@ new Vue({
 
     prepareDoCreateItem() {
       const {id, ...data} = this.createItem;
-      this.createActionData = data;
+      this.createActionData = _.pick(data, ['groupId', 'userId', 'roleId']);
     },
 
     async doCreateItem() {
@@ -510,8 +544,8 @@ new Vue({
       await window.jianghuAxios({
         data: {
           appData: {
-            pageId: 'appManagement',
-            actionId: 'insertItem',
+            pageId: 'enterpriseGroup',
+            actionId: 'insertUserGroupRole',
             actionData: this.createActionData
           }
         }
@@ -527,7 +561,7 @@ new Vue({
     // ---------- <<<<<<<<<<< 新增数据 uiAction  --------
     // ---------- 修改数据 uiAction >>>>>>>>>>>> --------
     async prepareUpdateFormData(funObj) {
-      this.updateItem = _.cloneDeep(funObj);
+      this.updateItem = _.pick(funObj, ['id', 'groupId', 'userId', 'roleId']);;
     },
 
     async openUpdateDrawer() {
@@ -559,8 +593,8 @@ new Vue({
       await window.jianghuAxios({
         data: {
           appData: {
-            pageId: 'appManagement',
-            actionId: 'updateItem',
+            pageId: 'enterpriseGroup',
+            actionId: 'updateUserGroupRole',
             actionData: this.updateActionData,
             where: {id: this.updateItemId}
           }
@@ -592,7 +626,7 @@ new Vue({
       await window.jianghuAxios({
         data: {
           appData: {
-            pageId: 'appManagement',
+            pageId: 'enterpriseGroup',
             actionId: 'deleteItem',
             actionData: {},
             where: {id: this.deleteItemId}
@@ -614,7 +648,7 @@ new Vue({
       activePageList.forEach(e => {
         const [appId, pageId] = e.split('|');
         // 过滤脏数据
-        if (pageId != '*' && !this.appData.find(e => e.appId == appId).appPageList.some(e => e.pageId == pageId)) {
+        if (pageId != '*' && !this.constantObj.appList.find(e => e.appId == appId).appPageList.some(e => e.pageId == pageId)) {
           return;
         } 
         updateList.push({appId, pageId});
@@ -624,9 +658,9 @@ new Vue({
       await window.jianghuAxios({
         data: {
           appData: {
-            pageId: 'systemRole',
+            pageId: 'enterpriseGroup',
             actionId: 'updateUserGroupRolePage',
-            actionData: {dataList: updateList, role: this.activeRole},
+            actionData: {dataList: updateList, group: this.activeGroup, role: this.activeRole},
           }
         }
       })
@@ -651,10 +685,5 @@ new Vue({
 </script>
 
 <style scoped>
-  .right-container-box {
-    height: calc(100vh - 165px);
-    overflow-y: auto;
-    padding: 10px
-  }
 </style>
 {% endblock %}
