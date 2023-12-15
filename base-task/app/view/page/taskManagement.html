@@ -216,7 +216,7 @@
              
             <v-col cols="12" sm="12" md="4">
               <span class="jh-input-label">子任务列表todo</span>
-              <task-child-list :initialTodos="createItem.taskChildList" />
+              <task-child-list :todos.sync="createItem.taskChildList" />
             </v-col>
              
           </v-row>
@@ -322,7 +322,7 @@
               -->
             <v-col cols="12" sm="12" md="4">
               <span class="jh-input-label">子任务列表todo</span>
-              <task-child-list ref="taskChildList" :initialTodos="updateItem.taskChildList" />
+              <task-child-list :todos.sync="updateItem.taskChildList" />
             </v-col>
                        
           </v-row>
@@ -674,7 +674,7 @@
       async prepareDoUpdateItem() {
         const { id, ...data } = this.updateItem;
         this.updateItemId = id;
-        data.taskChildList = JSON.stringify(this.$refs.taskChildList.todos)
+        data.taskChildList = JSON.stringify(data.taskChildList)
         this.updateActionData = data;
       },
 

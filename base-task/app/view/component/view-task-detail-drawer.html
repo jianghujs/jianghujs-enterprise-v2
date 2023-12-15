@@ -25,7 +25,7 @@
       <v-col cols="12" sm="12" md="12">
         <span class="jh-input-label grey--text">子任务</span>
     
-        <task-child-list readonly :initial-todos="detail.taskChildList"></task-child-list>
+        <task-child-list readonly :todos.sync="detail.taskChildList"></task-child-list>
       </v-col>
     </v-row>
     <!-- 抽屉关闭按钮 -->

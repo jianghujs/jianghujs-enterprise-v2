@@ -31,7 +31,7 @@
   Vue.component("task-child-list", {
     template: '#task-child-list',
     props: {
-      initialTodos: {
+      todos: {
         type: Array,
         default: () => [],
       },
@@ -42,17 +42,17 @@
       },
     },
     data: () => ({
-      todos: [],
     }),
     created() {
-      this.todos = this.initialTodos.map(todo => ({ ...todo }));
     },
     methods: {
       addTodo() {
         this.todos.push({ text: '', completed: false });
+        this.$emit('update:todos', this.todos)
       },
       deleteTodo(index) {
         this.todos.splice(index, 1);
+        this.$emit('update:todos', this.todos)
       },
     },
   })
