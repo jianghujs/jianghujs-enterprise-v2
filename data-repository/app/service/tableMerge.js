@@ -71,18 +71,6 @@ class UtilService extends Service {
     tableMergeConfigList = tableMergeConfigList.filter(item => item.sourceList.length > 0);
     const allTable = await jianghuKnex('information_schema.tables').select('table_schema as database', 'table_name as tableName');
     const allTableMap = Object.fromEntries(allTable.map(obj => [`${obj.database}.${obj.tableName}`, obj]));
-
-    // for (const tableMergeConfig of tableMergeConfigList) {
-    //   const sourceList = JSON.parse(tableMergeConfig.sourceList || '[]');
-    //   if (sourceList.length === 0) { continue; }
-    //   const { targetDatabase, targetTable } = tableMergeConfig;
-    //   for (const source of sourceList) {
-    //     const sourceDatabase = source.database;
-    //     const sourceTable = source.tableName;
-    //     const sourceDataList = await jianghuKnex(`${sourceDatabase}.${sourceTable}`).select();
-    //     console.log('sourceDataList: ', sourceDataList.length);
-    //   }
-    // }
     await this.tableConsistentCheckAndSync({tableMergeConfigList, allTableMap, outsideKnexMap});
 
   }
@@ -116,15 +104,24 @@ class UtilService extends Service {
         .replace(`CREATE TABLE \`${sourceTable}\``, `CREATE TABLE \`${targetTable}\``)
         .replace(/AUTO_INCREMENT=\d+ ?/, '');
       let targetTableDDL = null;
-
       if (targetTableExist) {
         const targetTableDDLResult = await targetKnex.raw(`SHOW CREATE TABLE ${targetDatabase}.${targetTable};`);
         targetTableDDL = targetTableDDLResult[0][0]['Create Table'].replace(/AUTO_INCREMENT=\d+ ?/, '');
       }
+      // TODO: 判断DDL不一致时才执行
       // if (targetTableDDL !== exceptTargetTableDDL) {
-        await targetKnex.raw(`DROP TABLE IF EXISTS ${targetDatabase}.${targetTable};`);
-        await targetKnex.raw(exceptTargetTableDDL);
       // }
+      await targetKnex.raw(`DROP TABLE IF EXISTS ${targetDatabase}.${targetTable};`);
+      await targetKnex.raw(exceptTargetTableDDL);
+      await targetKnex.raw(`ALTER TABLE \`${targetDatabase}\`.\`${targetTable}\`
+        ADD COLUMN \`incrementId\` int(11) NOT NULL AUTO_INCREMENT FIRST,
+        MODIFY COLUMN \`id\` int(11) NULL DEFAULT NULL FIRST,
+        DROP PRIMARY KEY,
+        ADD PRIMARY KEY (\`incrementId\`) USING BTREE;`);
+      const selectDataSql = tableConfig.sourceList
+        .map(source => `select null as incrementId, a.* from \`${source.database}\`.\`${source.tableName}\` as a`)
+        .join(' UNION ');
+      await targetKnex.raw(`REPLACE INTO all_task ${selectDataSql};`);
     }
   }
 
