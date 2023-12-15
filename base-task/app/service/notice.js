@@ -53,8 +53,8 @@ class NoticeService extends Service {
         taskTitle = '任务邀请提醒';
         break;
       case '审批':
-        taskDesc = `${username} 邀请您参与<a>《${taskTitle}》</a>审批，请及时查看`;
-        taskTitle = '审批邀请提醒';
+        taskDesc = `${username} 提交了<a>《${taskTitle}》</a>，请及时处理`;
+        taskTitle = '待审批提醒';
         break;
       case '日志':
         taskDesc = `${username} 将<a>《${taskTitle}》</a>日志发送给您，请及时查看`;
