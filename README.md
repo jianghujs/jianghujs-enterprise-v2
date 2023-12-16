@@ -17,3 +17,13 @@
 - base-task:       https://init.openjianghu.org/task 
 - hr:              https://init.openjianghu.org/hr
 - bi:              https://init.openjianghu.org/bi
+
+# demo演示
+
+- data-repository: https://demo.jianghujs.org/data-repository
+- base-system:     https://demo.jianghujs.org/system   
+- base-directory:  https://demo.jianghujs.org/directory
+- base-task:       https://demo.jianghujs.org/task 
+- hr:              https://demo.jianghujs.org/hr
+- bi:              https://demo.jianghujs.org/bi
+- finance:         https://demo.jianghujs.org/jh-finance
