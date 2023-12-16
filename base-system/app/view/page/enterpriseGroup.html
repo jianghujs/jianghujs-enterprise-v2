@@ -51,9 +51,8 @@
                   </v-tabs>
                 </v-col>
                 <!--搜索过滤-->
-                <v-col cols="12" sm="4" md="4" xl="2" class="pt-4 pr-4">
-                  <v-btn color="success" small v-if="tabActive == 1" :loading="isAppLoading" @click="doUiAction('updateUserGroupRolePage')">保存</v-btn>
-                </v-col>
+                <v-spacer></v-spacer>
+                <v-btn color="success" class="ma-4" small v-if="tabActive == 1" :loading="isAppLoading" @click="doUiAction('updateUserGroupRolePage')">保存</v-btn>
               </v-row>
 
               <v-tabs-items v-model="tabActive">
