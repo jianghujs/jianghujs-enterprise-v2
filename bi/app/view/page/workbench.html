@@ -77,7 +77,7 @@
                         <v-col cols="12">
                           <v-card class="d-flex flex-row flex-wrap mx-3" elevation="0">
                             <v-chart :option="contractAmountLineOption" autoresize style="height: 300px;"/>
-                            <v-chart :option="contractAmountBarOption" autoresize style="height: 300px;"/>
+                            <!-- <v-chart :option="contractAmountBarOption" autoresize style="height: 300px;"/> -->
                           </v-card>
                         </v-col>
                       </v-row>
@@ -277,7 +277,8 @@
           rate: '100%',
           status: 'up',
           chartOption: {
-            
+            color: ['#5470C6'],
+            data: [0, 2, 5, 9, 5, 10, 3]
           }
         },
         {
@@ -298,7 +299,8 @@
           rate: '100%',
           status: 'up',
           chartOption: {
-            
+            color: ['#5470C6'],
+            data: [0, 2, 5, 9, 5, 10, 3]
           }
         },
         {
