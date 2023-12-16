@@ -1,11 +1,11 @@
 # jianghujs-enterprise-v2
 
-- data-repository: http://127.0.0.1:7271/data-repository
-- base-system:     http://127.0.0.1:7272/system   
-- base-directory:  http://127.0.0.1:7273/directory
-- base-task:       http://127.0.0.1:7274/task 
-- hr:              http://127.0.0.1:7276/hr
-- bi:              http://127.0.0.1:7277/bi
+- data-repository: http://127.0.0.1:7261/data-repository
+- base-system:     http://127.0.0.1:7262/system   
+- base-directory:  http://127.0.0.1:7263/directory
+- base-task:       http://127.0.0.1:7264/task 
+- hr:              http://127.0.0.1:7266/hr
+- bi:              http://127.0.0.1:7267/bi
 
 
 
