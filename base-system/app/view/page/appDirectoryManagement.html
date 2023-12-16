@@ -79,7 +79,8 @@
                   class="jh-v-input" multiple dense filled single-line></v-autocomplete>
             </template>
             <template v-slot:item.appType="{ item }">
-              <v-autocomplete v-model="item.appType" :items="constantObj.appType" 
+              <v-autocomplete v-model="item.appType" :items="constantObj.appTypeList" 
+                item-text="value" item-value="value"
                 class="jh-v-input" dense filled single-line></v-autocomplete>
             </template>
             <!-- <template v-slot:item.appId="{ item }">
@@ -205,7 +206,12 @@ new Vue({
       ],
     },
     constantObj: {
-      appType: ['系统应用', '办公应用', '简单应用', '其他应用'],
+      appTypeList: [
+        { value:'系统应用' },
+        { value:'办公应用' }, 
+        { value:'简单应用' }, 
+        { value:'其他应用' }, 
+      ],
     },
     searchInput: null,
     isTableLoading: true,
