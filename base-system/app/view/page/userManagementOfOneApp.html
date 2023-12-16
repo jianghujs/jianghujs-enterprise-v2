@@ -31,7 +31,7 @@
         <v-card class="rounded-lg">
           <v-row class="ma-0 pa-4">
             <!--新增按钮-->
-            <v-btn color="success" class="elevation-0 mr-2" @click="doUiAction('startBuildRelation')" small>分配新用户</v-btn>
+            <!-- <v-btn color="success" class="elevation-0 mr-2" @click="doUiAction('startBuildRelation')" small>分配新用户</v-btn> -->
             <v-spacer></v-spacer>
             <!--搜索过滤-->
             <v-col cols="12" xs="8" sm="4" md="3" xl="2" class="pa-0">
@@ -52,11 +52,11 @@
             fixed-header
             class="jh-fixed-table-height elevation-0 mt-0 mb-xs-4">
             <template v-slot:item.action="{ item }">
-              <span
+              <!-- <span
                 role="button" class="red--text text--accent-2 font-weight-medium font-size-2"
                 @click="doUiAction('deleteRelation', item)">
                 <v-icon size="16" class="red--text text--accent-2">mdi-trash-can-outline</v-icon>删除
-              </span>
+              </span> -->
             </template>
             <!--没有数据-->
             <template v-slot:loading>

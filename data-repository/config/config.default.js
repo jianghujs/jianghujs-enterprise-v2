@@ -15,7 +15,7 @@ module.exports = appInfo => {
     appId,
     appTitle: '数据中心',
     appLogo: `${appId}/public/img/logo.png`,
-    appType: 'single', // single: 单应用; multiApp: 多应用
+    appType: 'multiApp', // single: 单应用; multiApp: 多应用
     appDirectoryLink: 'http://127.0.0.1:7273/directory',
     indexPage: `/${appId}/page/tableSyncConfig`,
     loginPage: `/${appId}/page/login`,
