@@ -390,6 +390,7 @@ new Vue({
       const whereIn = {};
       if (this.activeGroupPath) {
         where.groupPath = `${this.activeGroupPath}`;
+        where.groupId = `${this.activeGroup}`;
       } else {
         // whereIn.groupId = this.constantObj.groupList.map(e => e.value);
         whereIn.groupId = [this.activeGroup];
