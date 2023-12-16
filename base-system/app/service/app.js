@@ -30,6 +30,19 @@ class AppService extends Service {
     this.ctx.request.body.appData.actionData.appPageList = JSON.stringify(pageListFilter);
   }
 
+  async updateToDirectoryApp() {
+    const { jianghuKnex } = this.app;
+    const appList = await jianghuKnex('enterprise_app').select();
+    appList.forEach((row)=>{
+      row.appPageList = JSON.parse(row.appPageList || '[]');
+      row.appPageDirectoryList = JSON.parse(row.appPageDirectoryList || '[]');
+      row.appPageDirectoryList = row.appPageDirectoryList
+        .filter((pageId)=>row.appPageList.findIndex((page)=>page.pageId == pageId) > -1)
+        .map((pageId)=>row.appPageList.find((page)=>page.pageId == pageId));
+    });
+    console.log('updateToDirectoryApp');
+  }
+
 }
 
 module.exports = AppService;
