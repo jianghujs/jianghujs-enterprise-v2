@@ -42,6 +42,12 @@ class AppService extends Service {
     }
   }
 
+  async updateAppUserGroupRole() {
+
+    // TODO: 更新 _user_group_role; 排除当前应用==》避免异常
+    console.log('updateAppUserGroupRole');
+  }
+
   async updateToDirectoryApp() {
     const { jianghuKnex } = this.app;
     const appTypeList =  [
@@ -80,7 +86,6 @@ class AppService extends Service {
         await jianghuKnex('jh_enterprise_v2_directory.directory').insert(directoryList);
       }
     }
-    console.log('updateToDirectoryApp');
   }
 
 }
