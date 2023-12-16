@@ -24,20 +24,32 @@ class AppService extends Service {
     knex.client.config.connection.database = database;
     const currentKnex = Knex(knex.client.config);
     const pageList = await currentKnex('_page').select('*');
-    console.log(_.pick(pageList, ['pageId', 'pageName', 'pageType', 'sort']));
+    // console.log(_.pick(pageList, ['pageId', 'pageName', 'pageType', 'sort']));
     // const pageListFilter = _.pick(pageList, ['pageId', 'pageName', 'pageType', 'sort']);
     const pageListFilter = _.map(pageList.filter(e => !['help', 'login', 'manual'].includes(e.pageId)), item => _.pick(item, ['pageId', 'pageName', 'pageType', 'sort']))
     this.ctx.request.body.appData.actionData.appPageList = JSON.stringify(pageListFilter);
   }
 
+  async updatePageList() {
+    const { jianghuKnex } = this.app;
+    const appList = await jianghuKnex('enterprise_app').select();
+    for (const app of appList) {
+      const pageList = await jianghuKnex(`${app.appDatabase}._page`).select();
+      const pageListFilter = _.map(pageList.filter(e => !['help', 'login', 'manual'].includes(e.pageId)), item => _.pick(item, ['pageId', 'pageName', 'pageType', 'sort']));
+      // TODO: 有差异再更新
+      await jianghuKnex('enterprise_app').where({ id: app.id })
+        .update({ appPageList: JSON.stringify(pageListFilter)});
+    }
+  }
+
   async updateToDirectoryApp() {
+    const { jianghuKnex } = this.app;
     const appTypeList =  [
       { value:'系统应用' },
       { value:'办公应用' }, 
       { value:'简单应用' }, 
       { value:'其他应用' }, 
     ];
-    const { jianghuKnex } = this.app;
     const appList = await jianghuKnex('enterprise_app').select();
     appList.forEach((row)=>{
       row.appPageList = JSON.parse(row.appPageList || '[]');
