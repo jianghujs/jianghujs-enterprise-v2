@@ -90,6 +90,11 @@
             <template v-slot:item.appType="{ item }">
               {{ getDisplayText({displayObj: constantObj.appType, displayValue: item.appType}) }}
             </template>
+            <!-- <template v-slot:item.appId="{ item }">
+              <v-icon color="success" small @click="copyText('/<$ appic $>')">mdi-content-copy</v-icon>
+              <v-icon color="success" small>mdi-open-in-new</v-icon>
+              {{ item.appId }} 
+            </template> -->
             <!--没有数据-->
             <template v-slot:loading>
               <div class="jh-no-data">数据加载中</div>
@@ -470,6 +475,13 @@ new Vue({
     jump(url) {
       window.location.href = url;
     },
+
+    //   --------------- 复制密码 uiAction >>>>>>>>>>>>>  ---------------
+    async copyText(text) {
+      await navigator.clipboard.writeText(text);
+      return window.vtoast.success("复制密码成功！")
+    },
+    //   --------------- <<<<<<<<<<<<< 复制密码 uiAction  ---------------
   }
 })
 </script>
