@@ -159,8 +159,8 @@
                 <v-select class="jh-v-input" dense single-line filled v-model="createItem.userId" :items="constantObj.userList" :rules="validationRules.requireRules" ></v-select>
               </v-col>
               <v-col cols="12" sm="12" md="4">
-                <span class="jh-input-label">选择角色<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-select class="jh-v-input" dense single-line filled v-model="createItem.roleId" :items="constantObj.roleList" item-value="roleId" item-text="roleName" :rules="validationRules.requireRules" multiple></v-select>
+                <span class="jh-input-label">选择角色</span>
+                <v-select class="jh-v-input" dense single-line filled v-model="createItem.roleId" :items="constantObj.roleList.filter(e => e.roleId != '*')" item-value="roleId" item-text="roleName" multiple></v-select>
               </v-col>
             </v-row>
             <!--抽屉操作按钮-->
@@ -195,8 +195,8 @@
                 <v-select class="jh-v-input" dense single-line filled v-model="updateItem.userId" :items="constantObj.userList" :rules="validationRules.requireRules" disabled></v-select>
               </v-col>
               <v-col cols="12" sm="12" md="4">
-                <span class="jh-input-label">选择角色<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-select class="jh-v-input" dense single-line filled v-model="updateItem.roleId" :items="constantObj.roleList" item-value="roleId" item-text="roleName" :rules="validationRules.requireRules" multiple></v-select>
+                <span class="jh-input-label">选择角色</span>
+                <v-select class="jh-v-input" dense single-line filled v-model="updateItem.roleId" :items="constantObj.roleList.filter(e => e.roleId != '*')" item-value="roleId" item-text="roleName" multiple></v-select>
               </v-col>
             </v-row>
             <!--抽屉操作按钮-->
@@ -270,7 +270,8 @@ new Vue({
       tabList: ['组织员工', '组织权限'],
       userList: [],
       appList: [],
-      groupList: []
+      groupList: [],
+      roleList: [],
     },
     searchInput: null,
     isTableLoading: true,
@@ -593,7 +594,7 @@ new Vue({
     async prepareDoUpdateItem() {
       const {id, ...data} = this.updateItem;
       this.updateItemId = id;
-      this.updateActionData = data;
+      this.updateActionData = {...data, roleId: data.roleId.filter(e => e != '*')};
     },
 
     async doUpdateItem() {
