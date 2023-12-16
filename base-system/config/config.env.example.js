@@ -2,27 +2,27 @@
 
 const path = require('path');
 require('dotenv').config({path: path.resolve(__dirname, '../../../.env')});
-require('dotenv').config({path: path.resolve(__dirname, '../../../.env')});
 
 module.exports = appInfo => {
 
   return {
     appType: 'multiApp',
     appDirectoryLink: '/directory',
-    static: {
-      maxAge: 0,
-      buffer: false,
-      preload: false,
-      maxFiles: 0,
+    jiangHuConfig: {
+      packageIdCheck: false,
+      updateRequestDemoAndResponseDemo: false,
+      enableUserInfoCache: true,
+      userInfoCacheRefreshInterval: '10s',
     },
     logger: {
       outputJSON: true,
-      consoleLevel: 'DEBUG',
-      level: 'DEBUG',
+      level: 'INFO',
+      // level: 'DEBUG',
+      // allowDebugAtProd: true,
       dir: path.join(appInfo.baseDir, 'logs'),
       contextFormatter(meta) {
         return `[${meta.date}] [${meta.level}] [${meta.ctx.method} ${meta.ctx.url}] ${meta.message}`;
-      }
+      },
     },
     knex: {
       client: {
@@ -32,13 +32,12 @@ module.exports = appInfo => {
           port: process.env.DB_PORT,
           user: process.env.DB_USER,
           password: process.env.DB_PASSWORD,
-          database: 'jh_enterprise_v2_hr'
+          database: 'jh_enterprise_v2_system',
         },
         pool: { min: 0, max: 10 },
-        acquireConnectionTimeout: 30000
+        acquireConnectionTimeout: 30000,
       },
-      app: true
-    }
+      app: true,
+    },
   };
-
 };

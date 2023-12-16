@@ -45,6 +45,12 @@
           </v-btn>
           <v-spacer></v-spacer>
 
+          <v-col cols="12" xs="12" sm="4" md="3" xl="2" class="pa-0 text-md-right">
+            <v-btn-toggle :value="0"  @change="doUiAction('useScene', sceneList[$event])" class="mr-2 mt-2 mt-md-0" color="success" small>
+              <v-btn v-for="scene in sceneList" small>{{scene.name}}</v-btn>
+            </v-btn-toggle>
+          </v-col>
+
           <v-col cols="12" xs="8" sm="4" md="3" xl="2" class="pa-0">
             <v-text-field color="success" v-model="searchInput" prefix="搜索：" class="jh-v-input" dense filled single-line></v-text-field>
           </v-col>
@@ -105,8 +111,8 @@
               <v-text-field :rules="validationRules.requireRules" class="jh-v-input" dense single-line filled v-model="createItem.taskTitle"></v-text-field>
             </v-col>
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label"><span class="red--text">*</span>发给谁</span>
-              <v-autocomplete :rules="validationRules.requireRules" multiple :items="userList" class="jh-v-input" item-text="username" item-value="userId" dense single-line filled v-model="createItem.taskMemberIdList"></v-autocomplete>
+              <span class="jh-input-label">发给谁</span>
+              <v-autocomplete multiple :items="userList" class="jh-v-input" item-text="username" item-value="userId" dense single-line filled v-model="createItem.taskMemberIdList"></v-autocomplete>
             </v-col>
              
             <v-col cols="12" sm="12" md="12">
@@ -143,8 +149,8 @@
               <v-text-field :rules="validationRules.requireRules" class="jh-v-input" dense single-line filled v-model="updateItem.taskTitle"></v-text-field>
             </v-col>
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label"><span class="red--text">*</span>发给谁</span>
-              <v-autocomplete :rules="validationRules.requireRules" multiple :items="userList" class="jh-v-input" item-text="username" item-value="userId" dense single-line filled v-model="updateItem.taskMemberIdList"></v-autocomplete>
+              <span class="jh-input-label">发给谁</span>
+              <v-autocomplete multiple :items="userList" class="jh-v-input" item-text="username" item-value="userId" dense single-line filled v-model="updateItem.taskMemberIdList"></v-autocomplete>
               
             </v-col>
             <v-col cols="12" sm="12" md="12">
@@ -252,8 +258,21 @@
         { text: "操作者", value: "operationByUser", width: 120 },
         { text: "操作时间", value: "operationAt", width: 250 },
         { text: '操作', value: 'action', align: 'center', sortable: false, width: 120, class: 'fixed', cellClass: 'fixed' },
-
       ],
+
+      sceneList: [
+        {
+          "form": { taskManagerId: window.userInfo.userId, taskType: '日志', },
+          "name": "我发出的",
+          "id": "scene-fixed-1"
+        },
+        {
+          "form": { taskMemberIdList: `%${window.userInfo.userId}%`, taskType: '日志', },
+          "name": "我收到的",
+          "id": "scene-fixed-2"
+        },
+      ],
+      currentSceneId: null,
 
       isCreateDrawerShown: false,
       createItem: {},
@@ -330,6 +349,10 @@
           case 'exportExcel':
             await this.exportExcel();
             break;
+          case 'useScene':
+            await this.useScene(uiActionData);
+            await this.getTableData();
+            break;
           default:
             console.error("[doUiAction] uiActionId not find", { uiActionId });
             break;
@@ -340,18 +363,22 @@
        */
       async getTableData() {
         this.isTableLoading = true;
-        const backendSearchData = _.pickBy(this.serverSearchInput, (fieldValue, fieldKey) => {
-          if (fieldValue !== null && fieldValue !== '') {
-            return true;
-          }
-        });
+
+        const { taskMemberIdList, ...otherParams } = this.serverSearchInput
+        const whereData = _.pickBy(otherParams, _.identity);
+        const whereLikeData = {}
+        if (taskMemberIdList) {
+          whereLikeData.taskMemberIdList = taskMemberIdList
+        }
+
         const rows = (await window.jianghuAxios({
           data: {
             appData: {
               pageId: 'taskManagement',
               actionId: 'selectItemList',
               actionData: {},
-              where: backendSearchData,
+              where: whereData,
+              whereLike: whereLikeData,
               orderBy: [{ column: 'operationAt', order: 'desc' }]
             }
           }
@@ -552,6 +579,11 @@
             }
           }
         })
+      },
+
+      async useScene(funObj) {
+        this.currentSceneId = funObj.id;
+        this.serverSearchInput = _.cloneDeep(funObj.form);
       },
     }
   })
