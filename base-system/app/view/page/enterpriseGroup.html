@@ -85,10 +85,10 @@
                       <template>
                         <!-- pc端 -->
                         <template v-if="!isMobile">
-                          <span role="button" class="success--text font-weight-medium font-size-2 mr-2" @click="doUiAction('startUpdateItem', item)">
+                          <span role="button" v-if="item.groupId == activeGroup" class="success--text font-weight-medium font-size-2 mr-2" @click="doUiAction('startUpdateItem', item)">
                             <v-icon size="16" class="success--text">mdi-note-edit-outline</v-icon>修改
                           </span>
-                          <span role="button" class="red--text text--accent-2 font-weight-medium font-size-2" @click="doUiAction('deleteItem', item)">
+                          <span role="button" v-if="item.groupId == activeGroup" class="red--text text--accent-2 font-weight-medium font-size-2" @click="doUiAction('deleteItem', item)">
                             <v-icon size="16" class="red--text text--accent-2">mdi-trash-can-outline</v-icon>删除
                           </span>
                         </template>
@@ -101,13 +101,10 @@
                             </span>
                           </template>
                           <v-list dense>
-                            <v-list-item @click="doUiAction('jump', `/${appInfo.appId}/page/userManagementOfOneApp?id=${item.appId}&title=${item.appName}`)">
-                              <v-list-item-title>用户管理</v-list-item-title>
+                            <v-list-item v-if="item.groupId == activeGroup" @click="doUiAction('startUpdateItem', item)">
+                              <v-list-item-title>编辑</v-list-item-title>
                             </v-list-item>
-                            <v-list-item @click="doUiAction('startUpdateItem', item)">
-                              <v-list-item-title>修改</v-list-item-title>
-                            </v-list-item>
-                            <v-list-item @click="doUiAction('deleteItem', item)">
+                            <v-list-item v-if="item.groupId == activeGroup" @click="doUiAction('deleteItem', item)">
                               <v-list-item-title>删除</v-list-item-title>
                             </v-list-item>
                           </v-list>
@@ -160,11 +157,11 @@
               </v-col>
               <v-col cols="12" sm="12" md="4">
                 <span class="jh-input-label">选择用户<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-select class="jh-v-input" dense single-line filled v-model="createItem.userId" :items="constantObj.userList" :rules="validationRules.requireRules"></v-select>
+                <v-select class="jh-v-input" dense single-line filled v-model="createItem.userId" :items="constantObj.userList" :rules="validationRules.requireRules" ></v-select>
               </v-col>
               <v-col cols="12" sm="12" md="4">
-                <span class="jh-input-label">选择用户<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-select class="jh-v-input" dense single-line filled v-model="createItem.roleId" :items="constantObj.roleList" item-value="roleId" item-text="roleName" :rules="validationRules.requireRules"></v-select>
+                <span class="jh-input-label">选择角色<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                <v-select class="jh-v-input" dense single-line filled v-model="createItem.roleId" :items="constantObj.roleList" item-value="roleId" item-text="roleName" :rules="validationRules.requireRules" multiple></v-select>
               </v-col>
             </v-row>
             <!--抽屉操作按钮-->
@@ -199,8 +196,8 @@
                 <v-select class="jh-v-input" dense single-line filled v-model="updateItem.userId" :items="constantObj.userList" :rules="validationRules.requireRules"></v-select>
               </v-col>
               <v-col cols="12" sm="12" md="4">
-                <span class="jh-input-label">选择用户<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-select class="jh-v-input" dense single-line filled v-model="updateItem.roleId" :items="constantObj.roleList" item-value="roleId" item-text="roleName" :rules="validationRules.requireRules"></v-select>
+                <span class="jh-input-label">选择角色<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                <v-select class="jh-v-input" dense single-line filled v-model="updateItem.roleId" :items="constantObj.roleList" item-value="roleId" item-text="roleName" :rules="validationRules.requireRules" multiple></v-select>
               </v-col>
             </v-row>
             <!--抽屉操作按钮-->
@@ -389,12 +386,13 @@ new Vue({
     },
     async getTableData() {
       this.isTableLoading = true;
-      const whereLike = {};
+      const where = {};
       const whereIn = {};
       if (this.activeGroupPath) {
-        whereLike.groupPath = `${this.activeGroupPath}%`;
+        where.groupPath = `${this.activeGroupPath}`;
       } else {
-        whereIn.groupId = this.constantObj.groupList.map(e => e.value);
+        // whereIn.groupId = this.constantObj.groupList.map(e => e.value);
+        whereIn.groupId = [this.activeGroup];
       }
       const rows = (await window.jianghuAxios({
         data: {
@@ -402,7 +400,7 @@ new Vue({
             pageId: 'enterpriseGroup',
             actionId: 'selectItemList',
             actionData: {},
-            whereLike,
+            where,
             whereIn,
             orderBy: [{column: 'userId', order: 'asc'}]
           }
@@ -412,8 +410,19 @@ new Vue({
       rows.forEach(row => {
         row.operationAt = dayjs(row.operationAt).format('YYYY-MM-DD HH:mm:ss');
       })
-
-      this.tableDataBackUp = rows;
+      const list = [];
+      const groupBy = _.groupBy(rows, 'userId');
+      Object.keys(groupBy).forEach(key => {
+        const item = groupBy[key][0];
+        item.username = groupBy[key][0].username;
+        item.roleName = groupBy[key].map(e => (e.roleName || '默认角色')).join(',');
+        item.roleId = groupBy[key].map(e => e.roleId);
+        item.operationByUser = groupBy[key][0].operationByUser;
+        item.operationAt = groupBy[key][0].operationAt;
+        item.ids = groupBy[key].map(e => e.id);
+        list.push(item);
+      })
+      this.tableDataBackUp = list;
       this.isTableLoading = false;
     },
     async getAppData() {
@@ -589,7 +598,7 @@ new Vue({
 
     async doUpdateItem() {
       await window.jhMask.show();
-      await window.vtoast.loading("修改学生");
+      await window.vtoast.loading("修改");
       await window.jianghuAxios({
         data: {
           appData: {
@@ -602,7 +611,7 @@ new Vue({
       })
 
       await window.jhMask.hide();
-      await window.vtoast.success("修改学生成功");
+      await window.vtoast.success("修改成功");
     },
 
     async closeUpdateDrawer() {
@@ -614,7 +623,7 @@ new Vue({
     // ---------- <<<<<<<<<<< 修改数据 uiAction  --------
     // ---------- 删除数据 uiAction >>>>>>>>>>>> --------
     async prepareDeleteFormData(funObj) {
-      this.deleteItemId = funObj.id;
+      this.deleteItemId = funObj.ids;
     },
     async confirmDeleteItemDialog() {
       if (await window.confirmDialog({title: "删除", content: "确定删除吗？"}) === false) {
@@ -627,9 +636,9 @@ new Vue({
         data: {
           appData: {
             pageId: 'enterpriseGroup',
-            actionId: 'deleteItem',
+            actionId: 'deleteUserGroupRole',
             actionData: {},
-            where: {id: this.deleteItemId}
+            whereIn: {id: this.deleteItemId}
           }
         }
       });
