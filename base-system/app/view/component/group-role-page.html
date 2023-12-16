@@ -362,7 +362,7 @@
         this.deleteItem = _.cloneDeep(funObj);
       },
       async confirmDeleteItemDialog() {
-        if (await window.confirmDialog({title: "删除", content: "确定删除吗？"}) === false) {
+        if (await window.confirmDialog({title: "删除角色", content: "确定删除角色吗？"}) === false) {
           throw new Error("[confirmDeleteItemDialog] 否");
         }
       },
@@ -371,7 +371,7 @@
         this.deleteItemId = id;
       },
       async doDeleteItem() {
-        await window.vtoast.loading("删除数据");
+        await window.vtoast.loading("删除角色数据");
         await window.jianghuAxios({
           data: {
             appData: {
@@ -382,7 +382,7 @@
             }
           }
         });
-        await window.vtoast.success("删除数据成功");
+        await window.vtoast.success("删除角色数据成功");
       },
       async clearDeleteItem() {
         this.deleteItem = {};

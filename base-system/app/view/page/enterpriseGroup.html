@@ -663,7 +663,6 @@ new Vue({
         } 
         updateList.push({appId, pageId});
       })
-      console.log('updateList', updateList)
       await window.vtoast.loading("正在保存");
       await window.jianghuAxios({
         data: {
