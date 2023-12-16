@@ -189,12 +189,6 @@
     computed: {
     },
     watch: {
-      group: {
-        handler(val) {
-          this.doUiAction('changeGroup');
-        },
-        immediate: true
-      },
       activeRole(val) {
         this.$emit('change-role', this.activeRole);
       },
