@@ -109,6 +109,7 @@ class UtilService extends Service {
         targetTableDDL = targetTableDDLResult[0][0]['Create Table'].replace(/AUTO_INCREMENT=\d+ ?/, '');
       }
       // TODO: 判断DDL不一致时才执行
+      // TODO: 表结构要加上appId，以便区分数据来源
       // if (targetTableDDL !== exceptTargetTableDDL) {
       // }
       await targetKnex.raw(`DROP TABLE IF EXISTS ${targetDatabase}.${targetTable};`);
