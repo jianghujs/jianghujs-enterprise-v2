@@ -24,41 +24,60 @@
         <div class="jh-page-body-container px-8">
           <v-container class="pa-0">
             <v-card flat class="pa-4 jh-dashboard-wrapper-card">
-              <div class="d-flex align-center justify-space-between">
-                <div class="d-flex align-center">
-                  <v-icon dense color="grey darken-2">mdi-monitor-dashboard</v-icon>
-                  <span class="font-weight-medium text-subtitle-1 ml-1">工作台</span>
-                </div>
-                <v-chip-group mandatory active-class="success--text" v-model="activeDashboard" class="jh-dashboard-chip">
-                  <v-chip label small v-for="tag in dashboardList" :key="tag" class="my-0">{{ tag }}</v-chip>
-                </v-chip-group>
-              </div>
-              <v-divider class="my-3"></v-divider>
               <div class="jh-directory-card-body">
-                <!-- 模板 -->
-                <v-row v-if="activeDashboard === 0">
-                  <v-col cols="12" class="pb-0">
-                    <v-alert class="mb-0" dense text type="warning" >
-                      <span class="text-body-2">重要提醒</span>
-                    </v-alert>
-                  </v-col>
-                  <v-col cols="8" xs="12">
+                <v-row>
+                  <v-col cols="12">
                     <v-card class="rounded-lg mb-6 jh-dashboard-card">
                       <div class="d-flex align-center pa-4">
-                        <div class="font-weight-medium text-subtitle-2">数据统计 - A</div>
-                        <div class="text--secondary text-caption ml-2">次要文字</div>
+                        <div class="font-weight-medium text-subtitle-2">销售简报</div>
+                      </div>
+                      <div class="px-4 pb-4">
+                        <v-row dense>
+                          <v-col cols="12" xs="12" sm="12" md="3"
+                            v-for="(item, index) in saleData"  
+                            :key="index"
+                           >
+                            <v-card class="rounded-lg pa-4" role="button">
+                              <v-row dense align="center">
+                                <v-col cols="12" xs="12" sm="12" md="6">
+                                  <div>{{item.label}}</div>
+                                  <div class="mt-2"><span class="font-weight-bold text-subtitle-2 mr-1">{{item.number}}</span>{{item.unit}}</div>
+                                  <div class="d-flex align-center mt-2">
+                                    <div class="mr-2">较上月</div>
+                                    <div class="mr-2" :class="item.status === 'up' ? 'red--text' : 'success--text'">{{item.rate}}</div>
+                                    <div>
+                                      <v-icon v-if="item.status === 'up'" size="18" color="red">mdi-arrow-up-bold</v-icon>
+                                      <v-icon v-if="item.status === 'down'" size="18" color="green">mdi-arrow-down-bold</v-icon>
+                                    </div>
+                                  </div>
+                                </v-col>
+                                <v-col cols="12" xs="12" sm="12" md="6">
+                                  <v-sparkline
+                                    :gradient="item.chartOption.color"
+                                    line-width="2"
+                                    padding="8"
+                                    smooth="10"
+                                    :value="item.chartOption.data"
+                                    auto-draw
+                                  ></v-sparkline>
+                                </v-col>
+                              </v-row>
+                            </v-card>
+                          </v-col>
+                        </v-row> 
+                      </div>         
+                    </v-card>
+                  </v-col>
+                  <v-col cols="6" xs="12">
+                    <v-card class="rounded-lg mb-6 jh-dashboard-card">
+                      <div class="d-flex align-center pa-4">
+                        <div class="font-weight-medium text-subtitle-2">合同金额目标及完成情况</div>
                       </div>
                       <v-row>
                         <v-col cols="12">
                           <v-card class="d-flex flex-row flex-wrap mx-3" elevation="0">
-                            <template v-for="(status, index) in constantObj.status" :key="index">
-                              <v-card
-                                elevation="0"
-                                class="pa-3 text-center jh-statistics-card">
-                                <div class="mb-2">{{status.text}}</div>
-                                <div><span class="primary--text">{{status.num || 0}}</span> 人</div>
-                              </v-card>
-                            </template>
+                            <v-chart :option="contractAmountLineOption" autoresize style="height: 300px;"/>
+                            <v-chart :option="contractAmountBarOption" autoresize style="height: 300px;"/>
                           </v-card>
                         </v-col>
                       </v-row>
@@ -66,129 +85,91 @@
         
                     <v-card class="rounded-lg mb-6 jh-dashboard-card">
                       <div class="d-flex pa-4">
-                        <div class="font-weight-medium text-subtitle-2">数据统计 - B</div>
-                        <div class="text--secondary text-caption ml-2">次要文字</div>
+                        <div class="font-weight-medium text-subtitle-2">销售漏斗</div>
                       </div>
                       <v-row>
                         <v-col cols="12">
                           <v-card class="d-flex flex-row flex-wrap ml-3" elevation="0">
-                            <template v-for="(status, index) in constantObj.status2" :key="index">
-                              <v-card
-                                elevation="0"
-                                class="pa-3 text-center jh-statistics-card">
-                                <div class="mb-2">{{status.text}}</div>
-                                <div><span class="primary--text">{{status.num || 0}}</span> 人</div>
-                              </v-card>
+                            <v-chart :option="saleBarOption" autoresize style="height: 400px;"/>
+                          </v-card>
+                        </v-col>
+                      </v-row>
+                    </v-card>
+
+                    <v-card class="rounded-lg mb-6 jh-dashboard-card">
+                      <div class="d-flex pa-4">
+                        <div class="font-weight-medium text-subtitle-2">排行榜</div>
+                      </div>
+                      <v-row>
+                        <v-col cols="12">
+                          <v-simple-table dense>
+                            <template v-slot:default>
+                              <thead>
+                                <tr>
+                                  <th class="text-left font-weight-bold">
+                                    排名
+                                  </th>
+                                  <th class="text-left font-weight-bold">
+                                    姓名
+                                  </th>
+                                  <th class="text-left font-weight-bold">
+                                    回款金额（元）
+                                  </th>
+                                  <th class="text-left font-weight-bold">
+                                    目标完成率（%）
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr
+                                  v-for="(item, index) in tableData"
+                                  :key="index"
+                                >
+                                  <td>{{ item.ranking }}</td>
+                                  <td>{{ item.name }}</td>
+                                  <td>{{ item.amount }}</td>
+                                  <td>{{ item.completionRate}}</td>
+                                </tr>
+                              </tbody>
                             </template>
-                            <v-card
-                              elevation="0"
-                              class="pa-3 text-center jh-statistics-card">
-                              <h4>部门薪资占比</h4>
-                              <div class="text--secondary text-caption mt-3">暂无数据</div>
-                            </v-card>
-                          </v-card>
-                        </v-col>
-                      </v-row>
-                    </v-card>
-
-                    <v-card class="rounded-lg mb-6 jh-dashboard-card">
-                      <div class="d-flex pa-4">
-                        <div class="font-weight-medium text-subtitle-2">图表 - A</div>
-                      </div>
-                      <v-row>
-                        <v-col cols="12">
-                          <v-sparkline
-                            :gradient="['#f72047', '#ffd200', '#1feaea']"
-                            line-width="2"
-                            padding="8"
-                            smooth="10"
-                            :value="[0, 2, 5, 9, 5, 10, 3, 5, 0, 0, 1, 8, 2, 9, 0]"
-                            auto-draw
-                          ></v-sparkline>
-                        </v-col>
-                      </v-row>
-                    </v-card>
-
-                    <v-card class="rounded-lg mb-6 jh-dashboard-card">
-                      <div class="d-flex pa-4">
-                        <div class="font-weight-medium text-subtitle-2">图表 - B</div>
-                      </div>
-                      <v-row>
-                        <v-col cols="12">
-                          <v-card class="px-4"> 
-                            <v-sheet color="#C8E6C9">
-                              <v-sparkline 
-                              :labels="[ '12am', '3am', '6am', '9am', '12pm', '3pm', '6pm', '9pm', ]" 
-                              :value="[ 200, 675, 410, 390, 310, 460, 250, 240, ]" color="white" line-width="2" padding="16" ></v-sparkline>
-                            </v-sheet>
-                          </v-card>
-                        </v-col>
-                      </v-row>
-                    </v-card>
-
-                    <v-card class="rounded-lg mb-6 jh-dashboard-card">
-                      <div class="d-flex pa-4">
-                        <div class="font-weight-medium text-subtitle-2">表格</div>
-                      </div>
-                      <v-row>
-                        <v-col cols="12">
-                          <v-card class="px-4" flat> 
-                            <v-simple-table dense>
-                              <template v-slot:default>
-                                <thead>
-                                  <tr>
-                                    <th class="text-left font-weight-bold">
-                                      Name
-                                    </th>
-                                    <th class="text-left font-weight-bold">
-                                      Calories
-                                    </th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  <tr
-                                    v-for="item in tableData"
-                                    :key="item.name"
-                                  >
-                                    <td>{{ item.name }}</td>
-                                    <td>{{ item.calories }}</td>
-                                  </tr>
-                                </tbody>
-                              </template>
-                            </v-simple-table>
-                          </v-card>
+                          </v-simple-table>
                         </v-col>
                       </v-row>
                     </v-card>
                   </v-col>
-                  <v-col cols="4" class="pl-0">
-
+                  <v-col cols="6" xs="12" class="pl-0">
+                    <v-card class="rounded-lg mb-6 jh-dashboard-card">
+                      <div class="d-flex align-center pa-4">
+                        <div class="font-weight-medium text-subtitle-2">数据汇总</div>
+                      </div>
+                      <div class="px-4 pb-4">
+                        <div class="mt-2" v-for="(item, index) in datSummary" :key="index">
+                          <div class="font-weight-bold jh-font-size-12">{{item.groupName}}</div>
+                          <div class="mt-1">
+                            <v-row dense>
+                              <v-col cols="12" xs="12" sm="12" md="3"
+                                v-for="(row, index) in item.list"  
+                                :key="index"
+                               >
+                                <v-card class="rounded-lg pa-4" role="button">
+                                  <div>{{row.lable}}</div>
+                                  <div><span class="font-weight-bold text-subtitle-2 mr-1">{{row.number}}</span>{{row.unit}}</div>
+                                </v-card>
+                              </v-col>
+                            </v-row> 
+                          </div>     
+                        </div>
+                      </div>
+                    </v-card>
+        
                     <v-card class="rounded-lg mb-6 jh-dashboard-card">
                       <div class="d-flex pa-4">
-                        <div class="font-weight-medium text-subtitle-2">数据统计 - C</div>
-                        <div class="text--secondary text-caption ml-2">次要文字</div>
+                        <div class="font-weight-medium text-subtitle-2">业绩指标完成率</div>
                       </div>
                       <v-row>
                         <v-col cols="12">
                           <v-card class="d-flex flex-row flex-wrap ml-3" elevation="0">
-                            <template v-for="(status, index) in constantObj.status3" :key="index">
-                              <v-card
-                                elevation="0"
-                                class="pa-3 text-center jh-statistics-card">
-                                <div class="mb-2">{{status.text}}</div>
-                                <div><span class="primary--text">{{status.num || 0}}</span> 人</div>
-                              </v-card>
-                            </template>
-                          </v-card>
-                          <v-card class="d-flex flex-row flex-wrap ml-3 mt-2" elevation="0">
-                            <template v-for="(status, index) in constantObj.status4" :key="index">
-                              <v-card
-                                elevation="0"
-                                class="pa-3 text-center jh-statistics-card">
-                                <div class="mb-2">{{status.text}}</div>
-                                <div><span class="primary--text">{{status.num || 0}}</span> 人</div>
-                              </v-card>
-                            </template>
+                            <v-chart :option="saleCompletionRateGaugeOption" autoresize style="height: 400px;"/>
                           </v-card>
                         </v-col>
                       </v-row>
@@ -196,404 +177,329 @@
 
                     <v-card class="rounded-lg mb-6 jh-dashboard-card">
                       <div class="d-flex pa-4">
-                        <div class="font-weight-medium text-subtitle-2">图表 - C</div>
+                        <div class="font-weight-medium text-subtitle-2">客户遗忘提醒</div>
                       </div>
-                      <v-row>
-                        <v-col cols="12">
-                          <div class="d-flex flex-row flex-wrap justify-center">
-                            <v-progress-circular :rotate="360" :size="100" :width="10" :value="80" color="primary" >已完成</v-progress-circular>
-                            <v-progress-circular class="ml-5" :rotate="360" :size="100" :width="10" :value="20" color="amber" >进行中</v-progress-circular>
-                          </div>
-                        </v-col>
-                      </v-row>
-                    </v-card>
-
-                    <v-card class="rounded-lg mb-6 jh-dashboard-card">
-                      <div class="d-flex pa-4">
-                        <div class="font-weight-medium text-subtitle-2">进程/操作日志</div>
-                      </div>
-                      <v-timeline
-                        align-top
-                        dense
-                      >
-                        <v-timeline-item
-                          color="green lighten-4"
-                          small
-                        >
-                          <v-row class="pt-1">
-                            <v-col cols="3">
-                              <strong>5pm</strong>
-                            </v-col>
-                            <v-col>
-                              <strong>审批完成</strong>
-                              <div class="text-caption">
-                                流程结束
+                      <div class="px-4 pb-4">
+                        <v-row dense>
+                          <v-col cols="12" xs="12" sm="12" md="4"
+                            v-for="(item, index) in customerForgetfulnessList"  
+                            :key="index"
+                           >
+                            <v-card class="rounded-lg pa-4" role="button">
+                              <div class="d-flex align-center">
+                                <div>{{item.status === '已逾期' ? `${item.time}` : `超过${item.time}未联系`}}</div>
+                                <v-chip x-small class="ma-2" :color="item.status === '警告' ? 'orange' : item.status === '已逾期' ? 'red' : 'primary'" text-color="white"> {{item.status}} </v-chip>
                               </div>
-                            </v-col>
-                          </v-row>
-                        </v-timeline-item>
-                        <v-timeline-item
-                          color="blue-grey lighten-4"
-                          small
-                        >
-                          <v-row class="pt-1">
-                            <v-col cols="3">
-                              <strong>3-4pm</strong>
-                            </v-col>
-                            <v-col>
-                              <strong>审批流转</strong>
-                              <div class="text-caption mb-2">
-                                李四、王五
-                              </div>
-                              <v-avatar>
-                                <v-img
-                                  src="https://avataaars.io/?avatarStyle=Circle&topType=LongHairFrida&accessoriesType=Kurt&hairColor=Red&facialHairType=BeardLight&facialHairColor=BrownDark&clotheType=GraphicShirt&clotheColor=Gray01&graphicType=Skull&eyeType=Wink&eyebrowType=RaisedExcitedNatural&mouthType=Disbelief&skinColor=Brown"
-                                ></v-img>
-                              </v-avatar>
-                              <v-avatar>
-                                <v-img
-                                  src="https://avataaars.io/?avatarStyle=Circle&topType=ShortHairFrizzle&accessoriesType=Prescription02&hairColor=Black&facialHairType=MoustacheMagnum&facialHairColor=BrownDark&clotheType=BlazerSweater&clotheColor=Black&eyeType=Default&eyebrowType=FlatNatural&mouthType=Default&skinColor=Tanned"
-                                ></v-img>
-                              </v-avatar>
-                              </v-avatar>
-                            </v-col>
-                          </v-row>
-                        </v-timeline-item>
-                        <v-timeline-item
-                          color="blue-grey lighten-4"
-                          small
-                        >
-                          <v-row class="pt-1">
-                            <v-col cols="3">
-                              <strong>12pm</strong>
-                            </v-col>
-                            <v-col>
-                              <strong>审批中</strong>
-                            </v-col>
-                          </v-row>
-                        </v-timeline-item>
-                        <v-timeline-item
-                          color="blue-grey lighten-4"
-                          small
-                        >
-                          <v-row class="pt-1">
-                            <v-col cols="3">
-                              <strong>9am</strong>
-                            </v-col>
-                            <v-col>
-                              <strong>发布审批任务</strong>
-                              <div class="text-caption">
-                                张三
-                              </div>
-                            </v-col>
-                          </v-row>
-                        </v-timeline-item>
-                      </v-timeline>
-                    </v-card>
-
-                    <v-card class="rounded-lg mb-6 jh-dashboard-card">
-                      <div class="d-flex pa-4">
-                        <div class="font-weight-medium text-subtitle-2">进度</div>
-                      </div>
-                      <v-stepper alt-labels flat>
-                        <v-stepper-header>
-                          <v-stepper-step step="1">
-                            新任务已分配
-                          </v-stepper-step>
-                          <v-divider></v-divider>
-                          <v-stepper-step step="2">
-                            处理中
-                          </v-stepper-step>
-                          <v-divider></v-divider>
-                          <v-stepper-step step="3">
-                            处理完成
-                          </v-stepper-step>
-                        </v-stepper-header>
-                      </v-stepper>
+                              <div><span class="font-weight-bold text-subtitle-2 mr-1">{{item.number}}</span>个</div>
+                            </v-card>
+                          </v-col>
+                        </v-row> 
+                      </div>                     
                     </v-card>
                   </v-col>
                 </v-row>  
-                <!-- 人资 -->
-                <v-row v-else-if="activeDashboard === 1">
-                  <v-col cols="8" xs="12">
-                    <v-card class="rounded-lg mb-6 jh-dashboard-card">
-                      <div class="d-flex pa-4">
-                        <div class="font-weight-medium text-subtitle-2">人事概况</div>
-                        <div class="text--secondary text-caption ml-2">（2022.11.01-2022.11.30）</div>
-                      </div>
-                      <v-row>
-                        <v-col cols="12">
-                          <v-card class="d-flex flex-row flex-wrap mx-3" elevation="0">
-                            <template v-for="(status, index) in constantObj.status" :key="index">
-                              <v-card
-                                elevation="0"
-                                class="pa-3 text-center jh-statistics-card">
-                                <div class="mb-2">{{status.text}}</div>
-                                <div><span class="primary--text">{{status.num || 0}}</span> 人</div>
-                              </v-card>
-                            </template>
-                          </v-card>
-                        </v-col>
-                      </v-row>
-                    </v-card>
-        
-                    <v-card class="rounded-lg mb-6 jh-dashboard-card">
-                      <div class="d-flex pa-4">
-                        <div class="font-weight-medium text-subtitle-2">招聘动态</div>
-                        <div class="text--secondary text-caption ml-2">（2022.11.01-2022.11.30）</div>
-                      </div>
-                      <v-row>
-                        <v-col cols="12">
-                          <v-card class="d-flex flex-row flex-wrap ml-3" elevation="0">
-                            <template v-for="(status, index) in constantObj.status1" :key="index">
-                              <v-card
-                                elevation="0"
-                                class="pa-3 text-center jh-statistics-card">
-                                <div class="mb-2">{{status.text}}</div>
-                                <div><span class="primary--text">{{status.num || 0}}</span> 人</div>
-                              </v-card>
-                            </template>
-                          </v-card>
-                        </v-col>
-                      </v-row>
-                    </v-card>
-        
-                    <v-card class="rounded-lg mb-6 jh-dashboard-card">
-                      <div class="d-flex pa-4">
-                        <div class="font-weight-medium text-subtitle-2">上月薪资概况</div>
-                      </div>
-                      <v-row>
-                        <v-col cols="12">
-                          <v-card class="d-flex flex-row flex-wrap ml-3" elevation="0">
-                            <template v-for="(status, index) in constantObj.status2" :key="index">
-                              <v-card
-                                elevation="0"
-                                class="pa-3 text-center jh-statistics-card">
-                                <div class="mb-2">{{status.text}}</div>
-                                <div><span class="primary--text">{{status.num || 0}}</span> 人</div>
-                              </v-card>
-                            </template>
-                            <v-card
-                              elevation="0"
-                              class="pa-3 text-center jh-statistics-card">
-                              <h4>部门薪资占比</h4>
-                              <div class="text--secondary text-caption mt-3">暂无数据</div>
-                            </v-card>
-                          </v-card>
-                        </v-col>
-                      </v-row>
-                    </v-card>
-        
-                    <v-card class="rounded-lg mb-6 jh-dashboard-card">
-                      <div class="d-flex pa-4">
-                        <div class="font-weight-medium text-subtitle-2">绩效考核</div>
-                        <div class="text--secondary text-caption ml-2">（2022.11.01-2022.11.30）</div>
-                      </div>
-                      <v-row>
-                        <v-col cols="12">
-                          <v-tabs dense v-model="actionTab" class="px-4 pb-4">
-                            <v-tab v-for="(tab, index) in tabs" :key="index">{{tab.title}}</v-tab>
-                          </v-tabs>
-                        </v-col>
-                      </v-row>
-                    </v-card>
-                  </v-col>
-                  <v-col cols="4" class="pl-0">
-                    <v-card class="rounded-lg mb-6 jh-dashboard-card">
-                      <div class="d-flex pa-4">
-                        <div class="font-weight-medium text-subtitle-2">待办提醒</div>
-                      </div>
-                      <v-row class="">
-                        <v-col cols="12">
-                          <v-card class="d-flex flex-row flex-wrap ml-3" elevation="0">
-                            <template v-for="(status, index) in constantObj.status3" :key="index">
-                              <v-card
-                                elevation="0"
-                                class="pa-3 text-center jh-statistics-card">
-                                <div class="mb-2">{{status.text}}</div>
-                                <div><span class="primary--text">{{status.num || 0}}</span> 人</div>
-                              </v-card>
-                            </template>
-                          </v-card>
-                          <v-card class="d-flex flex-row flex-wrap ml-3 mt-2" elevation="0">
-                            <template v-for="(status, index) in constantObj.status4" :key="index">
-                              <v-card
-                                elevation="0"
-                                class="pa-3 text-center jh-statistics-card">
-                                <div class="mb-2">{{status.text}}</div>
-                                <div><span class="primary--text">{{status.num || 0}}</span> 人</div>
-                              </v-card>
-                            </template>
-                          </v-card>
-                        </v-col>
-                      </v-row>
-                    </v-card>
-        
-                    <v-card class="rounded-lg mb-6 jh-dashboard-card">
-                      <div class="d-flex pa-4">
-                        <div class="font-weight-medium text-subtitle-2">日历</div>
-                      </div>
-                      <div class="text-center">
-                        <v-date-picker
-                          v-model="picker"
-                          color="green lighten-1"
-                        ></v-date-picker>
-                      </div>
-                      <div class="pa-4">
-                        <v-btn block color="primary">添加备忘录</v-btn>
-                      </div>
-                      <div class="pa-4">
-                        <h4>当天事项</h4>
-                        <div class="text--secondary text-caption mt-3 text-center">暂无数据</div>
-                      </div>
-                    </v-card>
-                  </v-col>
-                </v-row>  
-                <!-- 空数据 -->
-                <div v-else class="text-center mt-10">暂无数据~</div>
               </template>
             </v-card>
           </v-container>
         </div>
-      </div>
-        <!-- <<<<<<<<<<<<< 头部内容 -->
-        <div class="jh-page-body-container px-8 pt-4">
-          <!-- 页面内容 >>>>>>>>>>>>> -->
-          <v-card class="rounded-lg">
-          <v-list-item-group
-              v-model="selectedUrlItem"
-              color="primary"
-          >
-            <v-row>
-              <template v-if="!directoryList">
-                <div style="text-align: center; line-height: 100px; width: 100%; color: #999999; font-size: 1.25rem">
-                  加载中
-                </div>
-              </template>
-              <template v-else-if="!Object.keys(directoryList).length">
-                <div style="text-align: center; line-height: 100px; width: 100%; color: #999999; font-size: 1.25rem">
-                  暂无目录
-                </div>
-              </template>
-              <template v-else v-for="(value, key) in directoryList">
-                <v-col cols="12" sm="6" md="4" lg="3" xl="2" class="">
-                  <v-list dense :key="key">
-                    <template v-for="(item, i) in value">
-                      <v-list-item
-                          :key="item.appId + '-' + item.loginId + '-' + item.appGroupNumber + '-' + item.appGroupItemSort + '-' + i"
-                          @click="doUiAction('jump', item.url)"
-                      >
-                        <v-list-item-icon class="mr-2">
-                          <v-icon size="18" color="grey lighten-3">mdi-link-variant</v-icon>
-                        </v-list-item-icon>
-                        <v-list-item-content>
-                          <v-list-item-title v-text="item.displayName"></v-list-item-title>
-                        </v-list-item-content>
-                        <v-list-item-icon class="mr-2">
-                          <v-icon size="18" color="grey lighten-1">mdi-chevron-right</v-icon>
-                        </v-list-item-icon>
-                      </v-list-item>
-                      <!--          <v-divider></v-divider>-->
-                    </template>
-                  </v-list>
-                </v-col>
-              </template>
-            </v-row>
-          </v-list-item-group>
-        </v-card>
-        <!-- <<<<<<<<<<<<< 页面内容 -->
-      </div>
-       <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
-       <v-navigation-drawer v-model="isHelpPageDrawerShown" fixed temporary right width="80%" class="elevation-24">
-        <iframe style="border: 0" :src="`/${appInfo.appId}/pageDoc#1.directory.md`" width="100%" height="100%"></iframe>
-        <v-btn elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn" @click="isHelpPageDrawerShown = false">
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
-      </v-navigation-drawer>
-      <!-- <<<<<<<<<<<<< 帮助页抽屉 -->
-    </v-main>
+
+        <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
+        <v-navigation-drawer v-model="isHelpPageDrawerShown" fixed temporary right width="80%" class="elevation-24">
+          <iframe style="border: 0" :src="`/${appInfo.appId}/pageDoc#1.directory.md`" width="100%" height="100%"></iframe>
+          <v-btn elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn" @click="isHelpPageDrawerShown = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-navigation-drawer>
+        <!-- <<<<<<<<<<<<< 帮助页抽屉 -->
+      </v-main>
     </v-app>
-  <jh-toast />
-  <jhMask />
-  <jhConfirmDialog />
-</div>
+    <jh-toast />
+    <jhMask />
+    <jhConfirmDialog />
+  </div>
 </script>
 <div id="app">
 </div>
 {% endblock %}
 {% block vueScript %}
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue-echarts@6.6.4"></script>
 <script type="module">
+  Vue.component('v-chart', VueECharts);
 
   new Vue({
     el: '#app',
     template: '#app-template',
     vuetify: new Vuetify(),
-    // mixins: [window.jianghuUiActionMixins],
     data: {
       isMobile: window.innerWidth < 500,
-      selectedUrlItem: null,
       isHelpPageDrawerShown: false,
-      
-      dashboardList: ['模板', '人资', '后勤', '校务', '教务', '财务', '公共关系'],
-      activeDashboard: 0,
 
-      constantObj: {
-        status: [
-            {text: "在职", value: 1},
-            {text: "入职", value: 2},
-            {text: "待入职", value: 3},
-            {text: "离职", value: 4},
-            {text: "待离职", value: 5},
-            {text: "转正", value: 6},
-            {text: "调岗", value: 7},
-        ],
-        status1: [
-            {text: "正在招聘职位", value: 1},
-            {text: "评选中", value: 2},
-            {text: "待入职", value: 3},
-            {text: "已入职", value: 4},
-        ],
-        status2: [
-            {text: "计薪人员", value: 1},
-            {text: "实发工资", value: 2},
-        ],
-        status3: [
-            {text: "待审核薪资", value: 1},
-            {text: "待离职", value: 2},
-            {text: "合同到期", value: 3},
-        ],
-        status4: [
-            {text: "待转正", value: 4},
-            {text: "待入职", value: 5},
-            {text: "生日", value: 6},
+      // 客户遗忘提醒
+      saleData: [
+        {
+          label: '新增客户',
+          number: 2,
+          unit: '人',
+          rate: '100%',
+          status: 'up',
+          chartOption: {
+            color: ['#5470C6'],
+            data: [0, 2, 5, 9, 5, 10, 3]
+          }
+        },
+        {
+          label: '新增联系人',
+          number: 2,
+          unit: '人',
+          rate: '100%',
+          status: 'up',
+          chartOption: {
+            color: ['#5470C6'],
+            data: [0, 2, 5, 9, 5, 10, 3]
+          }
+        },
+        {
+          label: '新增商机',
+          number: 2,
+          unit: '个',
+          rate: '-20%',
+          status: 'down',
+          chartOption: {
+            color: ['#5470C6'],
+            data: [0, 2, 5, 9, 5, 10, 3]
+          }
+        },
+        {
+          label: '新增合同',
+          number: 2,
+          unit: '个',
+          rate: '100%',
+          status: 'up',
+          chartOption: {
+            
+          }
+        },
+        {
+          label: '合同金额',
+          number: 2,
+          unit: '元',
+          rate: '100%',
+          status: 'up',
+          chartOption: {
+            color: ['#5470C6'],
+            data: [0, 2, 5, 9, 5, 10, 3]
+          }
+        },
+        {
+          label: '商机金额',
+          number: 2,
+          unit: '元',
+          rate: '100%',
+          status: 'up',
+          chartOption: {
+            
+          }
+        },
+        {
+          label: '回款金额',
+          number: 2,
+          unit: '元',
+          rate: '100%',
+          status: 'up',
+          chartOption: {
+            color: ['#5470C6'],
+            data: [0, 2, 5, 9, 5, 10, 3]
+          }
+        },
+        {
+          label: '新增跟进记录',
+          number: 2,
+          unit: '条',
+          rate: '100%',
+          status: 'up',
+          chartOption: {
+            color: ['#5470C6'],
+            data: [0, 2, 5, 9, 5, 10, 3]
+          }
+        },
+      ],
+
+      // 合同金额折线图
+      contractAmountLineOption: {
+        xAxis: {
+          type: 'category',
+          data: ['2023-01', '2023-02', '2023-03', '2023-04', '2023-05', '2023-06']
+        },
+        yAxis: {
+          type: 'value'
+        },
+        series: [
+          {
+            data: [0, 2000, 4000, 6000, 2000, 2000],
+            type: 'line'
+          }
         ],
       },
-      picker: (new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().substr(0, 10),
+
+      // 合同金额柱状图
+      contractAmountBarOption: {
+        xAxis: {
+          data: ['2023-01', '2023-02', '2023-03', '2023-04', '2023-05', '2023-06']
+        },
+        yAxis: {},
+        series: [
+          {
+            type: 'bar',
+            data: [0, 2000, 4000, 6000, 2000, 2000],
+          }
+        ]
+      },
+
+      // 销售漏斗图
+      saleBarOption: {
+        xAxis: {
+          max: 'dataMax'
+        },
+        yAxis: {
+          type: 'category',
+          data: ['初步沟通', '验证客户', '报价', '赢单', '输单'],
+        },
+        series: [
+          {
+            name: '金额',
+            type: 'bar',
+            data: [1000, 2000, 4000, 6000, 2000],
+            label: {
+              show: true,
+              position: 'right'
+            }
+          }
+        ],
+      },
+
+      // 排行榜
       tableData: [
         {
-          name: 'Frozen Yogurt',
-          calories: 159,
+          ranking: 1,
+          name: '张无忌',
+          amount: 2000,
+          completionRate: '70%'
         },
         {
-          name: 'Ice cream sandwich',
-          calories: 237,
+          ranking: 2,
+          name: '王语嫣',
+          amount: 1000,
+          completionRate: '60%'
         },
         {
-          name: 'Eclair',
-          calories: 262,
+          ranking: 3,
+          name: '小龙女',
+          amount: 500,
+          completionRate: '50%'
+        },
+      ],
+
+      // 数据汇总
+      datSummary: [
+        {
+          groupName: '客户汇总',
+          list: [
+            {
+              lable: '新增客户',
+              number: 2,
+              unit: '个'
+            },
+            {
+              lable: '转成交客户',
+              number: 2,
+              unit: '个'
+            },
+            {
+              lable: '放入公海客户',
+              number: 2,
+              unit: '个'
+            },
+            {
+              lable: '公海池领取',
+              number: 2,
+              unit: '个'
+            },
+          ]
+        },
+        {
+          groupName: '商机汇总',
+          list: [
+            {
+              lable: '新增商机',
+              number: 2,
+              unit: '个'
+            },
+            {
+              lable: '赢单商机',
+              number: 2,
+              unit: '个'
+            },
+          ]
         }
       ],
 
-      tabs: [
-        { title: '已完成考核', action: 'post' },
-        { title: '进行中考核', action: 'basic' },
-      ],
-      actionTab: 0,
+      // 业绩指标完成率仪表盘
+      saleCompletionRateGaugeOption: {
+        tooltip: {
+          formatter: '{a} <br/>{b} : {c}%'
+        },
+        series: [
+          {
+            name: 'Pressure',
+            type: 'gauge',
+            detail: {
+              formatter: '{value}%'
+            },
+            data: [
+              {
+                value: 50,
+                name: '完成率'
+              }
+            ]
+          }
+        ]
+      },
 
-      isDirectoryLoading: true,
-      directorySearchInput: null,
-      directoryList: null,
-      directorySearchList: null
+      // 客户遗忘提醒
+      customerForgetfulnessList: [
+        {
+          time: '7天',
+          number: 2,
+          status: '正常'
+        },
+        {
+          time: '15天',
+          number: 3,
+          status: '正常'
+        },
+        {
+          time: '1个月',
+          number: 4,
+          status: '警告'
+        },
+        {
+          time: '3个月',
+          number: 5,
+          status: '警告'
+        },
+        {
+          time: '6个月',
+          number:6,
+          status: '警告'
+        },
+        {
+          time: '逾期未联系',
+          number: 7,
+          status: '已逾期'
+        }
+      ],
+
     },
     computed: {
       isMobile() {
@@ -601,9 +507,6 @@
       },
     },
     watch: {
-      directorySearchInput() {
-        this.doUiAction('directorySearch')
-      },
     },
     async created() {
     },
@@ -613,9 +516,6 @@
     methods: {
       async doUiAction(uiActionId,uiActionData){
         switch(uiActionId){
-          case 'directorySearch':
-            await this.directorySearch();
-            break;
           case 'getTableData':
             await this.getTableData();
             break;
@@ -628,44 +528,8 @@
         }
       },
 
-      // ---------- 目录搜索 uiAction >>>>>>>>>>>> --------
-       async directorySearch() {
-        const searchVal = this.directorySearchInput ? this.directorySearchInput.toLowerCase() : null;
-        const directoryList = _.cloneDeep(this.directoryList);
-        if (searchVal) {
-          this.directorySearchList = _.filter(directoryList, item => {
-            return _.some(item, subItem => {
-              return _.isObject(subItem) && _.some(subItem, value => {
-                return _.isString(value) && value.includes(searchVal);
-              });
-            });
-          });
-        }else{
-          this.directorySearchList = directoryList;
-        }
-      },
-      // ---------- <<<<<<<<<<< 目录搜索 uiAction  --------
-
-      /**
-       * 获取表格数据
-       */
       async getTableData() {
-        this.isDirectoryLoading = true;
-        const result = await window.jianghuAxios({
-          data: {
-            appData: {
-              pageId: 'directory',
-              actionId: 'selectItemList',
-              orderBy: [{column: 'operationAt', order: 'desc'}]
-            }
-          }
-        });
-        this.directoryList = _
-        .chain(result.data.appData.resultData.rows)
-        .sortBy('appGroupItemSort')
-        .groupBy('appGroupNumber')
-        .value();
-        this.isDirectoryLoading = false;
+       
       },
       jump(url) {
         window.open(url);
