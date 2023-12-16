@@ -54,12 +54,24 @@ class TicketService extends Service {
       updateTaskData.taskStatus = '已完成';
     }
 
-    // 更新task
-    await jianghuKnex(tableEnum.task).where({ taskId }).update({
-      taskAuditedUserIdList: auditedUsers.join(','),
-      taskAuditConfig: JSON.stringify(auditConfig),
-      ...updateTaskData,
-    });
+    // 使用事务更新
+    await jianghuKnex.transaction(async trx => {
+      // 通知下申请人
+      await this.ctx.service.notice.addNotice({
+        taskMemberIdList: [task.taskManagerId],
+        taskTitle: `审批进度提醒`,
+        taskDesc: `${username} ${userAudit.status}了您<a>《${task.taskTitle}》</a>，请知晓`,
+      })
+
+      // 更新task
+      await jianghuKnex(tableEnum.task).where({ taskId }).update({
+        taskAuditedUserIdList: auditedUsers.join(','),
+        taskAuditConfig: JSON.stringify(auditConfig),
+        ...updateTaskData,
+      });
+    })
+
+
   }
 }
 

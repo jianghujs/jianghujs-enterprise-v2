@@ -33,8 +33,6 @@ class NoticeService extends Service {
       taskBizId = task.taskId
     }
 
-
-
     // 判断taskMemberIdList是否为数组
     if (!_.isArray(taskMemberIdList)) {
       taskMemberIdList = taskMemberIdList.split(',')
@@ -50,7 +48,6 @@ class NoticeService extends Service {
       taskMemberIdList = _.union(taskMemberIdList, [taskManagerId])
     }
 
-
     let idSequence = await idGenerateUtil.idPlus({
       knex,
       tableName: 'task',
@@ -60,23 +57,26 @@ class NoticeService extends Service {
 
     // 判断taskType类型
     // Tips: 传href就是跳转其他业务页面，不传就是在当前页看
-    switch (taskType) {
-      case '任务':
-        taskDesc = `${username} 邀请您参与<a>《${taskTitle}》</a>任务，请及时查看`;
-        taskTitle = '任务邀请提醒';
-        break;
-      case '审批':
-        taskDesc = `${username} 提交了<a>《${taskTitle}》</a>，请及时处理`;
-        taskTitle = '待审批提醒';
-        break;
-      case '日志':
-        taskDesc = `${username} 将<a>《${taskTitle}》</a>日志发送给您，请及时查看`;
-        taskTitle = '日志邀请提醒';
-        break;
-      default:
-        taskDesc = `有一个新公告 <a>《${taskTitle}》</a> ，请及时查看`;
-        taskTitle = '公告提醒';
-        break;
+
+    if (!taskDesc) {
+      switch (taskType) {
+        case '任务':
+          taskDesc = `${username} 邀请您参与<a>《${taskTitle}》</a>任务，请及时查看`;
+          taskTitle = '任务邀请提醒';
+          break;
+        case '审批':
+          taskDesc = `${username} 提交了<a>《${taskTitle}》</a>，请及时处理`;
+          taskTitle = '待审批提醒';
+          break;
+        case '日志':
+          taskDesc = `${username} 将<a>《${taskTitle}》</a>日志发送给您，请及时查看`;
+          taskTitle = '日志邀请提醒';
+          break;
+        default:
+          taskDesc = `有一个新公告 <a>《${taskTitle}》</a> ，请及时查看`;
+          taskTitle = '公告提醒';
+          break;
+      }
     }
 
     const insertData = taskMemberIdList.map(item => {
