@@ -83,6 +83,9 @@
                 item-text="value" item-value="value"
                 class="jh-v-input" dense filled single-line></v-autocomplete>
             </template>
+            <template v-slot:item.appUrl="{ item }">
+              <v-text-field class="jh-v-input" dense single-line filled v-model="item.appUrl"></v-text-field>
+            </template>
             <!-- <template v-slot:item.appId="{ item }">
               <v-icon color="success" small @click="copyText('/<$ appic $>')">mdi-content-copy</v-icon>
               <v-icon color="success" small>mdi-open-in-new</v-icon>
@@ -217,10 +220,11 @@ new Vue({
     isTableLoading: true,
     tableData: [],
     headers: [
-      {text: "应用ID", value: "appId"},
-      {text: "应用名", value: "appName"},
+      {text: "应用ID", value: "appId", width: 120},
+      {text: "应用名", value: "appName", width: 120},
       {text: "目录设置", value: "appPageDirectoryList", width: 500},
       {text: "应用类型", value: "appType", width: 150},
+      {text: "应用链接", value: "appUrl", width: 270},
       {text: "数据库", value: "appDatabase"},
       {text: '操作', value: 'action', align: 'center', sortable: false, width: window.innerWidth < 500 ? 80 : 120, class: 'fixed', cellClass: 'fixed'},
     ],
@@ -253,6 +257,7 @@ new Vue({
             break;
           case 'updateAppPageDirectoryList':
             await this.updateAppPageDirectoryList(uiActionData);
+            await this.getTableData();
             break;  
           case 'updateToDirectoryApp':
             await this.updateToDirectoryApp(uiActionData);
@@ -327,7 +332,7 @@ new Vue({
       await window.jhMask.show();
       await window.vtoast.loading({ message: '保存目录设置', timer: -1 });
       for (const item of this.tableData) {
-        const { id, appPageDirectoryList, appType } = item;
+        const { id, appPageDirectoryList, appType, appUrl } = item;
         await window.jianghuAxios({
           data: {
             appData: {
@@ -336,6 +341,7 @@ new Vue({
               actionData: { 
                 appPageDirectoryList: JSON.stringify(appPageDirectoryList || '[]'),
                 appType,
+                appUrl,
               },
               where: {id},
             }

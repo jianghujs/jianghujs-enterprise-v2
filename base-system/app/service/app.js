@@ -49,18 +49,16 @@ class AppService extends Service {
     await jianghuKnex('jh_enterprise_v2_directory.directory').where({description: '生成'}).delete();
     const directoryList = await jianghuKnex('jh_enterprise_v2_directory.directory').select();
     for (const app of appList) {
-      const { appPageDirectoryList, appType } = app;
+      const { appPageDirectoryList, appType, appUrl } = app;
       const directoryList = appPageDirectoryList.map((page)=>{
         const appTypeIndex = appTypeList.findIndex((at)=>at.value == appType)
         return {
-          // `appGroupNumber` varchar(255) DEFAULT NULL COMMENT '应用组排序',
-          // `appGroupName` varchar(255) DEFAULT NULL COMMENT '应用组名',
-          // `appGroupItemSort` varchar(255) DEFAULT NULL COMMENT '应用组下url的排序',
           appGroupNumber: appTypeIndex > -1 ? `${appTypeIndex + 1}0`: null,
           appGroupName: app.appType,
+          appGroupItemSort: null, // TODO: 从 old directoryList里取
           appId: app.appId,
           appName: app.appName,
-          url: `/page/${page.pageId}`,
+          url: `${appUrl}/page/${page.pageId}`,
           displayName: page.pageName,
           description: '生成',
           accessType: 'login',
