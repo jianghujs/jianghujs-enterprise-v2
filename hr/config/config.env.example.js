@@ -31,7 +31,7 @@ module.exports = appInfo => {
           password: process.env.DB_PASSWORD,
           database: 'jh_enterprise_v2_hr'
         },
-        pool: { min: 0, max: 100 },
+        pool: { min: 0, max: 10 },
         acquireConnectionTimeout: 30000
       },
       app: true

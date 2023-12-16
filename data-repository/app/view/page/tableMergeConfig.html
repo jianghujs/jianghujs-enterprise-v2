@@ -372,7 +372,7 @@ new Vue({
       const result = await window.jianghuAxios({
         data: {
           appData: {
-            pageId: 'tableMergeAllConfig',
+            pageId: 'tableMergeConfig',
             actionId: 'selectItemList',
             orderBy: [{column: 'targetTable', order: 'asc'}]
           }
@@ -400,7 +400,7 @@ new Vue({
       const result = await window.jianghuAxios({
         data: {
           appData: {
-            pageId: 'tableMergeAllConfig',
+            pageId: 'tableMergeConfig',
             actionId: 'selectSourceDatabase',
           }
         }
@@ -415,7 +415,7 @@ new Vue({
       const result = await window.jianghuAxios({
         data: {
           appData: {
-            pageId: 'tableMergeAllConfig',
+            pageId: 'tableMergeConfig',
             actionId: 'selectSourceTable',
             actionData: {sourceDatabase: funObj.sourceDatabase},
             orderBy: [{column: 'operationAt', order: 'desc'}]
@@ -462,7 +462,7 @@ new Vue({
       await window.jianghuAxios({
         data: {
           appData: {
-            pageId: 'tableMergeAllConfig',
+            pageId: 'tableMergeConfig',
             actionId: 'insertTable',
             actionData: this.createActionData
           }
@@ -515,7 +515,7 @@ new Vue({
       await window.jianghuAxios({
         data: {
           appData: {
-            pageId: 'tableMergeAllConfig',
+            pageId: 'tableMergeConfig',
             actionId: 'updateTable',
             actionData: this.updateActionData,
             where: {id: this.updateItemId}
@@ -548,7 +548,7 @@ new Vue({
       await window.jianghuAxios({
         data: {
           appData: {
-            pageId: 'tableMergeAllConfig',
+            pageId: 'tableMergeConfig',
             actionId: 'deleteTable',
             actionData: {},
             where: {id: this.deleteItemId}
@@ -574,8 +574,8 @@ new Vue({
       await window.jianghuAxios({
         data: {
           appData: {
-            pageId: 'tableMergeAllConfig',
-            actionId: 'syncTable',
+            pageId: 'tableMergeConfig',
+            actionId: 'doTableMerge',
             actionData: {
               sourceDatabase: this.syncItem.sourceDatabase,
               sourceTable: this.syncItem.sourceTable
@@ -597,8 +597,8 @@ new Vue({
       await window.jianghuAxios({
         data: {
           appData: {
-            pageId: 'tableMergeAllConfig',
-            actionId: 'syncTable',
+            pageId: 'tableMergeConfig',
+            actionId: 'doTableMerge',
             actionData: {}
           }
         }

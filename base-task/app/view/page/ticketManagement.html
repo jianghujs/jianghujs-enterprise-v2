@@ -43,13 +43,11 @@
           </v-btn>
           <v-btn color="success" class="elevation-0 mr-2" @click="doUiAction('exportExcel')" small outlined>导出
           </v-btn>
-          <task-filter-btn :user-list="userList" :filter-options="serverSearchInput" @save="doUiAction('getTableData')" />
           <v-spacer></v-spacer>
           <!-- 搜索过滤 -->
        
-          <v-btn-toggle v-model="selectedFilterIndex" class="mr-2" color="success" small>
-            <v-btn small>我的申请</v-btn>
-            <v-btn small>待我审批</v-btn>
+          <v-btn-toggle :value="0" @change="doUiAction('useScene', sceneList[$event])" class="mr-2" color="success" small>
+            <v-btn v-for="scene in sceneList" small>{{scene.name}}</v-btn>
           </v-btn-toggle>
 
           <v-col cols="12" xs="8" sm="4" md="3" xl="2" class="pa-0">
@@ -71,12 +69,19 @@
           class="jh-fixed-table-height elevation-0 mt-0 mb-xs-4">
           <!-- 表格操作按钮 -->
           <template v-slot:item.action="{ item }">
-            <span role="button" class="success--text font-weight-medium font-size-2 mr-2" @click="doUiAction('startUpdateItem', item)">
-              <v-icon size="16" class="success--text">mdi-note-edit-outline</v-icon>修改
-            </span>
-            <span role="button" class="success--text font-weight-medium font-size-2" @click="doUiAction('deleteItem', item)">
-              <v-icon size="16" class="success--text">mdi-trash-can-outline</v-icon>删除
-            </span>
+            <template v-if="item.taskStatus != '已完成' && item.taskManagerId==userId">
+              <span role="button" class="success--text font-weight-medium font-size-2 mr-2" @click="doUiAction('startUpdateItem', item)">
+                <v-icon size="16" class="success--text">mdi-note-edit-outline</v-icon>修改
+              </span>
+              <span role="button" class="success--text font-weight-medium font-size-2" @click="doUiAction('deleteItem', item)">
+                <v-icon size="16" class="success--text">mdi-trash-can-outline</v-icon>删除
+              </span>
+            </template>
+            <template v-if="item.taskAuditUserIdList.includes(userId)">
+              <span role="button" class="success--text font-weight-medium font-size-2 mr-2" @click="doUiAction('startHandleTaskApply', item)">
+                <v-icon size="16" class="success--text">mdi-note-edit-outline</v-icon>审批
+              </span>
+            </template>
           </template>
           <!-- 没有数据 -->
           <template v-slot:loading>
@@ -221,6 +226,8 @@
         </v-btn>
       </v-navigation-drawer>
       <!-- <<<<<<<<<<<<< 页面内容 -->
+
+      <view-ticket-detail-drawer ref="ticketDetail" />
     </div>
 
     <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
@@ -251,6 +258,7 @@
 {% include 'common/jianghuJs/fixedTableHeightV4.html' %}
 {% include 'component/task-filter-btn.html' %}
 {% include 'common/excelUtil.html' %}
+{% include 'component/view-ticket-detail-drawer.html' %}
 <script type="module">
   new Vue({
     el: '#app',
@@ -287,7 +295,21 @@
           { text: '低', value: '低' },
           { text: '高', value: '高' },
         ],
+
       },
+      sceneList: [
+        {
+          "form": { taskManagerId: window.userInfo.userId, taskType: '审批', },
+          "name": "我的申请",
+          "id": "scene-fixed-1"
+        },
+        {
+          "form": { taskAuditUserIdList: `%${window.userInfo.userId}%`, taskType: '审批', },
+          "name": "待我审批",
+          "id": "scene-fixed-2"
+        },
+      ],
+
       currentSceneId: null,
       serverSearchInput: {
         taskType: '审批',
@@ -321,13 +343,12 @@
       deleteItem: {},
       deleteItemId: null,
 
-      selectedFilterIndex: 0,
       isTaskStartAtMenuShown: false,
       isTaskEndAtMenuShown: false,
       userList: [],
 
       taskTemplateList: [],
-      taskTemplatePersonList: [],
+      userId: window.userInfo.userId
     }),
     watch: {
       isHelpPageDrawerShown(val) {
@@ -335,16 +356,6 @@
           this.isHelpPageDrawerLoaded = true;
         }
       },
-      selectedFilterIndex(val) {
-        if (val == 1) {
-          this.serverSearchInput.taskAuditUserIdList = `%${window.userInfo.userId}%`
-          this.serverSearchInput.taskManagerId = null
-        } else {
-          this.serverSearchInput.taskManagerId = window.userInfo.userId
-          this.serverSearchInput.taskAuditUserIdList = null
-        }
-        this.doUiAction('getTableData')
-      }
     },
     async created() {
     },
@@ -406,6 +417,13 @@
           case 'handleTaskTemplateChange':
             await this.handleTaskTemplateChange(uiActionData);
             break;
+          case 'useScene':
+            await this.useScene(uiActionData);
+            await this.doUiAction('getTableData');
+            break;
+          case 'startHandleTaskApply':
+            this.$refs.ticketDetail.doUiAction('open', { taskId: uiActionData.taskId })
+            break;
           default:
             console.error("[doUiAction] uiActionId not find", { uiActionId });
             break;
@@ -417,13 +435,17 @@
       async getTableData() {
         this.isTableLoading = true;
         // 取this.serverSearchInput为真，使用loadsh
-        const {taskAuditUserIdList, ...otherParams} = this.serverSearchInput
+        const { taskAuditUserIdList, taskAuditedUserIdList, ...otherParams } = this.serverSearchInput
 
         const whereData = _.pickBy(otherParams, _.identity);
         const whereLikeData = {}
         if (taskAuditUserIdList) {
           whereLikeData.taskAuditUserIdList = taskAuditUserIdList
         }
+        // const whereILikeData = {}
+        // if (taskAuditedUserIdList) {
+        //   whereILikeData.taskAuditedUserIdList = taskAuditedUserIdList
+        // }
 
         const rows = (await window.jianghuAxios({
           data: {
@@ -438,8 +460,10 @@
           }
         })).data.appData.resultData.rows;
 
-        rows.map(row=> {
+        rows.map(row => {
           row.taskAuditConfig = JSON.parse(row.taskAuditConfig)
+          row.taskAuditUserIdList = (row.taskAuditUserIdList || '').split(',')
+
         })
         this.tableData = rows;
         this.isTableLoading = false;
@@ -486,11 +510,11 @@
       prepareDoCreateItem() {
         const { id, ...data } = this.createItem;
 
-        data.taskAuditUserIdList = data.taskAuditConfig.map(item=> item.userId).join(',')
+        data.taskAuditUserIdList = data.taskAuditConfig.map(item => item.userId).join(',')
         data.taskMemberIdList = data.taskAuditUserIdList
-        data.taskAuditConfig = data.taskAuditConfig.map(item=> {
+        data.taskAuditConfig = data.taskAuditConfig.map(item => {
           // 查userList
-          const user = this.userList.find(user=> user.userId === item.userId)
+          const user = this.userList.find(user => user.userId === item.userId)
           return {
             ...item,
             username: user.username,
@@ -498,6 +522,7 @@
         })
         data.taskAuditConfig = JSON.stringify(data.taskAuditConfig)
         data.taskType = '审批'
+        data.taskCreateAt = dayjs().format('YYYY-MM-DD HH:mm:ss')
         this.createActionData = data;
       },
 
@@ -536,7 +561,6 @@
       // ---------- <<<<<<<<<<< 新增数据 uiAction ---------
       // ---------- 修改数据 uiAction >>>>>>>>>>>> --------
       async prepareUpdateFormData(funObj) {
-        this.taskTemplatePersonList = funObj.taskAuditConfig
 
         this.updateItem = _.cloneDeep(funObj);
       },
@@ -562,11 +586,11 @@
         const { id, ...data } = this.updateItem;
         this.updateItemId = id;
 
-        data.taskAuditUserIdList = data.taskAuditConfig.map(item=> item.userId).join(',')
+        data.taskAuditUserIdList = data.taskAuditConfig.map(item => item.userId).join(',')
         data.taskMemberIdList = data.taskAuditUserIdList
-        data.taskAuditConfig = data.taskAuditConfig.map(item=> {
+        data.taskAuditConfig = data.taskAuditConfig.map(item => {
           // 查userList
-          const user = this.userList.find(user=> user.userId === item.userId)
+          const user = this.userList.find(user => user.userId === item.userId)
           return {
             ...item,
             username: user.username,
@@ -669,7 +693,7 @@
         item.taskAuditConfig = JSON.parse(taskTemplate.taskTemplatePersonList);
       },
       // ---------- <<<<<<<<<<<<< 审批模板 ----------
-      
+
       // ---------- 添加通知 >>>>>>>>>>>>> ----------
       async addNotice(item) {
         await window.jianghuAxios({
@@ -683,6 +707,10 @@
         })
       },
       // ---------- <<<<<<<<<<<<< 添加通知 ----------
+      useScene(funObj) {
+        this.currentSceneId = funObj.id;
+        this.serverSearchInput = _.cloneDeep(funObj.form);
+      },
     }
   })
 </script>
