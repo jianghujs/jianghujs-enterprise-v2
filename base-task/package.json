@@ -26,9 +26,9 @@
     "node": ">=10.0.0"
   },
   "scripts": {
-    "start": "egg-scripts start --workers=2 --daemon  --port=7274 --title=jh-enterprise-v2-task",
+    "start": "egg-scripts start --workers=2 --daemon  --port=7264 --title=jh-enterprise-v2-task",
     "stop": "egg-scripts stop --title=jh-enterprise-v2-task",
-    "dev": "egg-bin dev --port=7274",
+    "dev": "egg-bin dev --port=7264",
     "debug": "egg-bin debug",
     "test": "npm run lint -- --fix && npm run test-local",
     "test-local": "egg-bin test",
