@@ -83,6 +83,7 @@ class AppService extends Service {
       ];
       await Promise.all(deleteViewSql);
       await Promise.all(createViewSql);
+      await currentKnex.destroy();
     }
   }
 
