@@ -210,12 +210,7 @@ new Vue({
       ],
     },
     constantObj: {
-      appTypeList: [
-        { value:'系统应用' },
-        { value:'办公应用' }, 
-        { value:'简单应用' }, 
-        { value:'其他应用' }, 
-      ],
+      appTypeList: [],
     },
     searchInput: null,
     isTableLoading: true,
@@ -255,6 +250,7 @@ new Vue({
         switch (uiActionId) {
           case 'getTableData':
             await this.getTableData();
+            await this.getConstantObj();
             break;
           case 'updateAppPageDirectoryList':
             await this.updateAppPageDirectoryList();
@@ -330,6 +326,21 @@ new Vue({
       })
       this.tableData = rows;
       this.isTableLoading = false;
+    },
+    async getConstantObj() {
+      this.isBaseLoading = true;
+      const result = await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'allPage',
+            actionId: 'getConstantList',
+            where: {},
+          }
+        }
+      });
+      const {rows} = result.data.appData.resultData;
+      const appTypeListStr = rows.find(item => item.constantKey === 'appTypeList').constantValue;
+      this.constantObj.appTypeList = JSON.parse(appTypeListStr || '[]');
     },
     // ---------- 保存目录设置 uiAction >>>>>>>>>> --------
     async updateAppPageDirectoryList() {

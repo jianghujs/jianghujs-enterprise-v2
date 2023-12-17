@@ -88,12 +88,9 @@ class AppService extends Service {
 
   async updateToDirectoryApp() {
     const { jianghuKnex } = this.app;
-    const appTypeList =  [
-      { value:'系统应用' },
-      { value:'办公应用' }, 
-      { value:'简单应用' }, 
-      { value:'其他应用' }, 
-    ];
+
+    const appTypeListConstant = await jianghuKnex('_constant', this.ctx).where({ constantKey: 'appTypeList' }).select().first();
+    const appTypeList = JSON.parse(appTypeListConstant?.constantValue || '[]');
     const appList = await jianghuKnex('enterprise_app').select();
     appList.forEach((row)=>{
       row.appPageList = JSON.parse(row.appPageList || '[]');
