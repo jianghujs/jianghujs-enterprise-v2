@@ -99,16 +99,18 @@ class AppService extends Service {
         .filter((pageId)=>row.appPageList.findIndex((page)=>page.pageId == pageId) > -1)
         .map((pageId)=>row.appPageList.find((page)=>page.pageId == pageId));
     });
-    await jianghuKnex('jh_enterprise_v2_directory.directory').where({description: '生成'}).delete();
     const directoryList = await jianghuKnex('jh_enterprise_v2_directory.directory').select();
+    const directoryListFilter = directoryList.filter(d => d.appGroupItemSort && d.appGroupItemSort >= 0);
+    const appGroupItemSortMap = Object.fromEntries(directoryListFilter.map(obj => [obj.appId, obj.appGroupItemSort]));
+    await jianghuKnex('jh_enterprise_v2_directory.directory').where({description: '生成'}).delete();
     for (const app of appList) {
-      const { appPageDirectoryList, appType, appUrl } = app;
+      const { appPageDirectoryList, appId, appType, appUrl } = app;
       const directoryList = appPageDirectoryList.map((page)=>{
-        const appTypeIndex = appTypeList.findIndex((at)=>at.value == appType)
+        const appTypeObj = appTypeList.find((at)=>at.value == appType)
         return {
-          appGroupNumber: appTypeIndex > -1 ? `${appTypeIndex + 1}0`: null,
+          appGroupNumber: appTypeObj?.appGroupNumber,
           appGroupName: app.appType,
-          appGroupItemSort: null, // TODO: 从 old directoryList里取
+          appGroupItemSort: appGroupItemSortMap[appId], // TODO: 从 old directoryList里取
           appId: app.appId,
           appName: app.appName,
           url: `${appUrl}/page/${page.pageId}`,
