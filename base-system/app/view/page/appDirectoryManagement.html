@@ -29,7 +29,7 @@
             <!--新增按钮-->
             <v-btn color="success" class="elevation-0 mr-2" @click="doUiAction('updateAppPageDirectoryList')" small>保存</v-btn>
             <v-btn color="success" class="elevation-0 mr-2" @click="doUiAction('updateToDirectoryApp')" small>更新到目录应用</v-btn>
-            <v-btn color="success" class="elevation-0 mr-2" @click="doUiAction('updateAppUserGroupRole')" small>更新应用的权限表为View</v-btn>
+            <v-btn color="success" class="elevation-0 mr-2" @click="doUiAction('updateAppUserGroupRole')" small>更新应用的权限表为System View</v-btn>
             <v-spacer></v-spacer>
             <!--搜索过滤-->
             <v-col cols="12" xs="8" sm="4" md="3" xl="2" class="pa-0">
@@ -54,8 +54,8 @@
               <template>
                 <!-- pc端 -->
                 <template v-if="!isMobile">
-                  <span role="button" class="success--text font-weight-medium font-size-2 mr-2" @click="doUiAction('startUpdateItem', item)">
-                    <v-icon size="16" class="success--text">mdi-note-edit-outline</v-icon>目录设置
+                  <span role="button" class="success--text font-weight-medium font-size-2 mr-2" @click="doUiAction('updateAppUserGroupRole', item)">
+                    更新应用的权限表为System View
                   </span>
                 </template>
                 <!-- 手机端 -->
@@ -264,7 +264,7 @@ new Vue({
             await this.updateToDirectoryApp();
             break;    
           case 'updateAppUserGroupRole':
-            await this.updateAppUserGroupRole();
+            await this.updateAppUserGroupRole(uiActionData);
             break;    
           case 'startCreateItem':
             await this.prepareCreateFormData();
@@ -371,21 +371,23 @@ new Vue({
       await window.jhMask.hide();
       await window.vtoast.success("更新到目录应用成功");
     },
-    // ---------- 更新应用的权限表为View uiAction >>>>>>>>>> --------
-    async updateAppUserGroupRole() {
+    // ---------- 更新应用的权限表为System View uiAction >>>>>>>>>> --------
+    async updateAppUserGroupRole(item) {
+      const actionData = {};
+      if (item) { actionData.id = item.id; };
       await window.jhMask.show();
-      await window.vtoast.loading("更新应用的权限表为View");
+      await window.vtoast.loading({ message: '更新应用的权限表为System View', timer: -1 });
       await window.jianghuAxios({
         data: {
           appData: {
             pageId: 'appDirectoryManagement',
             actionId: 'updateAppUserGroupRole',
-            actionData: {},
+            actionData: actionData,
           }
         }
       });
       await window.jhMask.hide();
-      await window.vtoast.success("更新应用的权限表为View成功");
+      await window.vtoast.success("更新应用的权限表为System View成功");
     },
     // ---------- 新增数据 uiAction >>>>>>>>>> --------
     async prepareCreateFormData() {

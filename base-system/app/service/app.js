@@ -43,9 +43,47 @@ class AppService extends Service {
   }
 
   async updateAppUserGroupRole() {
+    const actionData = this.ctx.request.body.appData.actionData;
+    const {knex, logger} = this.app;
+    const appWhere = _.pick(actionData, ['id']);
 
-    // TODO: 更新 _user_group_role; 排除当前应用==》避免异常
-    console.log('updateAppUserGroupRole');
+    let appList = await knex('enterprise_app')
+      .where(appWhere)
+      .select();
+    appList = appList.filter((app)=>app.appId != 'system');
+    for (const app of appList) {
+      const { appDatabase, appId} = app;
+      knex.client.config.connection.database = appDatabase;
+      const currentKnex = Knex(knex.client.config);
+      logger.info(`updateAppUserGroupRole appId: ${appId}`);
+      const deleteViewSql = [
+        currentKnex.raw(`DROP TABLE IF EXISTS _group;`),
+        currentKnex.raw(`DROP TABLE IF EXISTS _role;`),
+        currentKnex.raw(`DROP TABLE IF EXISTS _user_group_role;`),
+        currentKnex.raw(`DROP TABLE IF EXISTS _user_group_role_page;`),
+        currentKnex.raw(`DROP TABLE IF EXISTS _user_group_role_resource;`),
+        currentKnex.raw(`DROP TABLE IF EXISTS _view01_user;`),
+        currentKnex.raw(`DROP TABLE IF EXISTS _view02_user_app;`),
+        currentKnex.raw(`DROP VIEW IF EXISTS _group;`),
+        currentKnex.raw(`DROP VIEW IF EXISTS _role;`),
+        currentKnex.raw(`DROP VIEW IF EXISTS _user_group_role;`),
+        currentKnex.raw(`DROP VIEW IF EXISTS _user_group_role_page;`),
+        currentKnex.raw(`DROP VIEW IF EXISTS _user_group_role_resource;`),
+        currentKnex.raw(`DROP VIEW IF EXISTS _view01_user;`),
+        currentKnex.raw(`DROP VIEW IF EXISTS _view02_user_app;`),
+      ];
+      const createViewSql = [
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _group AS SELECT * FROM jh_enterprise_v2_data_repository.enterprise_group;`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _role AS SELECT * FROM jh_enterprise_v2_data_repository.enterprise_role;`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role AS SELECT * FROM jh_enterprise_v2_data_repository.enterprise_user_group_role;`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role_page AS SELECT * FROM jh_enterprise_v2_data_repository.enterprise_user_group_role_page WHERE jh_enterprise_v2_data_repository.enterprise_user_group_role_page.appId = '${appId}' OR jh_enterprise_v2_data_repository.enterprise_user_group_role_page.appId = '*';`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role_resource AS SELECT * FROM jh_enterprise_v2_data_repository.enterprise_user_group_role_resource WHERE jh_enterprise_v2_data_repository.enterprise_user_group_role_resource.appId = '${appId}' OR jh_enterprise_v2_data_repository.enterprise_user_group_role_resource.appId = '*';`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view01_user AS SELECT * FROM jh_enterprise_v2_data_repository.enterprise_user;`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view02_user_app AS SELECT * FROM jh_enterprise_v2_data_repository.enterprise_user_app;`),
+      ];
+      await Promise.all(deleteViewSql);
+      await Promise.all(createViewSql);
+    }
   }
 
   async updateToDirectoryApp() {
