@@ -149,7 +149,10 @@
                 </v-autocomplete>
               </v-row>
           </v-col>  
-             
+          <v-col cols="12" sm="12" md="12">
+            <span class="jh-input-label">附件列表
+            <task-attachment-list :files.sync="createItem.taskFileList" />
+          </v-col>
           </v-row>
 
           <!-- 抽屉操作按钮 -->
@@ -213,6 +216,11 @@
               </v-row>
           </v-col>  
 
+          <v-col cols="12" sm="12" md="12">
+            <span class="jh-input-label">附件列表
+            <task-attachment-list :files.sync="updateItem.taskFileList" />
+          </v-col>
+
           </v-row>
           <!-- 抽屉操作按钮 -->
           <v-row class="justify-end mx-0 mt-8 px-6">
@@ -259,6 +267,7 @@
 {% include 'component/task-filter-btn.html' %}
 {% include 'common/excelUtil.html' %}
 {% include 'component/view-ticket-detail-drawer.html' %}
+{% include 'component/task-attachment-list.html' %}
 <script type="module">
   new Vue({
     el: '#app',
@@ -463,6 +472,7 @@
         rows.map(row => {
           row.taskAuditConfig = JSON.parse(row.taskAuditConfig)
           row.taskAuditUserIdList = (row.taskAuditUserIdList || '').split(',')
+          row.taskFileList = JSON.parse(row.taskFileList || '[]')
 
         })
         this.tableData = rows;
@@ -514,12 +524,13 @@
         data.taskMemberIdList = data.taskAuditUserIdList
         data.taskAuditConfig = data.taskAuditConfig.map(item => {
           // 查userList
-          const user = this.userList.find(user => user.userId === item.userId)
+          const user = this.userList.find(user => user.userId === item.userId) || {}
           return {
             ...item,
             username: user.username,
           }
         })
+        data.taskFileList = JSON.stringify(data.taskFileList)
         data.taskAuditConfig = JSON.stringify(data.taskAuditConfig)
         data.taskType = '审批'
         data.taskCreateAt = dayjs().format('YYYY-MM-DD HH:mm:ss')
@@ -590,12 +601,13 @@
         data.taskMemberIdList = data.taskAuditUserIdList
         data.taskAuditConfig = data.taskAuditConfig.map(item => {
           // 查userList
-          const user = this.userList.find(user => user.userId === item.userId)
+          const user = this.userList.find(user => user.userId === item.userId) || {}
           return {
             ...item,
             username: user.username,
           }
         })
+        data.taskFileList = JSON.stringify(data.taskFileList)
         data.taskAuditConfig = JSON.stringify(data.taskAuditConfig)
         this.updateActionData = data;
       },

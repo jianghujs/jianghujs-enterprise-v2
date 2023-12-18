@@ -218,7 +218,10 @@
               <span class="jh-input-label">子任务列表todo</span>
               <task-child-list :todos.sync="createItem.taskChildList" />
             </v-col>
-             
+            <v-col cols="12" sm="12" md="12">
+              <span class="jh-input-label">附件列表
+              <task-attachment-list :files.sync="createItem.taskFileList" />
+            </v-col>   
           </v-row>
 
           <!-- 抽屉操作按钮 -->
@@ -324,7 +327,10 @@
               <span class="jh-input-label">子任务列表todo</span>
               <task-child-list :todos.sync="updateItem.taskChildList" />
             </v-col>
-                       
+            <v-col cols="12" sm="12" md="12">
+              <span class="jh-input-label">附件列表
+              <task-attachment-list :files.sync="updateItem.taskFileList" />
+            </v-col>         
           </v-row>
           <!-- 抽屉操作按钮 -->
           <v-row class="justify-end mx-0 mt-8 px-6">
@@ -371,6 +377,7 @@
 {% include 'component/task-child-list.html' %}
 {% include 'common/excelUtil.html' %}
 {% include 'component/view-task-detail-drawer.html' %}
+{% include 'component/task-attachment-list.html' %}
 <script type="module">
   new Vue({
     el: '#app',
@@ -572,6 +579,7 @@
 
         rows.forEach(row => {
           row.taskChildList = JSON.parse(row.taskChildList || '[]')
+          row.taskFileList = JSON.parse(row.taskFileList || '[]')
         })
         this.selectedTaskItem = rows.filter(item=> item.taskStatus == '已完成')
         this.tableData = rows;
@@ -626,6 +634,7 @@
         data.taskChildList = JSON.stringify(data.taskChildList)
         data.taskCreateAt = dayjs().format('YYYY-MM-DD HH:mm:ss')
         data.taskType = '任务'
+        data.taskFileList = JSON.stringify(data.taskFileList)
         this.createActionData = data;
       },
 
@@ -686,7 +695,9 @@
       async prepareDoUpdateItem() {
         const { id, ...data } = this.updateItem;
         this.updateItemId = id;
+        data.taskMemberIdList = data.taskMemberIdList.join(',')
         data.taskChildList = JSON.stringify(data.taskChildList)
+        data.taskFileList = JSON.stringify(data.taskFileList)
         this.updateActionData = data;
       },
 

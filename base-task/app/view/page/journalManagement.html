@@ -119,6 +119,11 @@
               <span class="jh-input-label"><span class="red--text">*</span>日志内容
               <v-textarea :rules="validationRules.requireRules" class="jh-v-input" dense single-line filled v-model="createItem.taskContent"></v-textarea>
             </v-col>
+
+            <v-col cols="12" sm="12" md="12">
+              <span class="jh-input-label">附件列表
+              <task-attachment-list :files.sync="createItem.taskFileList" />
+            </v-col>
           </v-row>
 
           <!-- 抽屉操作按钮 -->
@@ -156,6 +161,11 @@
             <v-col cols="12" sm="12" md="12">
               <span class="jh-input-label"><span class="red--text">*</span>日志内容
               <v-textarea :rules="validationRules.requireRules" class="jh-v-input" dense single-line filled v-model="updateItem.taskContent"></v-textarea>
+            </v-col>
+
+            <v-col cols="12" sm="12" md="12">
+              <span class="jh-input-label">附件列表
+              <task-attachment-list :files.sync="updateItem.taskFileList" />
             </v-col>
           </v-row>
           <!-- 抽屉操作按钮 -->
@@ -202,6 +212,7 @@
 {% include 'common/jianghuJs/fixedTableHeightV4.html' %}
 {% include 'common/excelUtil.html' %}
 {% include 'component/view-journal-detail-drawer.html' %}
+{% include 'component/task-attachment-list.html' %}
 <script type="module">
   new Vue({
     el: '#app',
@@ -386,6 +397,7 @@
 
         rows.forEach(row=> {
           row.taskMemberIdList = (row.taskMemberIdList || '').split(',')
+          row.taskFileList = JSON.parse(row.taskFileList || '[]')
         })
         this.tableData = rows;
         this.isTableLoading = false;
@@ -439,6 +451,7 @@
         data.taskCreateAt = dayjs().format('YYYY-MM-DD HH:mm:ss')
         data.taskManagerId = window.userInfo.userId
         data.taskMemberIdList = data.taskMemberIdList.join(',')
+        data.taskFileList = JSON.stringify(data.taskFileList)
         this.createActionData = data;
       },
 
@@ -499,6 +512,8 @@
         const { id, ...data } = this.updateItem;
         this.updateItemId = id;
         data.taskMemberIdList = data.taskMemberIdList.join(',')
+        data.taskFileList = JSON.stringify(data.taskFileList)
+
         this.updateActionData = data;
       },
 
