@@ -183,7 +183,7 @@
           return _.sortBy(_.map(appGroup, list => {
             return {
               ...list[0],
-              childPage: list.slice(1)
+              childPage: list
             }
           }), 'appGroupItemSort')
         })
