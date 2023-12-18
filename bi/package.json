@@ -10,6 +10,7 @@
   "dependencies": {
     "@jianghujs/jianghu": "5.0.7",
     "dayjs": "1.11.0",
+    "dotenv": "^16.3.1",
     "egg": "^2.15.1",
     "egg-scripts": "^2.11.0",
     "lodash": "4.17.21",
@@ -24,7 +25,7 @@
   "engines": {
     "node": ">=10.0.0"
   },
-  "scripts": { 
+  "scripts": {
     "start": "egg-scripts start --workers=2 --daemon --port=7267 --title=jh-enterprise-v2-bi",
     "stop": "egg-scripts stop --title=jh-enterprise-v2-bi",
     "dev": "egg-bin dev --port=7267",
