@@ -26,7 +26,7 @@
             <v-card class="jh-wrapper-card">
               <v-row dense no-gutters v-if="isDirectoryLoading || (!isDirectoryLoading && directoryList)">
                 <!-- 目录 -->
-                <v-col cols="12" xs="12" sm="4" md="3" xl="2" class="pr-sm-2">
+                <v-col cols="12" xs="12" sm="3" md="2" class="pr-sm-2">
                   <v-card flat class="pa-6 jh-directory-card">
                     <div class="jh-card-body px-6 px-sm-0">
                       <v-skeleton-loader
@@ -39,7 +39,7 @@
                         </div>
                         <div class="mt-4">
                           <div class="mb-2" v-for="(value, index) in directoryList" :key="index">
-                            <a class="jh-font-size-14 text-decoration-none" :class="activeDirectory === value[0].appGroupName ? 'success--text' : 'text--secondary'" :href="`#${value[0].appGroupName}`" @click="activeDirectory = value[0].appGroupName">{{value[0].appGroupName}}</a>
+                            <a class="jh-font-size-13 text-decoration-none" :class="activeDirectory === value[0].appGroupName ? 'success--text' : 'grey--text text--darken-2'" :href="`#${value[0].appGroupName}`" @click="activeDirectory = value[0].appGroupName">{{value[0].appGroupName}}</a>
                           </div> 
                         </div>
                       </template>
@@ -48,7 +48,7 @@
                 </v-col>
 
                 <!-- 应用 -->
-                <v-col cols="12" xs="12" sm="8" md="9" xl="10">
+                <v-col cols="12" xs="12" sm="9" md="10">
                   <v-card flat class="pa-6 jh-list-card">
                     <div class="jh-card-body px-6 px-sm-0">
                       <v-skeleton-loader
@@ -57,9 +57,9 @@
                       ></v-skeleton-loader>
                       <template v-else>
                         <div class="mb-6" v-for="(value, index) in directoryList" :key="index">
-                          <div class="font-weight-medium text-subtitle-1 mb-1" :id="`${value[0].appGroupName}`">{{value[0].appGroupName}}</div>
+                          <div class="font-weight-medium text-subtitle-1 grey--text text--darken-2 mb-1" :id="`${value[0].appGroupName}`">{{value[0].appGroupName}}</div>
                           <v-row dense>
-                            <v-col cols="12" xs="12" sm="12" md="4" xl="3"
+                            <v-col cols="12" xs="12" sm="6" md="3"
                               v-for="(item, i) in value"  
                               :key="item.appId + '-' + item.loginId + '-' + item.appGroupNumber + '-' + item.appGroupItemSort + '-' + i"
                              >
@@ -73,7 +73,7 @@
                                         <svg v-else t="1702548638970" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="13380" width="200" height="200"><path d="M864 144.014222H559.985778a16.042667 16.042667 0 0 0-15.985778 15.985778v304.014222c0 8.789333 7.196444 15.985778 16.014222 15.985778h303.985778c8.817778 0 16.014222-7.196444 16.014222-16.014222V160.028444a16.042667 16.042667 0 0 0-16.014222-16.014222z m0 399.985778H559.985778a16.042667 16.042667 0 0 0-15.985778 16.014222v303.985778c0 8.817778 7.196444 16.014222 16.014222 16.014222h303.985778c8.817778 0 16.014222-7.224889 16.014222-16.014222V559.985778a16.042667 16.042667 0 0 0-16.014222-15.985778zM463.985778 143.985778H160.028444a16.042667 16.042667 0 0 0-16.014222 16.014222v304.014222c0 8.789333 7.224889 15.985778 16.014222 15.985778h304.014223c8.789333 0 15.985778-7.196444 15.985777-16.014222V160.028444a16.042667 16.042667 0 0 0-16.014222-16.014222z m0 400.014222H160.028444a16.042667 16.042667 0 0 0-16.014222 16.014222v303.985778c0 8.817778 7.224889 16.014222 16.014222 16.014222h304.014223c8.789333 0 15.985778-7.224889 15.985777-16.014222V559.985778a16.042667 16.042667 0 0 0-16.014222-15.985778z" fill="#333333" fill-opacity=".65" p-id="13381"></path></svg>
                                       </div>
                                       <!-- app name -->
-                                      <div class="font-weight-medium text-subtitle-2 mx-3">{{item.appName}}</div>
+                                      <div class="font-weight-medium text-subtitle-1 grey--text text--darken-4 mx-3">{{item.appName}}</div>
                                     </div>
                                     <!-- 展开收起 -->
                                     <template v-if="item.childPage.length > 0">
@@ -82,8 +82,11 @@
                                     </template>
                                   </div>
                                   <!-- 子页面 -->
-                                  <div class="mt-2" v-if="_.includes(expandApp, item.appId)">
-                                    <div v-for="(childPage, childIndex) in item.childPage"  key="childIndex" class="text--secondary jh-font-size-13 text-truncate mb-1"  @click="doUiAction('jump', childPage.url)"><span>{{childPage.displayName}}</span></div>
+                                  <div class="mt-4" v-if="_.includes(expandApp, item.appId)">
+                                    <div v-for="(childPage, childIndex) in item.childPage"  key="childIndex" class="jh-font-size-13 grey--text text--darken-4 text-truncate mt-3"  @click="doUiAction('jump', childPage.url)">
+                                      <v-icon size="16">mdi-link-variant</v-icon>
+                                      <span class="ml-2">{{childPage.displayName}}</span>
+                                    </div>
                                   </div>
                                 </div>
                               </v-card>
@@ -219,8 +222,9 @@
     box-shadow: 0 1px 20px 0 rgb(0 0 0 / 3%) !important;
   }
   .jh-app-icon svg{
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
+    vertical-align: middle;
   }
 
   /* 移动端适配 >>>>>>>>>>>>> */
@@ -228,8 +232,8 @@
     .jh-wrapper-card{
       min-height: auto;
     }
-    .jh-card-body{
-      height: auto;
+    .jh-directory-card{
+      min-height: auto;
     }
   }
   /* <<<<<<<<<<<<< 移动端适配 */
