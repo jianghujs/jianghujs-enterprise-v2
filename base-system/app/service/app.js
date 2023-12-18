@@ -79,7 +79,7 @@ class AppService extends Service {
         currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role_page AS SELECT * FROM jh_enterprise_v2_data_repository.enterprise_user_group_role_page WHERE jh_enterprise_v2_data_repository.enterprise_user_group_role_page.appId = '${appId}' OR jh_enterprise_v2_data_repository.enterprise_user_group_role_page.appId = '*';`),
         currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role_resource AS SELECT * FROM jh_enterprise_v2_data_repository.enterprise_user_group_role_resource WHERE jh_enterprise_v2_data_repository.enterprise_user_group_role_resource.appId = '${appId}' OR jh_enterprise_v2_data_repository.enterprise_user_group_role_resource.appId = '*';`),
         currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view01_user AS SELECT * FROM jh_enterprise_v2_data_repository.enterprise_user;`),
-        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view02_user_app AS SELECT * FROM jh_enterprise_v2_data_repository.enterprise_user_app;`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view02_user_app AS SELECT * FROM jh_enterprise_v2_data_repository.enterprise_user_app where appId = '${appId}';`),
       ];
       await Promise.all(deleteViewSql);
       await Promise.all(createViewSql);
@@ -122,6 +122,27 @@ class AppService extends Service {
       });
       if (directoryList.length > 0) {
         await jianghuKnex('jh_enterprise_v2_directory.directory').insert(directoryList);
+      }
+    }
+  }
+
+  async buildSupperAdmin() {
+    const { jianghuKnex } = this.app;
+    const supperAdminUserList = await jianghuKnex('enterprise_user_group_role').where({groupId: '超级管理员', roleId: '*'}).select();
+    const userList = supperAdminUserList.map(e => e.userId);
+    // 检查 enterprise_user_app 内是否有对应的关系数据
+    const userAppList = await jianghuKnex('enterprise_user_app').whereIn('userId', userList).select();
+    const appList = await jianghuKnex('enterprise_app').select();
+    const appIdList = appList.map(e => e.appId);
+
+    for (const appId of appIdList) {
+      for (const userId of userList) {
+        if (!userAppList.some(e => e.appId == appId && e.userId == userId)) {
+          await jianghuKnex('enterprise_user_app').insert({
+            userId: userId,
+            appId: appId,
+          });
+        }
       }
     }
   }
