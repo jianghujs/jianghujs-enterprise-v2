@@ -81,6 +81,11 @@ class AppService extends Service {
         currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view01_user AS SELECT * FROM jh_enterprise_v2_data_repository.enterprise_user;`),
         currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view02_user_app AS SELECT * FROM jh_enterprise_v2_data_repository.enterprise_user_app where appId = '${appId}';`),
       ];
+      if (appId == 'directory') { 
+        // 替换 createViewSql 的最后一个
+        createViewSql.pop();
+        createViewSql.push(currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view02_user_app AS SELECT * FROM jh_enterprise_v2_data_repository.enterprise_user_app`));
+      }
       await Promise.all(deleteViewSql);
       await Promise.all(createViewSql);
       await currentKnex.destroy();
@@ -126,7 +131,7 @@ class AppService extends Service {
     }
   }
 
-  async buildSupperAdmin() {
+  async buildSupperAdminUserApp() {
     const { jianghuKnex } = this.app;
     const supperAdminUserList = await jianghuKnex('enterprise_user_group_role').where({groupId: '超级管理员', roleId: '*'}).select();
     const userList = supperAdminUserList.map(e => e.userId);

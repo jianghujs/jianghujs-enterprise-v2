@@ -307,9 +307,9 @@ new Vue({
   },
   computed: {
     tabList() {
-      // if (this.activeGroup == '超级管理员') {
-      //   return this.constantObj.tabList.slice(0, 1);
-      // }
+      if (this.activeGroup == '超级管理员') {
+        return ['组织员工'];
+      }
       return this.constantObj.tabList;
     },
     tableData() {
@@ -509,6 +509,9 @@ new Vue({
       this.activeGroup = item.groupId;
       this.activeGroupPath = item.groupPath;
       this.getRoleData();
+      if (this.activeGroup == '超级管理员') {
+        this.tabActive = 0;
+      }
       if (this.tabActive == 1) {
         this.getUserGroupRolePage();
         return;
