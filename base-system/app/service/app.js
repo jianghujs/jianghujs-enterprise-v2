@@ -150,6 +150,11 @@ class AppService extends Service {
         }
       }
     }
+    // 判断是否有非这些id的user关系数据
+    const idList = userAppList.filter(e => !appIdList.includes(e.appId)).map(e => e.id);
+    if (idList.length > 0) {
+      await jianghuKnex('enterprise_user_app').whereIn('id', idList).delete();
+    }
   }
 
 }
