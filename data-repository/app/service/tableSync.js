@@ -53,10 +53,11 @@ class UtilService extends Service {
     const {jianghuKnex, config} = this.app;
     const targetDatabase = this.getTargetDatabase();
     const rows = await jianghuKnex('information_schema.SCHEMATA')
-      .whereNotIn('schema_name', [targetDatabase, 'sys', 'information_schema'])
+      .whereNotIn('schema_name', ['sys', 'information_schema'])
       .orderBy('schema_name', 'desc')
       .select('schema_name as sourceDatabase');
-    return {rows};
+    const defaultTargetDatabase = config.knex.client.connection.database;;  
+    return { defaultTargetDatabase, rows};
   }
 
   async selectSourceTable() {
