@@ -12,7 +12,7 @@ module.exports = app => {
     async task(ctx) {
       const startTime = new Date().getTime();
       const { logger } = app;
-      await ctx.service.tableMerge.doMergeTable({ useSyncTimeSlotFilter: true });
+      await ctx.service.tableMerge.doTableMerge({ useSyncTimeSlotFilter: true });
       const endTime = new Date().getTime();
       logger.info('[tableMergeSchedule.js]', { useTime: `${endTime - startTime}/ms` });
     },

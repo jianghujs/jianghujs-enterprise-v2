@@ -53,7 +53,7 @@ class UtilService extends Service {
   }
 
 
-  async doMergeTable(actionData) {
+  async doTableMerge(actionData) {
     // Tip: 适配schedule调用, actionData从入参取
     validateUtil.validate(appDataSchema.mergeTable, actionData);
     const {useSyncTimeSlotFilter} = actionData;
@@ -101,7 +101,7 @@ class UtilService extends Service {
       const sourceTableDDLResult = await sourceKnex.raw(`SHOW CREATE TABLE ${sourceDatabaseInDb}.${sourceTable};`);
       const sourceTableDDL = sourceTableDDLResult[0][0]['Create Table'];
       const exceptTargetTableDDL = sourceTableDDL
-        .replace(`CREATE TABLE \`${sourceTable}\``, `CREATE TABLE \`${targetTable}\``)
+        .replace(`CREATE TABLE \`${sourceTable}\``, `CREATE TABLE \`${targetDatabase}\`.\`${targetTable}\``)
         .replace(/AUTO_INCREMENT=\d+ ?/, '');
       let targetTableDDL = null;
       if (targetTableExist) {
@@ -112,17 +112,18 @@ class UtilService extends Service {
       // TODO: 表结构要加上appId，以便区分数据来源
       // if (targetTableDDL !== exceptTargetTableDDL) {
       // }
-      await targetKnex.raw(`DROP TABLE IF EXISTS ${targetDatabase}.${targetTable};`);
+      await targetKnex.raw(`DROP TABLE IF EXISTS \`${targetDatabase}\`.\`${targetTable}\`;`);
       await targetKnex.raw(exceptTargetTableDDL);
       await targetKnex.raw(`ALTER TABLE \`${targetDatabase}\`.\`${targetTable}\`
         ADD COLUMN \`incrementId\` int(11) NOT NULL AUTO_INCREMENT FIRST,
-        MODIFY COLUMN \`id\` int(11) NULL DEFAULT NULL FIRST,
+        ADD COLUMN \`appId\` varchar(255) DEFAULT NULL AFTER \`incrementId\`,
+        MODIFY COLUMN \`id\` int(11) NULL DEFAULT NULL AFTER \`appId\`,
         DROP PRIMARY KEY,
         ADD PRIMARY KEY (\`incrementId\`) USING BTREE;`);
       const selectDataSql = tableConfig.sourceList
-        .map(source => `select null as incrementId, a.* from \`${source.database}\`.\`${source.tableName}\` as a`)
+        .map(source => `select null as incrementId, '${source.appId}' as appId, a.* from \`${source.database}\`.\`${source.tableName}\` as a`)
         .join(' UNION ');
-      await targetKnex.raw(`REPLACE INTO all_task ${selectDataSql};`);
+      await targetKnex.raw(`REPLACE INTO \`${targetDatabase}\`.\`${targetTable}\` ${selectDataSql};`);
     }
   }
 
