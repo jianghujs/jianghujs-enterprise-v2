@@ -569,8 +569,7 @@ new Vue({
           appData: {
             pageId: 'tableSyncConfig',
             actionId: 'deleteTable',
-            actionData: {},
-            where: {id: this.deleteItemId}
+            actionData: {id: this.deleteItemId}
           }
         }
       });
@@ -596,8 +595,7 @@ new Vue({
             pageId: 'tableSyncConfig',
             actionId: 'syncTable',
             actionData: {
-              sourceDatabase: this.syncItem.sourceDatabase,
-              sourceTable: this.syncItem.sourceTable
+              id: this.syncItem.id,
             }
           }
         }
