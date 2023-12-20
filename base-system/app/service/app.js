@@ -75,7 +75,7 @@ class AppService extends Service {
       .select();
     appList = appList.filter((app)=>app.appId != 'system');
     const databaseList = _.compact(_.uniqBy(appList.map((app) => app.appDatabase)));
-    for (const database of ['jianghu_baofeng']) {
+    for (const database of databaseList) {
       const appListByDatabase = appList.filter((app) => app.appDatabase == database);
       const appIdList = appListByDatabase.map((app) => app.appId);
       knex.client.config.connection.database = database;
