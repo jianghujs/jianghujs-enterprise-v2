@@ -23,7 +23,7 @@ const getJhIdViewSql = (appList, tableName) => {
     // 如果所有的 jhId 都是空，生成一个简单的 SELECT 查询
     return `SELECT * FROM jh_enterprise_v2_data_repository.${tableName}${whereClause.replace('{APPID}', appList[0].appId)}`;
   }
-  
+
   // 否则，生成一个 CROSS JOIN 查询
   const jhIdValuesSql = appList.map(({appJhId}) => {
     return `SELECT '${appJhId}' as jhId`;
@@ -107,13 +107,13 @@ class AppService extends Service {
         currentKnex.raw(`DROP VIEW IF EXISTS _view02_user_app;`),
       ];
       const createViewSql = [
-        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _group AS ${getJhIdViewUnionSql(appListByDatabase, 'enterprise_group')};`),
-        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _role AS ${getJhIdViewUnionSql(appListByDatabase, 'enterprise_role')};`),
-        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role AS ${getJhIdViewUnionSql(appListByDatabase, 'enterprise_user_group_role')};`),
-        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role_page AS ${getJhIdViewUnionSql(appListByDatabase, 'enterprise_user_group_role_page')};`),
-        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role_resource AS ${getJhIdViewUnionSql(appListByDatabase, 'enterprise_user_group_role_resource')};`),
-        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view01_user AS ${getJhIdViewUnionSql(appListByDatabase, 'enterprise_user')};`),
-        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view02_user_app AS ${getJhIdViewUnionSql(appListByDatabase, 'enterprise_user_app')};`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _group AS ${getJhIdViewSql(appListByDatabase, 'enterprise_group')};`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _role AS ${getJhIdViewSql(appListByDatabase, 'enterprise_role')};`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role AS ${getJhIdViewSql(appListByDatabase, 'enterprise_user_group_role')};`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role_page AS ${getJhIdViewSql(appListByDatabase, 'enterprise_user_group_role_page')};`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role_resource AS ${getJhIdViewSql(appListByDatabase, 'enterprise_user_group_role_resource')};`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view01_user AS ${getJhIdViewSql(appListByDatabase, 'enterprise_user')};`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view02_user_app AS ${getJhIdViewSql(appListByDatabase, 'enterprise_user_app')};`),
       ];
       if (appIdList.includes('directory')) { 
         // 替换 createViewSql 的最后一个
