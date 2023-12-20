@@ -87,11 +87,6 @@
             <template v-slot:item.appUrl="{ item }">
               <v-text-field class="jh-v-input" dense single-line filled v-model="item.appUrl"></v-text-field>
             </template>
-            <!-- <template v-slot:item.appId="{ item }">
-              <v-icon color="success" small @click="copyText('/<$ appic $>')">mdi-content-copy</v-icon>
-              <v-icon color="success" small>mdi-open-in-new</v-icon>
-              {{ item.appId }} 
-            </template> -->
             <!--没有数据-->
             <template v-slot:loading>
               <div class="jh-no-data">数据加载中</div>

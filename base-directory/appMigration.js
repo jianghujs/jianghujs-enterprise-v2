@@ -19,11 +19,16 @@ const commandLineArgs = parseCommandLineArgs(process.argv.slice(2));
 
 // 获取环境变量
 const env = commandLineArgs.env || 'local';
-const targetDatabase = commandLineArgs.target || 'jh_enterprise_v2_base';
+const targetDatabase = commandLineArgs.target;
 const selfDatabase = commandLineArgs.self;
 
 if (!targetDatabase || !selfDatabase) {
-  console.log('target or self database not specified, exit. example: node appMigration.js --target=jh_enterprise_v2_base --self=xxx');
+  console.log(`must to set target and self database, exit. 
+--------------
+example command: node appMigration.js --env=prod --target=target_database --self=database
+database info found in config/config.{env}.js
+jianghuConfig found in config/config.default.js
+`);
   process.exit(0);
 }
 
@@ -33,15 +38,16 @@ if (targetDatabase === selfDatabase) {
 }
 
 const configFile = require('./config/config.' + env)({baseDir: ''});
+const defaultConfigFile = require('./config/config.default')({baseDir: ''});
 // 获取egg config local 环境的 knex 配置
 const currentKnexConfig = configFile.knex.client;
 const targetKnexConfig = _.cloneDeep(currentKnexConfig);
 currentKnexConfig.connection.database = selfDatabase;
 targetKnexConfig.connection.database = targetDatabase;
-const jhId = configFile.jianghuConfig.jhIdConfig.jhId;
+const jhId = defaultConfigFile.jianghuConfig.jhIdConfig.jhId;
 
 // 获取默认支持jhId的表
-const careTableViewList = configFile.jianghuConfig.jhIdConfig.careTableViewList;
+const careTableViewList = defaultConfigFile.jianghuConfig.jhIdConfig.careTableViewList;
 
 // 如果数据库相同，直接退出
 if (currentKnexConfig.connection.database === targetKnexConfig.connection.database) {
