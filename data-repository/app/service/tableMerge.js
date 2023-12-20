@@ -145,6 +145,7 @@ class UtilService extends Service {
 
       const targetConnection = {...this.app.config.knex.client.connection, database: targetDatabase};
       let hasHyperDiff = false;
+      const appIdList = tableConfig.sourceList.map(source => source.appId);
       for (const source of tableConfig.sourceList) {
         const { appId } = source; 
         const sourceConnection = {...this.app.config.knex.client.connection, database: source.database};
@@ -178,7 +179,7 @@ class UtilService extends Service {
           }
         }  
       }    
-      // TODO: 多余的appId数据删除
+      await knex(`${targetDatabase}.${targetTable}`).whereNotIn('appId', appIdList).delete();
       if (hasHyperDiff) {
         logger.info(`[${targetTable}]`, '数据不一致; 同步成功;');
       } 
