@@ -8,7 +8,8 @@ const idGenerateUtil = require('@jianghujs/jianghu/app/common/idGenerateUtil');
 // ========================================常用 require end=============================================
 const _ = require('lodash');
 const Knex = require('knex');
-const getJhIdViewUnionSql = (appList, tableName, ) => {
+
+const getJhIdViewSql = (appList, tableName) => {
   let whereClause = ''; // 初始化 WHERE 子句
 
   if (['enterprise_user_group_role_page', 'enterprise_user_group_role_resource'].includes(tableName)) {
@@ -17,16 +18,24 @@ const getJhIdViewUnionSql = (appList, tableName, ) => {
     whereClause = ` WHERE appId = '{APPID}'`;
   }
 
-  if (!appList.some((app) => !!app.appJhId)) {
+  // 检查 appList 中是否存在非空的 jhId
+  if (!appList.some(({appJhId}) => !!appJhId)) {
+    // 如果所有的 jhId 都是空，生成一个简单的 SELECT 查询
     return `SELECT * FROM jh_enterprise_v2_data_repository.${tableName}${whereClause.replace('{APPID}', appList[0].appId)}`;
   }
-
-  const unionSql = appList.map(({appJhId, appId}) => {
-    return `SELECT '${appJhId}' as jhId, jh_enterprise_v2_data_repository.${tableName}.* FROM jh_enterprise_v2_data_repository.${tableName}${whereClause.replace('{APPID}', appId)}`;
+  
+  // 否则，生成一个 CROSS JOIN 查询
+  const jhIdValuesSql = appList.map(({appJhId}) => {
+    return `SELECT '${appJhId}' as jhId`;
   }).join(' UNION ALL ');
 
-  return unionSql;
+  const crossJoinSql = `SELECT jhId_values.jhId, jh_enterprise_v2_data_repository.${tableName}.* 
+                        FROM (${jhIdValuesSql}) AS jhId_values 
+                        CROSS JOIN jh_enterprise_v2_data_repository.${tableName}${whereClause.replace('{APPID}', appList[0].appId)}`;
+
+  return crossJoinSql;
 }
+
 
 class AppService extends Service {
 
