@@ -8,25 +8,48 @@ const idGenerateUtil = require('@jianghujs/jianghu/app/common/idGenerateUtil');
 // ========================================常用 require end=============================================
 const _ = require('lodash');
 const Knex = require('knex');
+const getJhIdViewUnionSql = (appList, tableName, ) => {
+  let whereClause = ''; // 初始化 WHERE 子句
 
+  if (['enterprise_user_group_role_page', 'enterprise_user_group_role_resource'].includes(tableName)) {
+    whereClause = ` WHERE appId = '{APPID}' OR appId = '*'`;
+  } else if (tableName === 'enterprise_user_app') {
+    whereClause = ` WHERE appId = '{APPID}'`;
+  }
+
+  if (!appList.some((app) => !!app.appJhId)) {
+    return `SELECT * FROM jh_enterprise_v2_data_repository.${tableName}${whereClause.replace('{APPID}', appList[0].appId)}`;
+  }
+
+  const unionSql = appList.map(({appJhId, appId}) => {
+    return `SELECT '${appJhId}' as jhId, jh_enterprise_v2_data_repository.${tableName}.* FROM jh_enterprise_v2_data_repository.${tableName}${whereClause.replace('{APPID}', appId)}`;
+  }).join(' UNION ALL ');
+
+  return unionSql;
+}
 
 class AppService extends Service {
 
   async checkDatabaseExist() {
     const { jianghuKnex, knex } = this.app;
-    const { appDatabase: database } = this.ctx.request.body.appData.actionData;
+    const { appDatabase: database, appJhId: jhId } = this.ctx.request.body.appData.actionData;
     // 检查数据库是否存在
     const [databaseExist] = await knex.raw('SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?',[database])
     if (!databaseExist.length) {
-      throw new Error(`【 ${database} 】- 数据库不存在`);
+      throw new Error(`数据库不存在`);
     }
     // 修改 knex 的 database
-    knex.client.config.connection.database = database;
-    const currentKnex = Knex(knex.client.config);
-    const pageList = await currentKnex('_page').select('*');
+    if (jhId) {
+      // knex 验证jhId 字段是否存在
+      if (!await knex.schema.hasColumn(database + '._page', 'jhId')) {
+        throw new Error(`数据库不存在 jhId 字段`);
+      }
+    }
+    const pageList = await jianghuKnex(database + '._page').where(jhId ? { jhId } : {}).select();
     // console.log(_.pick(pageList, ['pageId', 'pageName', 'pageType', 'sort']));
     // const pageListFilter = _.pick(pageList, ['pageId', 'pageName', 'pageType', 'sort']);
-    const pageListFilter = _.map(pageList.filter(e => !['help', 'login', 'manual'].includes(e.pageId)), item => _.pick(item, ['pageId', 'pageName', 'pageType', 'sort']))
+    const pageListFilter = _.map(pageList.filter(e => !['help', 'login', 'manual'].includes(e.pageId)), item => _.pick(item, ['pageId', 'pageName', 'pageType', 'sort']));
+
     this.ctx.request.body.appData.actionData.appPageList = JSON.stringify(pageListFilter);
   }
 
@@ -51,11 +74,13 @@ class AppService extends Service {
       .where(appWhere)
       .select();
     appList = appList.filter((app)=>app.appId != 'system');
-    for (const app of appList) {
-      const { appDatabase, appId} = app;
-      knex.client.config.connection.database = appDatabase;
+    const databaseList = _.compact(_.uniqBy(appList.map((app) => app.appDatabase)));
+    for (const database of ['jianghu_baofeng']) {
+      const appListByDatabase = appList.filter((app) => app.appDatabase == database);
+      const appIdList = appListByDatabase.map((app) => app.appId);
+      knex.client.config.connection.database = database;
       const currentKnex = Knex(knex.client.config);
-      logger.info(`updateAppUserGroupRole appId: ${appId}`);
+      logger.info(`updateAppUserGroupRole appId: ${appIdList.join(',')}`);
       const deleteViewSql = [
         currentKnex.raw(`DROP TABLE IF EXISTS _group;`),
         currentKnex.raw(`DROP TABLE IF EXISTS _role;`),
@@ -73,15 +98,15 @@ class AppService extends Service {
         currentKnex.raw(`DROP VIEW IF EXISTS _view02_user_app;`),
       ];
       const createViewSql = [
-        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _group AS SELECT * FROM jh_enterprise_v2_data_repository.enterprise_group;`),
-        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _role AS SELECT * FROM jh_enterprise_v2_data_repository.enterprise_role;`),
-        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role AS SELECT * FROM jh_enterprise_v2_data_repository.enterprise_user_group_role;`),
-        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role_page AS SELECT * FROM jh_enterprise_v2_data_repository.enterprise_user_group_role_page WHERE jh_enterprise_v2_data_repository.enterprise_user_group_role_page.appId = '${appId}' OR jh_enterprise_v2_data_repository.enterprise_user_group_role_page.appId = '*';`),
-        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role_resource AS SELECT * FROM jh_enterprise_v2_data_repository.enterprise_user_group_role_resource WHERE jh_enterprise_v2_data_repository.enterprise_user_group_role_resource.appId = '${appId}' OR jh_enterprise_v2_data_repository.enterprise_user_group_role_resource.appId = '*';`),
-        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view01_user AS SELECT * FROM jh_enterprise_v2_data_repository.enterprise_user;`),
-        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view02_user_app AS SELECT * FROM jh_enterprise_v2_data_repository.enterprise_user_app where appId = '${appId}';`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _group AS ${getJhIdViewUnionSql(appListByDatabase, 'enterprise_group')};`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _role AS ${getJhIdViewUnionSql(appListByDatabase, 'enterprise_role')};`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role AS ${getJhIdViewUnionSql(appListByDatabase, 'enterprise_user_group_role')};`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role_page AS ${getJhIdViewUnionSql(appListByDatabase, 'enterprise_user_group_role_page')};`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role_resource AS ${getJhIdViewUnionSql(appListByDatabase, 'enterprise_user_group_role_resource')};`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view01_user AS ${getJhIdViewUnionSql(appListByDatabase, 'enterprise_user')};`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view02_user_app AS ${getJhIdViewUnionSql(appListByDatabase, 'enterprise_user_app')};`),
       ];
-      if (appId == 'directory') { 
+      if (appIdList.includes('directory')) { 
         // 替换 createViewSql 的最后一个
         createViewSql.pop();
         createViewSql.push(currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view02_user_app AS SELECT * FROM jh_enterprise_v2_data_repository.enterprise_user_app`));
