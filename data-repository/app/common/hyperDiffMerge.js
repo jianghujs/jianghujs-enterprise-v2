@@ -225,10 +225,13 @@ async function hyperDiffMerge({
     ignoreColumns,
   });
 
-  await Promise.all([
-    oldTableSegment.init(),
-    newTableSegment.init(),
-  ]);
+  await oldTableSegment.init();
+  await newTableSegment.init();
+
+  // await Promise.all([
+  //   oldTableSegment.init(),
+  //   newTableSegment.init(),
+  // ]);
 
   const differ = new TableDiffer({ oldTableSegment, newTableSegment, splitCount, stopThreshold });
   const result = await differ.run();

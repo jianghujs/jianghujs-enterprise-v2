@@ -152,7 +152,7 @@ class UtilService extends Service {
           oldDatabaseConnectionConfig: targetConnection,
           oldTable: targetTable, oldDataWhere: { appId },
           newDatabaseConnectionConfig: sourceConnection,
-          newTable: sourceTable,
+          newTable: source.tableName,
           splitCount: 2,
           stopThreshold: 10,
           ignoreColumns: ['incrementId', 'appId'],
@@ -178,6 +178,7 @@ class UtilService extends Service {
           }
         }  
       }    
+      // TODO: 多余的appId数据删除
       if (hasHyperDiff) {
         logger.info(`[${targetTable}]`, '数据不一致; 同步成功;');
       } 
