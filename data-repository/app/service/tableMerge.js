@@ -111,7 +111,9 @@ class UtilService extends Service {
 
   async tableConsistentCheckAndSync({tableMergeConfigList, allTableMap}) {
     const {knex, logger} = this.app;
+    const lastMergeTime = dayjs().format();
     for (const tableConfig of tableMergeConfigList) {
+      await knex('_table_merge_config').where({ id: tableConfig.id }).update({ lastMergeTime, mergeDesc: '开始' });
       const { targetDatabase, targetTable } = tableConfig;
       const sourceDatabase = tableConfig.sourceList[0].database;
       const sourceTable = tableConfig.sourceList[0].tableName;
@@ -186,6 +188,8 @@ class UtilService extends Service {
       if (!hasHyperDiff) {
         logger.info(`[${targetTable}]`, '数据一致; 无需同步;');
       } 
+    
+      await knex('_table_merge_config').where({ id: tableConfig.id }).update({ mergeDesc: '正常' });
     }
   }
 

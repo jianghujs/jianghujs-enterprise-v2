@@ -115,11 +115,8 @@
               <span>{{pagination.pageStart}}-{{pagination.pageStop}}</span>
               <span class="ml-1">共{{pagination.itemsLength}}条</span>
             </template>
-            <template v-slot:item.operationAt="{ item }">
-              {{ item.operationAt && dayjs(item.operationAt).format('YYYY-MM-DD HH:mm:ss') }}
-            </template>
-            <template v-slot:item.lastSyncTime="{ item }">
-              {{ item.lastSyncTime && dayjs(item.lastSyncTime).format('YYYY-MM-DD HH:mm:ss') }}
+            <template v-slot:item.lastMergeTime="{ item }">
+              {{ item.lastMergeTime && dayjs(item.lastMergeTime).format('YYYY-MM-DD HH:mm:ss') }}
             </template>
 
           </v-data-table>
@@ -314,8 +311,8 @@ new Vue({
       {text: "合并-源表", value: "sourceList"},
       {text: "合并-目标库", value: "targetDatabase"},
       {text: "合并-目标表", value: "targetTable"},
-      {text: "合并状态", value: "syncDesc", width: 120},
-      {text: "合并触发时间", value: "lastSyncTime", width: 150},
+      {text: "合并状态", value: "mergeDesc", width: 120},
+      {text: "合并触发时间", value: "lastMergeTime", width: 150},
       {text: '操作', value: 'action', align: 'center', sortable: false, width: window.innerWidth < 500 ? 80 : 180, class: 'fixed', cellClass: 'fixed'},
     ],
     // 新增数据
@@ -354,7 +351,7 @@ new Vue({
     await this.doUiAction('getTableData');
 
     // Tip: 测试代码
-    await this.doUiAction('startCreateItem');
+    // await this.doUiAction('startCreateItem');
     // await this.doUiAction('startUpdateItem', this.tableData[0]);
   },
   methods: {
@@ -625,7 +622,7 @@ new Vue({
       }
     },
     async doManualSyncAll() {
-      window.vtoast.loading("合并中");
+      window.vtoast.loading({ message: "合并中", time: -1 });
       await window.jianghuAxios({
         data: {
           appData: {
