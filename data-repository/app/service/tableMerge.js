@@ -3,10 +3,10 @@
 const Service = require('egg').Service;
 const dayjs = require('dayjs');
 const validateUtil = require('@jianghujs/jianghu/app/common/validateUtil');
-const hyperDiff = require('@jianghujs/jianghu/app/common/hyperDiff');
 const _ = require('lodash');
 const {BizError, errorInfoEnum} = require('../constant/error');
 const Knex = require('knex');
+const hyperDiffMerge = require('../common/hyperDiffMerge');
 
 const appDataSchema = Object.freeze({
   mergeTable: {
@@ -28,6 +28,40 @@ const appDataSchema = Object.freeze({
   },
 });
 
+function compareTableForMerge(sql1, sql2) {
+  // 使用正则表达式提取列定义
+  const columnDefRegex = /\((.*)\)/s;
+
+  // 将列定义分割为单独的列
+  let table1Columns = [];
+  let table2Columns = [];
+  const match1 = columnDefRegex.exec(sql1);
+  const match2 = columnDefRegex.exec(sql2);
+  if (match1) {
+    table1Columns = match1[1]
+      .split(',')
+      .map(s => s.trim())
+      .filter(s => !s.startsWith('PRIMARY KEY')) // 排除主键定义
+      .filter(s => !s.startsWith('`id`'))        // 排除指定的列
+      .filter(s => !s.startsWith('`incrementId`'))
+      .filter(s => !s.startsWith('`appId`'));
+  };
+  if (match2) {
+    table2Columns = match2[1]
+      .split(',')
+      .map(s => s.trim())
+      .filter(s => !s.startsWith('PRIMARY KEY')) // 排除主键定义
+      .filter(s => !s.startsWith('`id`'))        // 排除指定的列
+      .filter(s => !s.startsWith('`incrementId`'))
+      .filter(s => !s.startsWith('`appId`'));
+  };
+  // 比较差异
+  const uniqueToTable1 = table1Columns.filter(col => !table2Columns.includes(col));
+  const uniqueToTable2 = table2Columns.filter(col => !table1Columns.includes(col));
+  const isDiff = uniqueToTable1.length > 0 || uniqueToTable2.length > 0;
+  return isDiff;
+}
+
 async function createTableSyncLog({jianghuKnex, tableSyncConfig, syncDesc, syncAction}) {
   const syncTime = dayjs().format();
   await jianghuKnex('_table_sync_log')
@@ -40,13 +74,12 @@ async function createTableSyncLog({jianghuKnex, tableSyncConfig, syncDesc, syncA
 
 class UtilService extends Service {
 
-  /**
-   * 返回当前应用所在库
-   * @return {Promise<*>}
-   */
-  getTargetDatabase() {
-    const {database} = this.app.config.knex.client.connection;
-    return database;
+  getConfig() {
+    const config = this.app.config;
+    const defaultTargetDatabase = config.knex.client.connection.database;
+    const { triggerPrefix } = config;
+    const syncTriggerPrefix = `${triggerPrefix}_merge`;
+    return { defaultTargetDatabase, syncTriggerPrefix };
   }
 
   async deleteTableMergeConfig() {
@@ -76,54 +109,81 @@ class UtilService extends Service {
   }
 
 
-  async tableConsistentCheckAndSync({tableMergeConfigList, allTableMap, outsideKnexMap}) {
-    const {knex, jianghuKnex, logger} = this.app;
+  async tableConsistentCheckAndSync({tableMergeConfigList, allTableMap}) {
+    const {knex, logger} = this.app;
     for (const tableConfig of tableMergeConfigList) {
-
       const { targetDatabase, targetTable } = tableConfig;
       const sourceDatabase = tableConfig.sourceList[0].database;
       const sourceTable = tableConfig.sourceList[0].tableName;
-      const sourceKnex = outsideKnexMap[sourceDatabase] || knex;
-      const targetKnex = outsideKnexMap[targetDatabase] || knex;
-      const targetConnection = {...this.app.config.knex.client.connection, database: targetDatabase};
-      let sourceConnection = {...this.app.config.knex.client.connection, database: sourceDatabase};
-      let outsideMode = false
-      let sourceDatabaseInDb = sourceDatabase;
-      if (sourceDatabase.startsWith('{')) {
-        outsideMode = true
-        const {name, ...knexConfig} = JSON.parse(sourceDatabase);
-        sourceConnection = knexConfig;
-        sourceDatabaseInDb = knexConfig.database;
-        targetTable = `${name.toLowerCase()}__${sourceTable}`;
-      }
-
       const targetTableExist = allTableMap[`${targetDatabase}.${targetTable}`];
-      const sourceTableDDLResult = await sourceKnex.raw(`SHOW CREATE TABLE ${sourceDatabaseInDb}.${sourceTable};`);
+      const sourceTableDDLResult = await knex.raw(`SHOW CREATE TABLE ${sourceDatabase}.${sourceTable};`);
       const sourceTableDDL = sourceTableDDLResult[0][0]['Create Table'];
       const exceptTargetTableDDL = sourceTableDDL
         .replace(`CREATE TABLE \`${sourceTable}\``, `CREATE TABLE \`${targetDatabase}\`.\`${targetTable}\``)
         .replace(/AUTO_INCREMENT=\d+ ?/, '');
       let targetTableDDL = null;
       if (targetTableExist) {
-        const targetTableDDLResult = await targetKnex.raw(`SHOW CREATE TABLE ${targetDatabase}.${targetTable};`);
+        const targetTableDDLResult = await knex.raw(`SHOW CREATE TABLE ${targetDatabase}.${targetTable};`);
         targetTableDDL = targetTableDDLResult[0][0]['Create Table'].replace(/AUTO_INCREMENT=\d+ ?/, '');
       }
-      // TODO: 判断DDL不一致时才执行
-      // TODO: 表结构要加上appId，以便区分数据来源
-      // if (targetTableDDL !== exceptTargetTableDDL) {
-      // }
-      await targetKnex.raw(`DROP TABLE IF EXISTS \`${targetDatabase}\`.\`${targetTable}\`;`);
-      await targetKnex.raw(exceptTargetTableDDL);
-      await targetKnex.raw(`ALTER TABLE \`${targetDatabase}\`.\`${targetTable}\`
-        ADD COLUMN \`incrementId\` int(11) NOT NULL AUTO_INCREMENT FIRST,
-        ADD COLUMN \`appId\` varchar(255) DEFAULT NULL AFTER \`incrementId\`,
-        MODIFY COLUMN \`id\` int(11) NULL DEFAULT NULL AFTER \`appId\`,
-        DROP PRIMARY KEY,
-        ADD PRIMARY KEY (\`incrementId\`) USING BTREE;`);
-      const selectDataSql = tableConfig.sourceList
-        .map(source => `select null as incrementId, '${source.appId}' as appId, a.* from \`${source.database}\`.\`${source.tableName}\` as a`)
-        .join(' UNION ');
-      await targetKnex.raw(`REPLACE INTO \`${targetDatabase}\`.\`${targetTable}\` ${selectDataSql};`);
+      const isDiff = compareTableForMerge(targetTableDDL, exceptTargetTableDDL);
+      if (isDiff) {
+        await knex.raw(`DROP TABLE IF EXISTS \`${targetDatabase}\`.\`${targetTable}\`;`);
+        await knex.raw(exceptTargetTableDDL);
+        await knex.raw(`ALTER TABLE \`${targetDatabase}\`.\`${targetTable}\`
+          ADD COLUMN \`incrementId\` int(11) NOT NULL AUTO_INCREMENT FIRST,
+          ADD COLUMN \`appId\` varchar(255) DEFAULT NULL AFTER \`incrementId\`,
+          MODIFY COLUMN \`id\` int(11) NULL DEFAULT NULL AFTER \`appId\`,
+          DROP PRIMARY KEY,
+          ADD PRIMARY KEY (\`incrementId\`) USING BTREE;`);
+        const selectDataSql = tableConfig.sourceList
+          .map(source => `select null as incrementId, '${source.appId}' as appId, a.* from \`${source.database}\`.\`${source.tableName}\` as a`)
+          .join(' UNION ');
+        await knex.raw(`REPLACE INTO \`${targetDatabase}\`.\`${targetTable}\` ${selectDataSql};`);
+        logger.info(`[${targetTable}]`, '结构不一致; 创建成功;');
+      }
+
+      const targetConnection = {...this.app.config.knex.client.connection, database: targetDatabase};
+      let hasHyperDiff = false;
+      for (const source of tableConfig.sourceList) {
+        const { appId } = source; 
+        const sourceConnection = {...this.app.config.knex.client.connection, database: source.database};
+        const hyperDiffResult = await hyperDiffMerge({
+          oldDatabaseConnectionConfig: targetConnection,
+          oldTable: targetTable, oldDataWhere: { appId },
+          newDatabaseConnectionConfig: sourceConnection,
+          newTable: sourceTable,
+          splitCount: 2,
+          stopThreshold: 10,
+          ignoreColumns: ['incrementId', 'appId'],
+        });
+        let hyperDiffIsConsistent = hyperDiffResult.added.length === 0 && hyperDiffResult.removed.length === 0 && hyperDiffResult.changed.length === 0;
+        if (!hyperDiffIsConsistent) {
+          hasHyperDiff = true;
+          const {added, removed, changed} = hyperDiffResult;
+          added.forEach(item => { item.appId = appId; })
+          changed.forEach(item => { item.appId = appId; })
+          if (added.length > 0) {
+            await knex(`${targetDatabase}.${targetTable}`).insert(added);
+          }
+          if (removed.length > 0) {
+            const idList = removed.map(item => item.id);
+            await knex(`${targetDatabase}.${targetTable}`).where({ appId }).whereIn('id', idList).delete();
+          }
+          if (changed.length > 0) {
+            for (const item of changed) {
+              const {id, ...updateParam} = item.new;
+              await knex(`${targetDatabase}.${targetTable}`).where({ appId }).where({id}).update(updateParam);
+            }
+          }
+        }  
+      }    
+      if (hasHyperDiff) {
+        logger.info(`[${targetTable}]`, '数据不一致; 同步成功;');
+      } 
+      if (!hasHyperDiff) {
+        logger.info(`[${targetTable}]`, '数据一致; 无需同步;');
+      } 
     }
   }
 
