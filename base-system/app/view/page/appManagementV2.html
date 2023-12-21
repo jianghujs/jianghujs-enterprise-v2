@@ -365,7 +365,7 @@ new Vue({
       const rows = (await window.jianghuAxios({
         data: {
           appData: {
-            pageId: 'appSetting',
+            pageId: 'appManagement',
             actionId: 'selectItemList',
             actionData: {},
             where: {},
@@ -422,7 +422,7 @@ new Vue({
         await window.jianghuAxios({
           data: {
             appData: {
-              pageId: 'appSetting',
+              pageId: 'appManagement',
               actionId: 'updateItem',
               actionData: { 
                 appPageDirectoryList: JSON.stringify(appPageDirectoryList || '[]'),
@@ -446,7 +446,7 @@ new Vue({
       await window.jianghuAxios({
         data: {
           appData: {
-            pageId: 'appSetting',
+            pageId: 'appManagement',
             actionId: 'updateAppUserGroupRole',
             actionData: actionData,
           }
@@ -488,7 +488,7 @@ new Vue({
       await window.jianghuAxios({
         data: {
           appData: {
-            pageId: 'appSetting',
+            pageId: 'appManagement',
             actionId: 'insertItem',
             actionData: this.createActionData
           }
@@ -537,7 +537,7 @@ new Vue({
       await window.jianghuAxios({
         data: {
           appData: {
-            pageId: 'appSetting',
+            pageId: 'appManagement',
             actionId: 'updateItem',
             actionData: this.updateActionData,
             where: {id: this.updateItemId}
@@ -570,7 +570,7 @@ new Vue({
       await window.jianghuAxios({
         data: {
           appData: {
-            pageId: 'appSetting',
+            pageId: 'appManagement',
             actionId: 'deleteItem',
             actionData: {},
             where: {id: this.deleteItemId}
