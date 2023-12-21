@@ -39,8 +39,6 @@
       <v-card class="rounded-lg">
         <v-row class="ma-0 pa-4 d-flex align-center">
           <!-- 新增按钮 -->
-          <v-btn color="success" class="elevation-0 mr-2" @click="doUiAction('startCreateItem')" small>新建公告
-          </v-btn>
           <v-menu v-model="isMoreMenuShown" bottom offset-y offset-x>
             <template v-slot:activator="{ on, attrs }">
               <!-- icon筛选 -->
@@ -157,10 +155,7 @@
       </v-navigation-drawer>
       <!-- <<<<<<<<<<<<< 页面内容 -->
 
-      <view-journal-detail-drawer ref="journalDetail" />
-      <view-task-detail-drawer ref="taskDetail" />
       <view-notice-detail-drawer ref="noticeDetail" />
-      <view-ticket-detail-drawer ref="ticketDetail" />
     </div>
 
     <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
@@ -189,10 +184,7 @@
 {% block vueScript %}
 
 {% include 'common/jianghuJs/fixedTableHeightV4.html' %}
-{% include 'component/view-journal-detail-drawer.html' %}
 {% include 'component/view-notice-detail-drawer.html' %}
-{% include 'component/view-task-detail-drawer.html' %}
-{% include 'component/view-ticket-detail-drawer.html' %}
 {% include 'common/constant.html' %}
 
 <script type="module">
@@ -237,7 +229,6 @@
       isTableLoading: true,
       tableData: [],
       headers: [
-        { text: "应用", value: "appId", width: 120 },
         { text: "通知名称", value: "taskTitle", width: 120 },
         { text: "通知描述", value: "taskDesc", width: 200 },
         { text: "创建时间", value: "taskCreateAt", width: 250 },
@@ -273,7 +264,6 @@
         switch (uiActionId) {
           case 'initPageData':
             await this.getTableData();
-            await this.getUserList();
             await this.getPageParams();
             break;
           case 'getTableData':
@@ -295,9 +285,6 @@
             await this.confirmDeleteDialog();
             await this.doDeleteItem(uiActionData);
             await this.getTableData();
-            break;
-          case 'getUserList':
-            await this.getUserList();
             break;
           case 'viewItem':
             await this.doViewItem(uiActionData);
@@ -443,8 +430,6 @@
         if ((item.taskDesc || '').includes('href')) {
           throw new Error("跳转页面")
         }
-        // appInfo.appId != item.appId
-        
         this.taskId = item.taskBizId
         await this.open()
       },
@@ -509,13 +494,7 @@
       async open() {
         const taskId = this.taskId
         // 判断是taskId，弹出不同的抽屉
-        if (taskId.includes('RW')) {
-          this.$refs.taskDetail.doUiAction('open', { taskId })
-        } else if (taskId.includes('SP')) {
-          this.$refs.ticketDetail.doUiAction('open', { taskId })
-        } else if (taskId.includes('RZ')) {
-          this.$refs.journalDetail.doUiAction('open', { taskId })
-        } else if (taskId.includes('TZ')) {
+        if (taskId.includes('TZ')) {
           this.$refs.noticeDetail.doUiAction('open', { taskId })
         }
       },

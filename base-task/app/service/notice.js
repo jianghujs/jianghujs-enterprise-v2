@@ -125,6 +125,24 @@ class NoticeService extends Service {
       })
       .delete()
   }
+  // 替换task a标签链接
+  async replaceNoticeUrlAfterHook() {
+    // 请求enterprise_app表
+    const { jianghuKnex, knex } = this.app;
+    const { userId } = this.ctx.userInfo;
+    const enterpriseAppList = await jianghuKnex(tableEnum.enterprise_app).select()
+
+    const rows = this.ctx.response.body.appData.resultData.rows
+
+    rows.forEach(row=> {
+      const appItem = enterpriseAppList.find(app=> app.appId == row.appId) || {}
+      // row.taskDesc中a标签加上href和target
+      if (row.taskBizId) {
+        row.taskDesc = row.taskDesc.replace(/<a>/g, `<a href="${appItem.appUrl}/page/noticeManagement?taskId=${row.taskBizId}" target="_blank">`)
+      }
+    })
+    this.ctx.response.body.appData.resultData.rows = rows;
+  }
 }
 
 module.exports = NoticeService;

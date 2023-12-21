@@ -24,6 +24,7 @@ module.exports = {
      _app_account: '_app_account',
      // ========================应用表============================
      task: 'task',
+     enterprise_app: 'enterprise_app'
   }
 };
 
