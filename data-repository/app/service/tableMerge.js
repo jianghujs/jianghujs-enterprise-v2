@@ -78,8 +78,8 @@ class UtilService extends Service {
     const config = this.app.config;
     const defaultTargetDatabase = config.knex.client.connection.database;
     const { triggerPrefix } = config;
-    const syncTriggerPrefix = `${triggerPrefix}_merge`;
-    return { defaultTargetDatabase, syncTriggerPrefix };
+    const mergeTriggerPrefix = `${triggerPrefix}_merge`;
+    return { defaultTargetDatabase, mergeTriggerPrefix };
   }
 
   async deleteTableMergeConfig() {
@@ -90,22 +90,20 @@ class UtilService extends Service {
     // Tip: 适配schedule调用, actionData从入参取
     validateUtil.validate(appDataSchema.mergeTable, actionData);
     const {useSyncTimeSlotFilter} = actionData;
-    const tableSyncConfigSelectParams = _.pick(actionData, ['targetDatabase', 'targetTable']);
+    const tableMergeConfigWhere= _.pick(actionData, ['id']);
     
     const {jianghuKnex, logger} = this.app;
-    const lastSyncTime = dayjs().format();
-    const currentMinute = dayjs().diff(dayjs().format('YYYY-MM-DD'), 'minute');
-    const outsideKnexMap = {};
 
     let tableMergeConfigList = await jianghuKnex('_table_merge_config')
-      .where(tableSyncConfigSelectParams)
+      .where(tableMergeConfigWhere)
       .select();
     tableMergeConfigList.forEach(item => { item.sourceList = JSON.parse(item.sourceList || '[]');})
     tableMergeConfigList = tableMergeConfigList.filter(item => item.sourceList.length > 0);
     const allTable = await jianghuKnex('information_schema.tables').select('table_schema as database', 'table_name as tableName');
     const allTableMap = Object.fromEntries(allTable.map(obj => [`${obj.database}.${obj.tableName}`, obj]));
-    await this.tableConsistentCheckAndSync({tableMergeConfigList, allTableMap, outsideKnexMap});
-
+    await this.tableConsistentCheckAndSync({tableMergeConfigList, allTableMap});
+    await this.tableMysqlTriggerCheckAndSync({tableMergeConfigList});
+    await this.clearUselessMysqlTrigger({allTableMap});
   }
 
 
@@ -113,6 +111,7 @@ class UtilService extends Service {
     const {knex, logger} = this.app;
     const lastMergeTime = dayjs().format();
     for (const tableConfig of tableMergeConfigList) {
+      if (tableConfig.sourceList.length === 0) { continue; }
       await knex('_table_merge_config').where({ id: tableConfig.id }).update({ lastMergeTime, mergeDesc: '开始' });
       const { targetDatabase, targetTable } = tableConfig;
       const sourceDatabase = tableConfig.sourceList[0].database;
@@ -142,7 +141,7 @@ class UtilService extends Service {
           .map(source => `select null as incrementId, '${source.appId}' as appId, a.* from \`${source.database}\`.\`${source.tableName}\` as a`)
           .join(' UNION ');
         await knex.raw(`REPLACE INTO \`${targetDatabase}\`.\`${targetTable}\` ${selectDataSql};`);
-        logger.info(`[${targetTable}]`, '结构不一致; 创建成功;');
+        logger.info(`[merge][${targetTable}]`, '结构不一致; 创建成功;');
       }
 
       const targetConnection = {...this.app.config.knex.client.connection, database: targetDatabase};
@@ -183,13 +182,133 @@ class UtilService extends Service {
       }    
       await knex(`${targetDatabase}.${targetTable}`).whereNotIn('appId', appIdList).delete();
       if (hasHyperDiff) {
-        logger.info(`[${targetTable}]`, '数据不一致; 同步成功;');
+        logger.info(`[merge][${targetTable}]`, '数据不一致; 同步成功;');
       } 
       if (!hasHyperDiff) {
-        logger.info(`[${targetTable}]`, '数据一致; 无需同步;');
+        logger.info(`[merge][${targetTable}]`, '数据一致; 无需同步;');
       } 
     
       await knex('_table_merge_config').where({ id: tableConfig.id }).update({ mergeDesc: '正常' });
+    }
+  }
+
+  async tableMysqlTriggerCheckAndSync({tableMergeConfigList}) {
+    const {jianghuKnex} = this.app;
+    const { mergeTriggerPrefix } = this.getConfig();
+    const triggerList = await jianghuKnex('information_schema.triggers')
+      .whereNotIn('TRIGGER_SCHEMA', ['sys'])
+      .where('TRIGGER_NAME', 'like', `${mergeTriggerPrefix}_%`)
+      .select('TRIGGER_NAME as triggerName', 'ACTION_STATEMENT as triggerContent');
+    const allTriggerContentMap = Object.fromEntries(triggerList.map(obj => [obj.triggerName, obj.triggerContent]));
+
+    for (const tableConfig of tableMergeConfigList) {
+      if (tableConfig.sourceList.length === 0) { continue; }
+      await this.createMysqlTriggerForSourceTable({tableConfig, allTriggerContentMap, mergeTriggerPrefix});
+    }
+  }
+
+  async createMysqlTriggerForSourceTable({tableConfig, allTriggerContentMap, mergeTriggerPrefix}) {
+    const {jianghuKnex, logger} = this.app;
+    const { targetDatabase, targetTable, sourceList } = tableConfig;
+    for (const source of sourceList) {
+      const sourceDatabase = source.database;
+      const sourceTable = source.tableName;
+      const appId = source.appId;
+
+      const columnListSelect = await jianghuKnex('information_schema.COLUMNS')
+        .where({TABLE_SCHEMA: sourceDatabase, TABLE_NAME: sourceTable})
+        .select();
+      const columnList = columnListSelect.map(item => `\`${item.COLUMN_NAME}\``);
+      const NEWColumnList = columnListSelect.map(item => `NEW.\`${item.COLUMN_NAME}\``);
+      const updateColumnList = columnListSelect.map(item => `\`${item.COLUMN_NAME}\`=NEW.\`${item.COLUMN_NAME}\``);
+      const INSERTTriggerName = `${mergeTriggerPrefix}_${appId}_${targetDatabase}_${targetTable}_INSERT`;
+      const INSERTTriggerContentSql = `BEGIN
+              INSERT INTO \`${targetDatabase}\`.\`${targetTable}\`
+              (\`appId\`,${columnList.join(',')})
+              VALUES
+              ("${appId}",${NEWColumnList.join(',')});
+          END`;
+      const INSERTTriggerCreateSql = `CREATE TRIGGER \`${sourceDatabase}\`.\`${INSERTTriggerName}\` AFTER INSERT
+          ON \`${sourceDatabase}\`.\`${sourceTable}\` FOR EACH ROW
+          ${INSERTTriggerContentSql}`;
+      if (!allTriggerContentMap[INSERTTriggerName] || allTriggerContentMap[INSERTTriggerName] !== INSERTTriggerContentSql) {
+        await jianghuKnex.raw(`DROP TRIGGER IF EXISTS ${sourceDatabase}.${INSERTTriggerName};`);
+        await jianghuKnex.raw(INSERTTriggerCreateSql);
+        const syncDesc = 'insert 触发器覆盖';
+        logger.warn(`[merge][${targetTable}]`, syncDesc);
+      } else {
+        logger.info(`[merge][${targetTable}]`, 'insert触发器已存在; 无需覆盖');
+      }
+
+      const UPDATETriggerName = `${mergeTriggerPrefix}_${appId}_${targetDatabase}_${targetTable}_UPDATE`;
+      const UPDATETriggerContentSql = `BEGIN
+              UPDATE \`${targetDatabase}\`.\`${targetTable}\`
+              SET ${updateColumnList.join(',')}
+              where id=OLD.id and appId="${appId}";
+          END`;
+      const UPDATETriggerCreateSql = `CREATE TRIGGER \`${sourceDatabase}\`.\`${UPDATETriggerName}\` AFTER UPDATE
+          ON \`${sourceDatabase}\`.\`${sourceTable}\` FOR EACH ROW
+          ${UPDATETriggerContentSql}`;
+      if (!allTriggerContentMap[UPDATETriggerName] || allTriggerContentMap[UPDATETriggerName] !== UPDATETriggerContentSql) {
+        await jianghuKnex.raw(`DROP TRIGGER IF EXISTS ${sourceDatabase}.${UPDATETriggerName};`);
+        await jianghuKnex.raw(UPDATETriggerCreateSql);
+        const syncDesc = 'update 触发器覆盖';
+        logger.warn(`[merge][${targetTable}]`, syncDesc);
+      } else {
+        logger.info(`[merge][${targetTable}]`, 'update触发器已存在; 无需覆盖');
+      }
+
+
+      const DELETETriggerName = `${mergeTriggerPrefix}_${appId}_${targetDatabase}_${targetTable}_DELETE`;
+      const DELETETriggerContentSql = `BEGIN
+              DELETE FROM \`${targetDatabase}\`.\`${targetTable}\` WHERE id = OLD.id and appId="${appId}";
+          END`;
+      const DELETETriggerCreateSql = `CREATE TRIGGER \`${sourceDatabase}\`.\`${DELETETriggerName}\` AFTER DELETE
+          ON \`${sourceDatabase}\`.\`${sourceTable}\` FOR EACH ROW
+          ${DELETETriggerContentSql}`;
+      if (!allTriggerContentMap[DELETETriggerName] || allTriggerContentMap[DELETETriggerName] !== DELETETriggerContentSql) {
+        await jianghuKnex.raw(`DROP TRIGGER IF EXISTS ${sourceDatabase}.${DELETETriggerName};`);
+        await jianghuKnex.raw(DELETETriggerCreateSql);
+        const syncDesc = 'delete 触发器覆盖';
+        logger.warn(`[merge][${targetTable}]`, syncDesc);
+      } else {
+        logger.info(`[merge][${targetTable}]`, 'delete触发器已存在; 无需覆盖');
+      }
+    }
+    
+  }
+
+  async clearUselessMysqlTrigger({allTableMap}) {
+    const {jianghuKnex, logger} = this.app;
+    const { mergeTriggerPrefix } = this.getConfig();
+
+    const tableConfigList = await jianghuKnex('_table_merge_config').select();
+    tableConfigList.forEach(item => { item.sourceList = JSON.parse(item.sourceList || '[]');})
+    const triggerCheckMap = {};
+    tableConfigList.forEach(tableConfig => {
+      const { sourceList, targetDatabase, targetTable } = tableConfig;
+      for (const source of sourceList) {
+        const appId = source.appId;
+        triggerCheckMap[`${mergeTriggerPrefix}_${appId}_${targetDatabase}_${targetTable}_INSERT`] = true;
+        triggerCheckMap[`${mergeTriggerPrefix}_${appId}_${targetDatabase}_${targetTable}_UPDATE`] = true;
+        triggerCheckMap[`${mergeTriggerPrefix}_${appId}_${targetDatabase}_${targetTable}_DELETE`] = true;
+      }
+    })
+
+    const triggerList = await jianghuKnex('information_schema.triggers')
+      .whereNotIn('TRIGGER_SCHEMA', ['sys'])
+      .where('TRIGGER_NAME', 'like', `${mergeTriggerPrefix}_%`)
+      .select();
+
+    for (const trigger of triggerList) {
+      const {
+        TRIGGER_SCHEMA: sourceDatabase,
+        TRIGGER_NAME: triggerName, EVENT_MANIPULATION: triggerEvent,
+      } = trigger;
+      if (!triggerCheckMap[triggerName]) {
+        await jianghuKnex.raw(`DROP TRIGGER IF EXISTS ${sourceDatabase}.${triggerName};`);
+        logger.warn(`[merge][${triggerName}]`, '无用的mysql trigger, 执行删除逻辑;');
+      }
     }
   }
 

@@ -301,22 +301,21 @@ class UtilService extends Service {
 
   async tableMysqlTriggerCheckAndSync({tableSyncConfigList}) {
     const {jianghuKnex} = this.app;
-
+    const { syncTriggerPrefix } = this.getConfig();
     const triggerList = await jianghuKnex('information_schema.triggers')
       .whereNotIn('TRIGGER_SCHEMA', ['sys'])
+      .where('TRIGGER_NAME', 'like', `${syncTriggerPrefix}_%`)
       .select('TRIGGER_NAME as triggerName', 'ACTION_STATEMENT as triggerContent');
     const allTriggerContentMap = Object.fromEntries(triggerList.map(obj => [obj.triggerName, obj.triggerContent]));
 
     for (const tableSyncConfig of tableSyncConfigList) {
-      await this.createMysqlTriggerForSourceTable({tableSyncConfig, allTriggerContentMap});
+      await this.createMysqlTriggerForSourceTable({tableSyncConfig, allTriggerContentMap, syncTriggerPrefix});
     }
 
   }
 
-  async createMysqlTriggerForSourceTable({tableSyncConfig, allTriggerContentMap}) {
+  async createMysqlTriggerForSourceTable({tableSyncConfig, allTriggerContentMap, syncTriggerPrefix}) {
     const {jianghuKnex, logger} = this.app;
-    const { syncTriggerPrefix } = this.getConfig();
-
     const { targetDatabase, targetTable, sourceDatabase, sourceTable} = tableSyncConfig;
     // 外部数据库不需要建 trigger
     if (sourceDatabase.startsWith('{')) {
@@ -397,7 +396,7 @@ class UtilService extends Service {
     // 过滤 knex 连接失败的外部表同步配置
     tableSyncConfigList = tableSyncConfigList.filter(o => !o.sourceDatabase.startsWith('{') || outsideKnexMap[o.sourceDatabase])
     tableSyncConfigList = await this.tableExistCheck({tableSyncConfigList, allTableMap});
-    tableSyncConfigList.forEach(o => o.targetTable = o.targetTable || `${o.sourceDatabase}__${o.sourceTable}`);
+    tableSyncConfigList.forEach(o => o.targetTable = o.targetTable);
 
     const triggerList = await jianghuKnex('information_schema.triggers')
       .whereNotIn('TRIGGER_SCHEMA', ['sys'])

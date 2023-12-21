@@ -396,7 +396,7 @@ new Vue({
           break;
         case 'manualSyncOneTable':
           await this.prepareSyncOnTable(uiActionData);
-          await this.confirmSyncOneTableDialog();
+          // await this.confirmSyncOneTableDialog();
           await this.doManualSyncOneTable();
           await this.getTableData();
           break;
@@ -599,15 +599,14 @@ new Vue({
       }
     },
     async doManualSyncOneTable() {
-      window.vtoast.loading("合并中");
+      window.vtoast.loading({ message: "合并中", time: -1});
       await window.jianghuAxios({
         data: {
           appData: {
             pageId: 'tableMergeConfig',
             actionId: 'doTableMerge',
             actionData: {
-              sourceDatabase: this.syncItem.sourceDatabase,
-              sourceTable: this.syncItem.sourceTable
+              id: this.syncItem.id,
             }
           }
         }

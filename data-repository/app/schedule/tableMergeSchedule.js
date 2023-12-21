@@ -4,10 +4,9 @@ module.exports = app => {
   return {
     schedule: {
       immediate: true,
-      interval: '30s', // 1 分钟间隔; 2m 30s
+      interval: '2m', // 1 分钟间隔; 2m 30s
       type: 'worker', // 只有一个worker执行
-      // disable: ['启用', 'enable'].indexOf(app.config.dataSyncStatus) == -1,
-      disable: true, // Tip: 临时代码, 用于测试
+      disable: ['启用', 'enable'].indexOf(app.config.dataSyncStatus) == -1,
     },
     async task(ctx) {
       const startTime = new Date().getTime();
