@@ -94,18 +94,54 @@ class UtilService extends Service {
     
     const {jianghuKnex, logger} = this.app;
 
+    const allTable = await jianghuKnex('information_schema.tables').select('table_schema as database', 'table_name as tableName');
+    const allTableMap = Object.fromEntries(allTable.map(obj => [`${obj.database}.${obj.tableName}`, obj]));
+
     let tableMergeConfigList = await jianghuKnex('_table_merge_config')
       .where(tableMergeConfigWhere)
       .select();
     tableMergeConfigList.forEach(item => { item.sourceList = JSON.parse(item.sourceList || '[]');})
     tableMergeConfigList = tableMergeConfigList.filter(item => item.sourceList.length > 0);
-    const allTable = await jianghuKnex('information_schema.tables').select('table_schema as database', 'table_name as tableName');
-    const allTableMap = Object.fromEntries(allTable.map(obj => [`${obj.database}.${obj.tableName}`, obj]));
+    tableMergeConfigList = await this.tableMergeCheck({tableMergeConfigList, allTableMap});
     await this.tableConsistentCheckAndSync({tableMergeConfigList, allTableMap});
     await this.tableMysqlTriggerCheckAndSync({tableMergeConfigList});
     await this.clearUselessMysqlTrigger({allTableMap});
   }
 
+  async tableMergeCheck({tableMergeConfigList, allTableMap}) {
+    const {jianghuKnex, logger} = this.app;
+
+    tableMergeConfigList.forEach(item => item.sourceList=item.sourceList.filter(source => allTableMap[`${source.database}.${source.tableName}`]));
+    tableMergeConfigList = tableMergeConfigList.filter(item => item.sourceList.length > 0);
+    const tableMergeConfigListNew = [];
+    for (const tableConfig of tableMergeConfigList) {
+      const sourceList = tableConfig.sourceList;
+      if (sourceList.length == 1) { continue; }
+      const masterSource = sourceList[0];
+      const masterSourceDDLResult = await jianghuKnex.raw(`SHOW CREATE TABLE ${masterSource.database}.${masterSource.tableName};`);
+      let masterSourceDDL = masterSourceDDLResult[0][0]['Create Table'];
+      masterSourceDDL = masterSourceDDL.replace(/AUTO_INCREMENT=\d+ ?/, '');
+      let mergeDesc = '';
+      for (let i = 1; i < sourceList.length; i++) {
+        const currentSource = sourceList[i];
+        const currentSourceDDLResult = await jianghuKnex.raw(`SHOW CREATE TABLE ${currentSource.database}.${currentSource.tableName};`);
+        let currentSourceDDL = currentSourceDDLResult[0][0]['Create Table'];
+        currentSourceDDL = currentSourceDDL
+          .replace(`CREATE TABLE \`${currentSource.tableName}\``, `CREATE TABLE \`${masterSource.tableName}\``)
+          .replace(/AUTO_INCREMENT=\d+ ?/, '');
+        if (masterSourceDDL != currentSourceDDL) {
+          mergeDesc += `${currentSource.database}.${currentSource.tableName}和主表结构不一致; `;
+        }
+      }
+      if (mergeDesc) {
+        await jianghuKnex('_table_merge_config').update({ mergeDesc }).where({ id: tableConfig.id });
+      }
+      if (!mergeDesc) {
+        tableMergeConfigListNew.push(tableConfig);
+      }
+    }
+    return tableMergeConfigListNew;
+  }
 
   async tableConsistentCheckAndSync({tableMergeConfigList, allTableMap}) {
     const {knex, logger} = this.app;
