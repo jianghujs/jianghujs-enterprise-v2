@@ -57,15 +57,15 @@
               <v-list-item @click="doUiAction('deleteAllTask')">删除全部已读信息</v-list-item>
             </v-card>
           </v-menu>
-
           <v-spacer></v-spacer>
-          <!-- 搜索过滤 -->
-          <v-col cols="12" xs="8" sm="4" md="4" xl="3" class="pa-0 d-flex align-center">
-            <v-switch false-value="否" true-value="是" v-model="serverSearchInput.taskReadStatus" color="success" class="jh-v-input mr-3" label="显示已读" dense filled single-line @change="doUiAction('getTableData')"></v-switch>
 
+          <v-switch hide-actions hide-details false-value="否" true-value="是" v-model="serverSearchInput.taskReadStatus" color="success" class="jh-v-input ma-0 mr-3" label="显示已读" dense filled single-line @change="doUiAction('getTableData')"></v-switch>
+
+          <v-col cols="12" xs="8" sm="4" md="3" class="pa-0">
             <v-text-field color="success" v-model="searchInput" prefix="搜索：" class="jh-v-input" dense filled single-line></v-text-field>
           </v-col>
         </v-row>
+
         <!-- 表格 -->
         <v-data-table
           :headers="headers"
@@ -419,7 +419,7 @@
       // ---------- <<<<<<<<<<< 新增数据 uiAction ---------
 
       // ---------- 删除通知 >>>>>>>>>>>>> ----------
-      async doDeleteItem( { item }) {
+      async doDeleteItem({ item }) {
         const { id } = item;
         await window.jhMask.show();
         await window.vtoast.loading("删除数据");
@@ -492,7 +492,7 @@
         }
       },
       // ---------- <<<<<<<<<<<<< 更多操作 ----------
-      
+
       // ---------- 初始化页面时参数处理 >>>>>>>>>>>>> ----------
       async getPageParams() {
         var queryString = window.location.search;
@@ -508,11 +508,11 @@
         // 判断是taskId，弹出不同的抽屉
         if (taskId.includes('RW')) {
           this.$refs.taskDetail.doUiAction('open', { taskId })
-        } else if(taskId.includes('SP')) {
+        } else if (taskId.includes('SP')) {
           this.$refs.ticketDetail.doUiAction('open', { taskId })
-        } else if(taskId.includes('RZ')) {
+        } else if (taskId.includes('RZ')) {
           this.$refs.journalDetail.doUiAction('open', { taskId })
-        } else if(taskId.includes('TZ')) {
+        } else if (taskId.includes('TZ')) {
           this.$refs.noticeDetail.doUiAction('open', { taskId })
         }
       },
