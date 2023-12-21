@@ -87,8 +87,6 @@ class NoticeService extends Service {
         taskId: `TZ${idSequence}`,
       }
 
-
-
       return insertItem
     })
 
@@ -137,6 +135,9 @@ class NoticeService extends Service {
         taskTitle = '修改密码'
         taskContent = `您的密码已被修改为[${actionData.clearTextPassword}]，请重新登录`
         break;
+      case 'insertUserGroupRole':
+        taskTitle = '角色变更'
+        taskContent = `您的角色已被修改为[${actionData.groupId}]，请重新登录`
       default:
         break;
     }
