@@ -40,23 +40,22 @@ async function createTableSyncLog({jianghuKnex, tableSyncConfig, syncDesc, syncA
 
 class UtilService extends Service {
 
-  /**
-   * 返回当前应用所在库
-   * @return {Promise<*>}
-   */
-  getTargetDatabase() {
-    const {database} = this.app.config.knex.client.connection;
-    return database;
+  getConfig() {
+    const config = this.app.config;
+    const defaultTargetDatabase = config.knex.client.connection.database;
+    const { triggerPrefix } = config;
+    const syncTriggerPrefix = `${triggerPrefix}_sync`;
+    return { defaultTargetDatabase, syncTriggerPrefix };
   }
 
   async selectSourceDatabase() {
     const {jianghuKnex, config} = this.app;
-    const targetDatabase = this.getTargetDatabase();
     const rows = await jianghuKnex('information_schema.SCHEMATA')
-      .whereNotIn('schema_name', [targetDatabase, 'sys', 'information_schema'])
+      .whereNotIn('schema_name', ['sys', 'information_schema'])
       .orderBy('schema_name', 'desc')
       .select('schema_name as sourceDatabase');
-    return {rows};
+    const { defaultTargetDatabase } = this.getConfig();  
+    return { defaultTargetDatabase, rows};
   }
 
   async selectSourceTable() {
@@ -72,15 +71,14 @@ class UtilService extends Service {
   }
 
   async deleteTableSyncConfig() {
-    const where = this.ctx.request.body.appData.where;
-    const {id} = where;
-    const {jianghuKnex} = this.app;
-    const tableSyncConfig = await jianghuKnex('_table_sync_config').where({id}).first();
+    const { id } = this.ctx.request.body.appData.actionData;
+    const { jianghuKnex } = this.app;
+    const { syncTriggerPrefix } = this.getConfig();
+    const tableSyncConfig = await jianghuKnex('_table_sync_config').where({ id }).first();
     if (!tableSyncConfig) {
       throw new BizError(errorInfoEnum.data_not_found);
     }
-    const {sourceDatabase, sourceTable} = tableSyncConfig;
-
+    const { sourceDatabase } = tableSyncConfig;
     await jianghuKnex('_table_sync_config')
       .where({id})
       .delete();
@@ -89,15 +87,13 @@ class UtilService extends Service {
     if (sourceDatabase.startsWith('{')) {
       return;
     }
-
-    const targetTable = tableSyncConfig.targetTable || `${sourceDatabase}__${sourceTable}`;
-    const DELETETriggerName = `${targetTable}_DELETE`;
+    const targetTable = tableSyncConfig.targetTable;
+    const DELETETriggerName = `${syncTriggerPrefix}_${targetTable}_DELETE`;
     await jianghuKnex.raw(`DROP TRIGGER IF EXISTS ${sourceDatabase}.${DELETETriggerName};`);
-    const INSERTTriggerName = `${targetTable}_INSERT`;
+    const INSERTTriggerName = `${syncTriggerPrefix}_${targetTable}_INSERT`;
     await jianghuKnex.raw(`DROP TRIGGER IF EXISTS ${sourceDatabase}.${INSERTTriggerName};`);
-    const UPDATETriggerName = `${targetTable}_UPDATE`;
+    const UPDATETriggerName = `${syncTriggerPrefix}_${targetTable}_UPDATE`;
     await jianghuKnex.raw(`DROP TRIGGER IF EXISTS ${sourceDatabase}.${UPDATETriggerName};`);
-
     return;
   }
 
@@ -118,16 +114,15 @@ class UtilService extends Service {
 
     validateUtil.validate(appDataSchema.syncTable, actionData);
     const {useSyncTimeSlotFilter} = actionData;
-    const tableSyncConfigSelectParams = _.pick(actionData, ['sourceDatabase', 'sourceTable']);
+    const tableSyncConfigWhere = _.pick(actionData, ['id']);
 
     const {jianghuKnex, logger} = this.app;
-    const targetDatabase = this.getTargetDatabase();
     const lastSyncTime = dayjs().format();
     const currentMinute = dayjs().diff(dayjs().format('YYYY-MM-DD'), 'minute');
     const outsideKnexMap = {};
 
     let tableSyncConfigList = await jianghuKnex('_table_sync_config')
-      .where(tableSyncConfigSelectParams)
+      .where(tableSyncConfigWhere)
       .select();
     const allTable = await jianghuKnex('information_schema.tables').select('table_schema as database', 'table_name as tableName');
     const allTableMap = Object.fromEntries(allTable.map(obj => [`${obj.database}.${obj.tableName}`, obj]));
@@ -157,7 +152,7 @@ class UtilService extends Service {
     }
     tableSyncConfigList = validTableSyncConfigList;
 
-    tableSyncConfigList = await this.tableExistCheck({tableSyncConfigList, allTableMap, targetDatabase});
+    tableSyncConfigList = await this.tableExistCheck({tableSyncConfigList, allTableMap});
     if (useSyncTimeSlotFilter === true) {
       tableSyncConfigList = tableSyncConfigList.filter(x => x.syncTimeSlot && currentMinute % parseInt(x.syncTimeSlot) === 0);
     }
@@ -173,8 +168,8 @@ class UtilService extends Service {
       .whereIn('id', tableSyncConfigIdList)
       .update({syncDesc: '同步中', lastSyncTime});
 
-    await this.tableConsistentCheckAndSync({tableSyncConfigList, allTableMap, targetDatabase, outsideKnexMap});
-    await this.tableMysqlTriggerCheckAndSync({tableSyncConfigList, targetDatabase});
+    await this.tableConsistentCheckAndSync({tableSyncConfigList, allTableMap, outsideKnexMap});
+    await this.tableMysqlTriggerCheckAndSync({tableSyncConfigList});
     await this.clearUselessMysqlTrigger({allTableMap, outsideKnexMap});
 
     // 标记为正常
@@ -184,13 +179,12 @@ class UtilService extends Service {
 
   }
 
-  async tableExistCheck({tableSyncConfigList, allTableMap, targetDatabase}) {
+  async tableExistCheck({tableSyncConfigList, allTableMap}) {
     const {jianghuKnex, logger} = this.app;
     const newTableSyncConfigList = [];
     const lastSyncTime = dayjs().format();
     for (const tableSyncConfig of tableSyncConfigList) {
-      const {sourceDatabase, sourceTable} = tableSyncConfig;
-      let targetTable = tableSyncConfig.targetTable || `${sourceDatabase}__${sourceTable}`;
+      const {targetDatabase, targetTable, sourceDatabase, sourceTable} = tableSyncConfig;
       if (sourceDatabase.startsWith('{')) {
         const {name} = JSON.parse(sourceDatabase);
         targetTable = `${name.toLowerCase()}__${sourceTable}`;
@@ -221,11 +215,11 @@ class UtilService extends Service {
     return newTableSyncConfigList;
   }
 
-  async tableConsistentCheckAndSync({tableSyncConfigList, allTableMap, targetDatabase, outsideKnexMap}) {
+  async tableConsistentCheckAndSync({tableSyncConfigList, allTableMap, outsideKnexMap}) {
     const {knex, jianghuKnex, logger} = this.app;
     for (const tableSyncConfig of tableSyncConfigList) {
 
-      const {sourceDatabase, sourceTable} = tableSyncConfig;
+      const {targetDatabase, targetTable, sourceDatabase, sourceTable} = tableSyncConfig;
 
       const sourceKnex = outsideKnexMap[sourceDatabase] || knex;
       const targetKnex = outsideKnexMap[targetDatabase] || knex;
@@ -233,14 +227,12 @@ class UtilService extends Service {
       let sourceConnection = {...this.app.config.knex.client.connection, database: sourceDatabase};
 
       let outsideMode = false
-      let targetTable = tableSyncConfig.targetTable || `${sourceDatabase}__${sourceTable}`;
       let sourceDatabaseInDb = sourceDatabase;
       if (sourceDatabase.startsWith('{')) {
         outsideMode = true
         const {name, ...knexConfig} = JSON.parse(sourceDatabase);
         sourceConnection = knexConfig;
         sourceDatabaseInDb = knexConfig.database;
-        targetTable = `${name.toLowerCase()}__${sourceTable}`;
       }
 
       const targetTableExist = allTableMap[`${targetDatabase}.${targetTable}`];
@@ -257,7 +249,8 @@ class UtilService extends Service {
       }
       if (targetTableDDL !== exceptTargetTableDDL) {
         await targetKnex.raw(`DROP TABLE IF EXISTS ${targetDatabase}.${targetTable};`);
-        await targetKnex.raw(exceptTargetTableDDL);
+        const excuteTargetTableDDL = sourceTableDDL.replace(`CREATE TABLE \`${sourceTable}\``, `CREATE TABLE \`${targetDatabase}\`.\`${targetTable}\``).replace(/AUTO_INCREMENT=\d+ ?/, '');
+        await targetKnex.raw(excuteTargetTableDDL);
         if (outsideMode) {
           const syncDesc = '【表覆盖】结构不一致; 由于外部库，未触发覆盖仓库表逻辑;';
           await createTableSyncLog({jianghuKnex, tableSyncConfig, syncDesc, syncAction: '外部库不触发仓库表覆盖'});
@@ -306,29 +299,28 @@ class UtilService extends Service {
     }
   }
 
-  async tableMysqlTriggerCheckAndSync({tableSyncConfigList, targetDatabase}) {
+  async tableMysqlTriggerCheckAndSync({tableSyncConfigList}) {
     const {jianghuKnex} = this.app;
-
+    const { syncTriggerPrefix } = this.getConfig();
     const triggerList = await jianghuKnex('information_schema.triggers')
       .whereNotIn('TRIGGER_SCHEMA', ['sys'])
+      .where('TRIGGER_NAME', 'like', `${syncTriggerPrefix}_%`)
       .select('TRIGGER_NAME as triggerName', 'ACTION_STATEMENT as triggerContent');
     const allTriggerContentMap = Object.fromEntries(triggerList.map(obj => [obj.triggerName, obj.triggerContent]));
 
     for (const tableSyncConfig of tableSyncConfigList) {
-      await this.createMysqlTriggerForSourceTable({tableSyncConfig, targetDatabase, allTriggerContentMap});
+      await this.createMysqlTriggerForSourceTable({tableSyncConfig, allTriggerContentMap, syncTriggerPrefix});
     }
 
   }
 
-  async createMysqlTriggerForSourceTable({tableSyncConfig, targetDatabase, allTriggerContentMap}) {
+  async createMysqlTriggerForSourceTable({tableSyncConfig, allTriggerContentMap, syncTriggerPrefix}) {
     const {jianghuKnex, logger} = this.app;
-
-    const {sourceDatabase, sourceTable} = tableSyncConfig;
+    const { targetDatabase, targetTable, sourceDatabase, sourceTable} = tableSyncConfig;
     // 外部数据库不需要建 trigger
     if (sourceDatabase.startsWith('{')) {
       return;
     }
-    const targetTable = tableSyncConfig.targetTable || `${sourceDatabase}__${sourceTable}`;
 
     const columnListSelect = await jianghuKnex('information_schema.COLUMNS')
       .where({TABLE_SCHEMA: sourceDatabase, TABLE_NAME: sourceTable})
@@ -337,7 +329,7 @@ class UtilService extends Service {
     const NEWColumnList = columnListSelect.map(item => `NEW.\`${item.COLUMN_NAME}\``);
     const updateColumnList = columnListSelect.map(item => `\`${item.COLUMN_NAME}\`=NEW.\`${item.COLUMN_NAME}\``);
 
-    const INSERTTriggerName = `${targetTable}_INSERT`;
+    const INSERTTriggerName = `${syncTriggerPrefix}_${targetTable}_INSERT`;
     const INSERTTriggerContentSql = `BEGIN
             INSERT INTO \`${targetDatabase}\`.\`${targetTable}\`
             (${columnList.join(',')})
@@ -357,7 +349,7 @@ class UtilService extends Service {
       logger.info(`[${targetTable}]`, 'insert触发器已存在; 无需覆盖');
     }
 
-    const UPDATETriggerName = `${targetTable}_UPDATE`;
+    const UPDATETriggerName = `${syncTriggerPrefix}_${targetTable}_UPDATE`;
     const UPDATETriggerContentSql = `BEGIN
             UPDATE \`${targetDatabase}\`.\`${targetTable}\`
             SET ${updateColumnList.join(',')}
@@ -376,7 +368,7 @@ class UtilService extends Service {
       logger.info(`[${targetTable}]`, 'update触发器已存在; 无需覆盖');
     }
 
-    const DELETETriggerName = `${targetTable}_DELETE`;
+    const DELETETriggerName = `${syncTriggerPrefix}_${targetTable}_DELETE`;
     const DELETETriggerContentSql = `BEGIN
             DELETE FROM \`${targetDatabase}\`.\`${targetTable}\` WHERE id = OLD.id;
         END`;
@@ -397,18 +389,18 @@ class UtilService extends Service {
 
 
   async clearUselessMysqlTrigger({allTableMap, outsideKnexMap}) {
-
     const {jianghuKnex, logger} = this.app;
-    const targetDatabase = this.getTargetDatabase();
+    const { syncTriggerPrefix } = this.getConfig();
 
     let tableSyncConfigList = await jianghuKnex('_table_sync_config').select();
     // 过滤 knex 连接失败的外部表同步配置
     tableSyncConfigList = tableSyncConfigList.filter(o => !o.sourceDatabase.startsWith('{') || outsideKnexMap[o.sourceDatabase])
-    tableSyncConfigList = await this.tableExistCheck({tableSyncConfigList, allTableMap, targetDatabase});
-    tableSyncConfigList.forEach(o => o.targetTable = o.targetTable || `${o.sourceDatabase}__${o.sourceTable}`);
+    tableSyncConfigList = await this.tableExistCheck({tableSyncConfigList, allTableMap});
+    tableSyncConfigList.forEach(o => o.targetTable = o.targetTable);
 
     const triggerList = await jianghuKnex('information_schema.triggers')
       .whereNotIn('TRIGGER_SCHEMA', ['sys'])
+      .where('TRIGGER_NAME', 'like', `${syncTriggerPrefix}_%`)
       .select();
 
     for (const trigger of triggerList) {
@@ -416,7 +408,7 @@ class UtilService extends Service {
         TRIGGER_SCHEMA: sourceDatabase,
         TRIGGER_NAME: triggerName, EVENT_MANIPULATION: triggerEvent,
       } = trigger;
-      const tableSyncConfigExist = tableSyncConfigList.find(item => triggerName === `${item.targetTable}_${triggerEvent}`);
+      const tableSyncConfigExist = tableSyncConfigList.find(item => triggerName === `${syncTriggerPrefix}_${item.targetTable}_${triggerEvent}`);
       if (!tableSyncConfigExist) {
         await jianghuKnex.raw(`DROP TRIGGER IF EXISTS ${sourceDatabase}.${triggerName};`);
         logger.warn(`[${triggerName}]`, '无用的mysql trigger, 执行删除逻辑;');
