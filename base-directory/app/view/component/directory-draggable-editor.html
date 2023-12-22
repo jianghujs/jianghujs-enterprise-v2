@@ -156,6 +156,9 @@ Vue.component("directory-draggable-editor", {
       const list = ['directory'];
       this.directoryTmpConfig.forEach((catalog) => {
         catalog.children.forEach((app) => {
+          if (!app.children.length) {
+            return;
+          }
           app.children.forEach((page) => {
             list.push(page.appId);
           })
@@ -174,6 +177,7 @@ Vue.component("directory-draggable-editor", {
               type: 'page',
               appId: e.appId,
               pageId: page.pageId,
+              children: []
             }
           })
         }
