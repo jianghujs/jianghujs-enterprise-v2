@@ -1,7 +1,7 @@
 <template id="directory-draggable-editor">
   <div class="directory-edit-container pa-3" :style="{'padding-right': isOtherAppListShown ? '268px !important' : '12px'}">
     <draggable class="dragArea no-gutters" tag="v-row" :list="directoryTmpConfig" :group="{ name: 'name' }" :move="onMove">
-      <v-col cols="12" v-for="el in directoryTmpConfig" :key="el.name">
+      <v-col cols="12" v-for="(el, catalogIndex) in directoryTmpConfig" :key="el.name">
         <div>
           <v-badge left color="primary" inline dot>
             <span class="text-h6 pt-4 pb-3">{{el.name}}</span>
@@ -10,15 +10,23 @@
         </div>
         
         <draggable class="dragArea no-gutters" tag="v-row" :list="el.children" :group="{ name: 'name' }" :move="onMove">
-          <v-col cols="3" v-for="app in el.children" :key="el.name">
+          <v-col cols="3" v-for="(app, appIndex) in el.children" :key="el.name">
             <v-card class="rounded-lg pa-0" outlined role="button" style="height: 100%;">
               <div class="px-4 px-sm-0" style="height: 100%;">
                 <div class="d-flex align-center justify-space-between pa-2">
                   <div class="d-flex align-center" style="flex: 1">
                     <!-- icon -->
-                    <div class="jh-app-icon">
-                      <svg t="1702548638970" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="13380" width="200" height="200"><path d="M864 144.014222H559.985778a16.042667 16.042667 0 0 0-15.985778 15.985778v304.014222c0 8.789333 7.196444 15.985778 16.014222 15.985778h303.985778c8.817778 0 16.014222-7.196444 16.014222-16.014222V160.028444a16.042667 16.042667 0 0 0-16.014222-16.014222z m0 399.985778H559.985778a16.042667 16.042667 0 0 0-15.985778 16.014222v303.985778c0 8.817778 7.196444 16.014222 16.014222 16.014222h303.985778c8.817778 0 16.014222-7.224889 16.014222-16.014222V559.985778a16.042667 16.042667 0 0 0-16.014222-15.985778zM463.985778 143.985778H160.028444a16.042667 16.042667 0 0 0-16.014222 16.014222v304.014222c0 8.789333 7.224889 15.985778 16.014222 15.985778h304.014223c8.789333 0 15.985778-7.196444 15.985777-16.014222V160.028444a16.042667 16.042667 0 0 0-16.014222-16.014222z m0 400.014222H160.028444a16.042667 16.042667 0 0 0-16.014222 16.014222v303.985778c0 8.817778 7.224889 16.014222 16.014222 16.014222h304.014223c8.789333 0 15.985778-7.224889 15.985777-16.014222V559.985778a16.042667 16.042667 0 0 0-16.014222-15.985778z" fill="#333333" fill-opacity=".65" p-id="13381"></path></svg>
-                    </div>
+                    <label :for="catalogIndex + '-' + appIndex">
+                      <div class="jh-app-icon" role="button">
+                        <v-avatar size="20" v-if="app.icon" tile>
+                          <img
+                            :src="'/<$ ctx.app.config.appId $>' + app.icon"
+                          >
+                        </v-avatar>
+                        <svg v-else t="1702548638970" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="13380" width="200" height="200"><path d="M864 144.014222H559.985778a16.042667 16.042667 0 0 0-15.985778 15.985778v304.014222c0 8.789333 7.196444 15.985778 16.014222 15.985778h303.985778c8.817778 0 16.014222-7.196444 16.014222-16.014222V160.028444a16.042667 16.042667 0 0 0-16.014222-16.014222z m0 399.985778H559.985778a16.042667 16.042667 0 0 0-15.985778 16.014222v303.985778c0 8.817778 7.196444 16.014222 16.014222 16.014222h303.985778c8.817778 0 16.014222-7.224889 16.014222-16.014222V559.985778a16.042667 16.042667 0 0 0-16.014222-15.985778zM463.985778 143.985778H160.028444a16.042667 16.042667 0 0 0-16.014222 16.014222v304.014222c0 8.789333 7.224889 15.985778 16.014222 15.985778h304.014223c8.789333 0 15.985778-7.196444 15.985777-16.014222V160.028444a16.042667 16.042667 0 0 0-16.014222-16.014222z m0 400.014222H160.028444a16.042667 16.042667 0 0 0-16.014222 16.014222v303.985778c0 8.817778 7.224889 16.014222 16.014222 16.014222h304.014223c8.789333 0 15.985778-7.224889 15.985777-16.014222V559.985778a16.042667 16.042667 0 0 0-16.014222-15.985778z" fill="#333333" fill-opacity=".65" p-id="13381"></path></svg>
+                      </div>
+                    </label>
+                    <v-file-input v-model="uploadFile" class="jh-v-input" :id="catalogIndex + '-' + appIndex" style="display: none;" dense filled single-line chips label="请选择文件" @change="doUiAction('doUploadFile', catalogIndex + '-' + appIndex)"></v-file-input>
                     <!-- app name -->
                     <!-- <div class="font-weight-medium text-subtitle-1 grey--text text--darken-4 mx-3">{{app.name}}</div> -->
                     <v-text-field
@@ -121,6 +129,7 @@ Vue.component("directory-draggable-editor", {
   },
   data: () => ({
     isOtherAppListShown: true,
+    uploadFile: null,
   }),
   watch: {
     appList: {
@@ -174,8 +183,8 @@ Vue.component("directory-draggable-editor", {
         case 'changeExpandApp':
           await this.changeExpandApp(uiActionData);
           break;
-        case 'jump':
-          await this.jump(uiActionData);
+        case 'doUploadFile':
+          await this.doUploadFile(uiActionData);
           break;
         default:
           console.error("[doUiAction] uiActionId not find", { uiActionId });
@@ -203,6 +212,31 @@ Vue.component("directory-draggable-editor", {
       }
       return true;
     },  
+
+    async doUploadFile(key) {
+      const [catalogIndex, appIndex] = key.split('-');
+      const file = this.uploadFile;
+      if (file && file.size) {
+        await window.vtoast.loading("文件上传");
+        const result = await window.jianghuAxios.httpUploadByStream({ file, fileDirectory: 'appIcon' }, {
+          onProgress: (total, loaded) => {
+            let progress = Number((loaded * 100 / total).toFixed(2))
+            window.vtoast.loading(`文件上传进度${progress}%`);
+            if (progress === 100) {
+              window.vtoast.success('文件上传成功');
+            }
+          }
+        });
+
+        if (result.data.status === 'success') {
+          const {downloadPath} = result.data.appData.resultData;
+          this.directoryTmpConfig[catalogIndex].children[appIndex].icon = '/upload' + downloadPath;
+        } else {
+          await window.vtoast.fail("文件上传失败");
+          throw new Error("文件上传失败");
+        }
+      }
+    },
     
   },
 })

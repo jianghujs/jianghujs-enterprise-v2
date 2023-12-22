@@ -225,6 +225,7 @@
           catalog.children.forEach(appTmp => {
             const appItem = {
               name: appTmp.name,
+              icon: appTmp.icon,
               children: appTmp.children.map(pageTmp => {
                 let { appId, pageId, link, name, children, type } = pageTmp;
                 if (type == 'app') {
@@ -261,6 +262,7 @@
             const appItem = {
               name: appTmp.name,
               type: 'app',
+              icon: appTmp.icon,
               children: appTmp.children.map(pageTmp => {
                 const { appId, pageId, link, name } = pageTmp;
                 const currentApp = this.constantObj.appList.find(e => e.appId == appId);
