@@ -9,19 +9,25 @@
         <div class="jh-page-second-bar px-8">
           <v-row class="align-center">
             <v-col cols="12" xs="12" sm="12" md="4" xl="3">
-              <div class="py-4 text-body-1 font-weight-bold">目录管理
+              <div class="py-4 text-body-1 font-weight-bold">目录设置
                 <!-- 帮助页按钮 -->
                 <span role="button" class="success--text font-weight-regular jh-font-size-13 ml-2" @click="isHelpPageDrawerShown = true">
                   <v-icon size="13" class="success--text">mdi-help-circle-outline</v-icon>帮助
                 </span>
               </div>
             </v-col>
+            <!-- pc端的搜索条件表单 >>>>>>>> -->
             <v-col cols="12" xs="12" sm="12" md="8" xl="9">
-              <v-row class="align-center justify-end">
-                <v-col cols="12" xs="12" sm="12" md="6" xl="6">
-                  <v-btn color="primary" @click="doUiAction('saveDirectoryConfig')">保存</v-btn>
-                </v-col>
+              <v-row class="jh-backend-form-container justify-end ma-0 py-3">
+                <v-btn class="elevation-0 mt-2 mt-md-0 mr-md-2" color="success" small @click="isJsonEditModel = !isJsonEditModel">
+                  切换{{ isJsonEditModel ? '拖拽' : 'JSON' }}模式
+                </v-btn>
+                <v-btn class="elevation-0 mt-2 mt-md-0" color="success" small @click="doUiAction('saveDirectoryConfig')">
+                  保存
+                </v-btn>
               </v-row>
+            </v-col>
+            <!-- <<<<<<<< pc端的搜索条件表单 -->
           </v-row>
         </div>
         <!-- <<<<<<<<<<<<< 头部内容 -->
@@ -31,18 +37,15 @@
           <v-card class="jh-wrapper-card">
             <v-row dense no-gutters>
               <!-- 目录 -->
-              <v-col cols="12" class="pr-sm-2">
-                <v-card flat class="pa-6 jh-directory-card">
-                  <directory-draggable-tree-edit :app-list="constantObj.appList" :app-tree-obj.sync="appTreeObj"></directory-draggable-tree-edit>
-                </v-card>
+              <v-col cols="12" xs="12" class="pa-3" v-if="isJsonEditModel">
+                <vue-json-editor v-model="directoryConfig" height="calc(100vh - 141px)"
+                      ></vue-json-editor>
               </v-col>
 
               <!-- 应用 -->
-              <!-- <v-col cols="12" xs="12" sm="9" md="10">
-                <v-card flat class="pa-6 jh-list-card">
-                  <directory-tree-view></directory-tree-view>
-                </v-card>
-              </v-col> -->
+              <v-col cols="12" xs="12" v-else>
+                <directory-draggable-editor class="jh-directory-card" :app-list="constantObj.appList" :directory-tmp-config.sync="directoryTmpConfig"></directory-draggable-editor>
+              </v-col>
             </v-row>
 
             <!-- 空数据 -->
@@ -77,8 +80,8 @@
 <script src="/<$ ctx.app.config.appId $>/public/lib/Sortable/Sortable.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/Vue.Draggable/2.20.0/vuedraggable.umd.min.js"></script>
 <!-- <<<<<<<<<<<<< 引入额外的库文件 -->
-{% include 'component/directory-draggable-tree-edit.html' %}
-{% include 'component/directory-tree-view.html' %}
+{% include 'component/directory-draggable-editor.html' %}
+{% include 'component/vueJsonEditor.html' %}
 
 <script type="module">
 
@@ -97,13 +100,28 @@
       isDirectoryLoading: true,
       directoryList: null,
       activeDirectory: null,
-      expandApp: []
+      expandApp: [],
+      directoryTmpConfig: [],
+      directoryConfig: [],
+      isJsonEditModel: false,
     },
     computed: { },
-    watch: { },
+    watch: {
+      isJsonEditModel(val){
+        if(val){
+          this.buildDirectoryConfig();
+        }else{
+          this.buildDirectoryTmpConfig();
+        }
+      }
+    },
     async created() { },
-    mounted() {
-      this.doUiAction('getAppData');
+    async mounted() {
+      await Promise.all([
+        this.doUiAction('getAppData'),
+        this.doUiAction('getConstantData'),
+      ]);
+      this.buildDirectoryTmpConfig();
     },
     methods: {
       async doUiAction(uiActionId,uiActionData){
@@ -144,24 +162,16 @@
           }
         });
 
-        const data = result.data.appData.resultData.rows;
-        const groupData = _.chain(data).sortBy('appGroupNumber').groupBy('appGroupName').value();
-        this.directoryList = _.map(groupData, value => {
-          const appGroup = _.chain(value).groupBy('appId').value();
-          return _.sortBy(_.map(appGroup, list => {
-            return {
-              ...list[0],
-              childPage: list
-            }
-          }), 'appGroupItemSort')
-        })
-        this.expandApp = _.uniq(_.map(data, 'appId'));
-        this.constantObj.appList = data;
-
+        const rows = result.data.appData.resultData.rows;
+        rows.forEach(row => {
+          row.appPageList = JSON.parse(row.appPageList);
+          row.appPageDirectoryList = JSON.parse(row.appPageDirectoryList);
+        });
+        this.constantObj.appList = rows;
         this.isDirectoryLoading = false;
       },
       async getConstantData() {
-        const rows = (
+        const [row] = (
           await window.jianghuAxios({
             data: {
               appData: {
@@ -174,9 +184,8 @@
             }
           })
         ).data.appData.resultData.rows;
-        for (const row of rows) {
-          this.constantObj[row.constantKey] = JSON.parse(row.constantValue);
-        }
+        this.directoryConfig = JSON.parse(row?.constantValue || '[]');
+        this.directoryConfigId = row?.id || null;
       },
       changeExpandApp(funObj){
         const { item, actionType } = funObj;
@@ -190,18 +199,127 @@
         window.open(url);
       },
       async saveDirectoryConfig() {
-        console.log(this.appTreeObj)
         await window.vtoast.loading("保存中");
+        !this.isJsonEditModel && this.buildDirectoryConfig();
         await window.jianghuAxios({
           data: {
             appData: {
               pageId: 'directoryEditor',
-              actionId: 'saveDirectoryConfig',
-              actionData: {appConfigList: this.appTreeObj}
+              actionId: this.directoryConfigId ? 'saveDirectoryConfig' : 'insertDirectoryConfig',
+              actionData: { constantValue: JSON.stringify(this.directoryConfig) },
+              where: {
+                id: this.directoryConfigId
+              }
             }
           }
         });
         await window.vtoast.success("保存成功");
+      },
+      buildDirectoryConfig() {
+        const directoryConfig = _.cloneDeep(this.directoryTmpConfig);
+        const list = directoryConfig.map(catalog => {
+          const catalogItem = {
+            name: catalog.name,
+            children: []
+          };
+          catalog.children.forEach(appTmp => {
+            const appItem = {
+              name: appTmp.name,
+              children: appTmp.children.map(pageTmp => {
+                let { appId, pageId, link, name, children, type } = pageTmp;
+                if (type == 'app') {
+                  appId = children[0]?.appId;
+                }
+                const it = {
+                  name,
+                  appId,
+                  pageId,
+                  type
+                };
+                if (link) {
+                  it.link = link;
+                }
+                return it;
+              })
+            };
+            catalogItem.children.push(appItem);
+          });
+          return catalogItem;
+        });
+        this.directoryConfig = list;
+      },
+
+      buildDirectoryTmpConfig() {
+        const directoryConfig = _.cloneDeep(this.directoryConfig && this.directoryConfig.length ? this.directoryConfig : this.getDefaultDirectoryConfig());
+        const list = directoryConfig.map(catalog => {
+          const catalogItem = {
+            name: catalog.name,
+            type: 'catalog',
+            children: []
+          };
+          catalog.children.forEach(appTmp => {
+            const appItem = {
+              name: appTmp.name,
+              type: 'app',
+              children: appTmp.children.map(pageTmp => {
+                const { appId, pageId, link, name } = pageTmp;
+                const currentApp = this.constantObj.appList.find(e => e.appId == appId);
+                const pageLine = {
+                  name: pageId ? currentApp.appPageList.find(e => e.pageId == pageId)?.pageName : currentApp.appName,
+                  type: pageId ? 'page' : 'app',
+                  appId,
+                  pageId
+                };
+                if (pageLine.type == 'app') {
+                  pageLine.children = currentApp.appPageList.filter(e => currentApp.appPageDirectoryList.includes(e.pageId)).map(e => ({
+                    name: e.pageName,
+                    type: 'page',
+                    appId,
+                    pageId: e.pageId
+                  }));
+                }
+                if (link) {
+                  pageLine.link = link;
+                }
+                return pageLine
+              })
+            };
+            catalogItem.children.push(appItem);
+          });
+          return catalogItem;
+        });
+        this.directoryTmpConfig = list;
+      },
+      getDefaultDirectoryConfig() {
+        const catalogList = [];
+
+        const groupByCatalog = _.groupBy(
+          this.constantObj.appList.filter(e => e.appId != 'directory'),
+          'appType'
+        );
+
+        for (const appType in groupByCatalog) {
+          const childList = groupByCatalog[appType];
+
+          const catalog = {
+            name: appType,
+            children: childList.map(app => ({
+              name: app.appName,
+              appId: app.appId,
+              children: app.appPageList
+                .filter(e => (app.appPageDirectoryList || []).includes(e.pageId))
+                .map(page => ({
+                  name: page.pageName,
+                  appId: app.appId,
+                  pageId: page.pageId,
+                }))
+            }))
+          };
+
+          catalogList.push(catalog);
+        }
+
+        return catalogList;
       }
     }
   })
