@@ -88,7 +88,11 @@
                                   <!-- 子页面 -->
                                   <div class="mt-4" v-if="_.includes(expandApp, catalogIndex + '-' + appIndex)">
                                     <div v-for="(children, childIndex) in app.children"  key="childIndex" class="jh-font-size-13 grey--text text--darken-4 text-truncate mt-3"  @click="doUiAction('jump', children.link)">
-                                      <v-icon size="16">mdi-link-variant</v-icon>
+                                      <v-avatar size="16" v-if="app.icon" tile>
+                                        <img
+                                          :src="'/<$ ctx.app.config.appId $>' + app.icon"
+                                        >
+                                      </v-avatar>
                                       <span class="ml-2">{{children.name}}</span>
                                     </div>
                                   </div>
