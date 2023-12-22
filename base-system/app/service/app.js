@@ -124,6 +124,24 @@ class AppService extends Service {
       await Promise.all(createViewSql);
       await currentKnex.destroy();
     }
+
+    // knex 检查 _page表是否有 pageIcon 字段
+    const taskApp = appList.find((app)=>app.appId == 'task');
+    for (const app of appList) {
+      const { appDatabase, appId } = app;
+      if (appId == 'task') { continue; }
+      if (!await knex.schema.hasColumn(`${appDatabase}._page`, 'pageIcon')) {
+        await knex.schema.alterTable(`${appDatabase}._page`, function (table) {
+          table.text('pageIcon').after('pageType');
+        });
+      }
+      await knex(`${appDatabase}._page`).where({ pageName: '通知', pageType: 'showInRightMenu' }).delete();
+      await knex(`${appDatabase}._page`).insert({ 
+        pageId: taskApp.appUrl + '/page/noticeManagement',
+        pageName: '通知', pageType: 'showInRightMenu',
+        pageIcon: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"> <g id="Frame 19"> <path id="Vector" d="M14 0C6.2695 0 0 6.2695 0 14C0 21.7305 6.2695 28 14 28C21.7305 28 28 21.7305 28 14C28 6.2695 21.7305 0 14 0Z" fill="#5DB55F"/> <g id="Frame"> <path id="Vector_2" d="M15.2698 19.44L15.307 19.4419C15.5022 19.4633 15.6398 19.6499 15.5895 19.8403L15.57 19.9088C15.3646 20.5638 14.7393 21.04 14.0001 21.04L13.9239 21.0384C13.193 21.0057 12.5866 20.5075 12.4103 19.8403L12.4033 19.8048C12.3758 19.6153 12.5284 19.44 12.7303 19.44H15.2698ZM14.0001 6.95996C14.1274 6.95996 14.2495 7.01053 14.3395 7.10055C14.4295 7.19057 14.4801 7.31266 14.4801 7.43996V7.94364C16.9402 8.191 18.8001 10.3545 18.8001 12.8556V16.24L18.802 16.288C18.8141 16.4489 18.8866 16.5994 19.0049 16.7091C19.1232 16.8189 19.2787 16.8799 19.4401 16.88H19.5543L19.6087 16.8816C20.0055 16.9065 20.3562 17.1993 20.3959 17.5974L20.3994 17.6486C20.4037 17.7562 20.3861 17.8635 20.3479 17.9642C20.3096 18.0648 20.2514 18.1567 20.1768 18.2343C20.1022 18.312 20.0127 18.3737 19.9137 18.4159C19.8146 18.4581 19.7081 18.4799 19.6004 18.48H8.44583L8.39143 18.4784C7.99463 18.4534 7.64391 18.1606 7.60423 17.7625L7.60071 17.7113C7.59649 17.6037 7.61404 17.4964 7.65231 17.3957C7.69058 17.295 7.74878 17.2031 7.82342 17.1255C7.89807 17.0479 7.98762 16.9861 8.0867 16.9439C8.18579 16.9017 8.29238 16.88 8.40007 16.88H8.56007L8.60807 16.8784C8.76908 16.8663 8.91956 16.7937 9.02935 16.6753C9.13914 16.5569 9.20012 16.4014 9.20007 16.24V12.72C9.20007 10.231 11.0945 8.1846 13.5201 7.94364V7.43996C13.5201 7.31266 13.5706 7.19057 13.6607 7.10055C13.7507 7.01053 13.8728 6.95996 14.0001 6.95996Z" fill="white"/> </g> </g> </svg>`,
+      });
+    }
   }
 
   async updateToDirectoryApp() {
