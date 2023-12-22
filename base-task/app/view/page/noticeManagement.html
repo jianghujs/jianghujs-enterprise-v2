@@ -440,8 +440,8 @@
 
       // ---------- 查看通知 >>>>>>>>>>>>> ----------
       async doViewItem({ item }) {
-        if ((item.taskDesc || '').includes('href')) {
-          throw new Error("跳转页面")
+        if (!(item.taskDesc || '').includes('<a>') || (item.taskDesc || '').includes('href')) {
+          throw new Error("查看通知")
         }
         // appInfo.appId != item.appId
         
