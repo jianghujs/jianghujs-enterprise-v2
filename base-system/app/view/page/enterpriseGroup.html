@@ -553,22 +553,23 @@ new Vue({
 
     async doCreateItem() {
       await window.jhMask.show();
-      await window.vtoast.loading("新增学生");
+      await window.vtoast.loading("新增");
       await window.jianghuAxios({
         data: {
           appData: {
             pageId: 'enterpriseGroup',
             actionId: 'insertUserGroupRole',
-            actionData: this.createActionData
+            actionData: this.createActionData,
+            taskNotice: {
+              taskTitle: '权限更新',
+              taskMemberIdList: [this.createActionData.userId],
+              taskDesc: `你的权限已更新, 请点击<a href="__appUrl-directory__/" target="_blank">《回到目录》</a>查看最新权限。`,
+            }
           },
-          taskNotice: {
-            taskTitle: '修改角色',
-            taskMemberIdList: [this.createActionData.userId],
-          }
         }
       })
       await window.jhMask.hide();
-      await window.vtoast.success("新增学生成功");
+      await window.vtoast.success("新增成功");
     },
     async closeCreateDrawer() {
       this.isCreateDrawerShown = false;
@@ -613,7 +614,12 @@ new Vue({
             pageId: 'enterpriseGroup',
             actionId: 'updateUserGroupRole',
             actionData: this.updateActionData,
-            where: {id: this.updateItemId}
+            where: {id: this.updateItemId},
+            taskNotice: {
+              taskTitle: '权限更新',
+              taskMemberIdList: [this.updateItem.userId],
+              taskDesc: `你的权限已更新, 请点击<a href="__appUrl-directory__/" target="_blank">《回到目录》</a>查看最新权限。`,
+            }
           }
         }
       })

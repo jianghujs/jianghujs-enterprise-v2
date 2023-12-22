@@ -131,22 +131,35 @@ class NoticeService extends Service {
     const { jianghuKnex, knex } = this.app;
     const { userId } = this.ctx.userInfo;
     const enterpriseAppList = await jianghuKnex(tableEnum.enterprise_app).select()
-
+    const appUrlMap = Object.fromEntries(enterpriseAppList.map(obj => [obj.appId, obj.appUrl]));
     const rows = this.ctx.response.body.appData.resultData.rows
 
-    rows.forEach(row=> {
-      const appItem = enterpriseAppList.find(app=> app.appId == row.appId) || {}
-      // 如果a标签href包含全路径，http或者https，则不替换
-      if (row.taskDesc.includes('http') || row.taskDesc.includes('https')) return;
-      
-      if (!row.taskDesc.includes('href')) {
-        // 没有路径的话，就加上
-        row.taskDesc = row.taskDesc.replace(/<a>/g, `<a href="${appItem.appUrl}/page/noticeManagement?taskId=${row.taskBizId}" target="_blank">`)
-      } else {
-        // 有路径的话，加上全路径
-        row.taskDesc = row.taskDesc.replace(/<a href="/g, `<a href="${appItem.appUrl}`)
-      }
+    const matchAppIdList = (text) =>{
+      const regex = /__appUrl-([^_]+)__/g;
+      const matches = [];
+      let match;
+      while ((match = regex.exec(text)) !== null) { matches.push(match[1]);}
+      return matches;
+    }
+
+    rows.forEach(row=> { 
+      if (!row.taskDesc) {return;}
+      const appIdList = matchAppIdList(row.taskDesc);
+      appIdList.forEach(appId => {
+        row.taskDesc = row.taskDesc.replace(new RegExp(`__appUrl-${appId}__`, 'g'), appUrlMap[appId]||`/${appId}`);
+      });
     })
+    // rows.forEach(row=> {
+      // 如果a标签href包含全路径，http或者https，则不替换
+      // if (row.taskDesc.includes('http') || row.taskDesc.includes('https')) return;
+      // if (!row.taskDesc.includes('href')) {
+      //   // 没有路径的话，就加上
+      //   row.taskDesc = row.taskDesc.replace(/<a>/g, `<a href="${appItem.appUrl}/page/noticeManagement?taskId=${row.taskBizId}" target="_blank">`)
+      // } else {
+      //   // 有路径的话，加上全路径
+      //   row.taskDesc = row.taskDesc.replace(/<a href="/g, `<a href="${appItem.appUrl}`)
+      // }
+    // })
     this.ctx.response.body.appData.resultData.rows = rows;
   }
 }
