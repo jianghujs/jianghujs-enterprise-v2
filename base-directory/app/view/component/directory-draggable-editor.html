@@ -37,6 +37,10 @@
                       single-line
                     ></v-text-field>
                   </div>
+                  <v-spacer></v-spacer>
+                  <div class="d-flex align-center" draggable="false">
+                    <v-icon size="25" color="error" @click="el.children.splice(appIndex, 1)" small>mdi-close-circle</v-icon>
+                  </div>
                 </div>
                 <!-- 子页面 -->
 
@@ -47,6 +51,7 @@
                     <v-chip x-small :color="page.type == 'app' ? 'warning' : 'default'">{{page.type}}</v-chip>
                     <span class="ml-2">{{page.name}}</span>
                     <v-chip v-if="page.link" x-small color="success">link</v-chip>
+                    <v-icon size="25" color="error" class="float-right" @click="app.children.splice(childIndex, 1)" small>mdi-close</v-icon>
                   </div>
                 </draggable>
               </div>

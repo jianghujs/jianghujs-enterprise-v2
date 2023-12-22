@@ -32,6 +32,7 @@ class DirectoryService extends Service {
             url += `/page/${page.pageId}`;
           }
           page.link = page.link || url;
+          page.name = page.name.replace(/\[.*\]/g, '');
         });
       });
     })
