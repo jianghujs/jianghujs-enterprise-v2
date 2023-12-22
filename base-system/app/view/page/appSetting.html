@@ -96,10 +96,14 @@
             </template> -->
 
             <template v-slot:item.appPageDirectoryList="{ item }">
+
               <v-autocomplete v-model="item.appPageDirectoryList" :items="item.appPageList" 
                   item-text="pageName" item-value="pageId" 
                   :class="{ 'jh-v-input-change': !_.isEqual(item.appPageDirectoryListCopy, item.appPageDirectoryList) }"
                   class="jh-v-input" multiple dense filled single-line></v-autocomplete>
+              <!-- 全选按钮 -->
+              <v-btn color="success" x-small @click="item.appPageDirectoryList = item.appPageList.map(e => e.pageId)">全选</v-btn>
+              <v-btn x-small @click="item.appPageDirectoryList = []">全取消</v-btn>
             </template>
             <template v-slot:item.appType="{ item }">
               <v-autocomplete v-model="item.appType" :items="constantObj.appTypeList" 
@@ -418,7 +422,7 @@ new Vue({
       await window.jhMask.show();
       await window.vtoast.loading({ message: '保存目录设置', timer: -1 });
       for (const item of changeLineList) {
-        const { id, appPageDirectoryList, appType, appUrl } = item;
+        const { id, appPageDirectoryList, appType, appUrl, appDatabase, appName } = item;
         await window.jianghuAxios({
           data: {
             appData: {
@@ -427,7 +431,9 @@ new Vue({
               actionData: { 
                 appPageDirectoryList: JSON.stringify(appPageDirectoryList || '[]'),
                 appType,
+                appName,
                 appUrl,
+                appDatabase
               },
               where: {id},
             }
@@ -528,7 +534,7 @@ new Vue({
     async prepareDoUpdateItem() {
       const {id, ...data} = this.updateItem;
       this.updateItemId = id;
-      this.updateActionData = _.pick(data, ['id', 'appName', 'appDatabase', 'appJhId', 'appType'])
+      this.updateActionData = _.pick(data, ['id', 'appName', 'appDatabase', 'appJhId', 'appType', 'appDatabase'])
     },
 
     async doUpdateItem() {
