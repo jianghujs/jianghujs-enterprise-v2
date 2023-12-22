@@ -135,28 +135,20 @@ class NoticeService extends Service {
 
     const rows = this.ctx.response.body.appData.resultData.rows
 
-    // rows.forEach(row=> {
-    //   if (!row.taskDesc) {return;}
-    //   const matcheStrList = row.taskDesc.match(/__appUrl-([^_]+)__/g);
-    //   const appItem = enterpriseAppList.find(item=> item.appId==row.appId) || {};
-    //   if (matcheStrList) {
-    //     matcheStrList.forEach(matcheStr => {
-    //       row.taskDesc = row.taskDesc.replace(new RegExp(`${matcheStr}`, 'g'), appUrlMap[matcheStr]);
-    //     });
-    //     row.taskDesc = row.taskDesc.replace(new RegExp(`__appUrl__`, 'g'), appItem.appUrl);
-    //   }
-    // })
-
     rows.forEach(row=> {
-      const appItem = enterpriseAppList.find(app=> app.appId == row.appId) || {}
+      let appItem = enterpriseAppList.find(app=> app.appId == row.appId) || {}
       // 如果a标签href包含全路径，http或者https，则不替换
       if (row.taskDesc.includes('http') || row.taskDesc.includes('https')) return;
       
       if (!row.taskDesc.includes('href')) {
-        // 没有路径的话，就加上
+        // 没有路径的话，就默认noticeManagement页面
         row.taskDesc = row.taskDesc.replace(/<a>/g, `<a href="${appItem.appUrl}/page/noticeManagement?taskId=${row.taskBizId}" target="_blank">`)
       } else {
+        // 取row.taskDesc中a标签的appId
+        const appId = row.taskDesc.match(/href="\/(.*?)\//)[1]
+        appItem = enterpriseAppList.find(app=> app.appId == appId) || {}
         // 有路径的话，加上全路径
+        appItem.appUrl = appItem.appUrl.replace(`/${appId}`, '');
         row.taskDesc = row.taskDesc.replace(/<a href="/g, `<a href="${appItem.appUrl}`)
       }
     })
