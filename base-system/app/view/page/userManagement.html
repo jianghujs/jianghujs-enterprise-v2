@@ -29,6 +29,24 @@
           <v-row class="ma-0 pa-4 pb-0">
             <!--新增按钮-->
             <v-btn color="success" class="elevation-0 mr-2" @click="doUiAction('startCreateItem')" small>新增</v-btn>
+            <!-- <v-btn color="success" class="elevation-0 mr-2" @click="doUiAction('startCreateItem')" small>新增</v-btn> -->
+
+            <!-- <template v-slot:activator="{ on, attrs }">
+              <v-btn :disabled="!tableSelected.length" outlined color="success" class="elevation-0 mr-2" small v-bind="attrs" v-on="on">
+                  ···<v-icon size="14" class="success--text">mdi-chevron-down</v-icon>
+              </v-btn>
+            </template>
+            <v-list dense>
+              <v-list-item @click="doUiAction('createPaymentRequest')">
+                <v-list-item-title>批量创建付款申请</v-list-item-title>
+              </v-list-item>
+              <v-list-item @click="doUiAction('createPurchaseWarehouseInRequest')">
+                <v-list-item-title>批量创建入库申请</v-list-item-title>
+              </v-list-item>
+              <v-list-item @click="doUiAction('deleteItem', { isDeleteAndCopyItem: false})" v-if="_.find(window.userInfo.allowResourceList, {resourceId: 'purchaseOrderManagement.deleteItem'})">
+                <v-list-item-title class="red--text">批量删除订单</v-list-item-title>
+              </v-list-item>
+            </v-list> -->
             <v-spacer></v-spacer>
             <!--搜索过滤-->
             <v-col cols="12" xs="8" sm="4" md="3" xl="2" class="pa-0">
