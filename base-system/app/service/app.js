@@ -126,8 +126,11 @@ class AppService extends Service {
     }
 
     // knex 检查 _page表是否有 pageIcon 字段
-    const taskApp = appList.find((app)=>app.appId == 'task');
-    for (const app of appList) {
+    const appList2 = await knex('enterprise_app')
+      .where(appWhere)
+      .select();
+    const taskApp = appList2.find((app)=>app.appId == 'task');
+    for (const app of appList2) {
       const { appDatabase, appId } = app;
       if (appId == 'task') { continue; }
       if (!await knex.schema.hasColumn(`${appDatabase}._page`, 'pageIcon')) {
