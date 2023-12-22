@@ -131,35 +131,21 @@ class NoticeService extends Service {
     const { jianghuKnex, knex } = this.app;
     const { userId } = this.ctx.userInfo;
     const enterpriseAppList = await jianghuKnex(tableEnum.enterprise_app).select()
-    const appUrlMap = Object.fromEntries(enterpriseAppList.map(obj => [obj.appId, obj.appUrl]));
+    const appUrlMap = Object.fromEntries(enterpriseAppList.map(obj => [`__appUrl-${obj.appId}__`, obj.appUrl]));
+
     const rows = this.ctx.response.body.appData.resultData.rows
 
-    const matchAppIdList = (text) =>{
-      const regex = /__appUrl-([^_]+)__/g;
-      const matches = [];
-      let match;
-      while ((match = regex.exec(text)) !== null) { matches.push(match[1]);}
-      return matches;
-    }
-
-    rows.forEach(row=> { 
+    rows.forEach(row=> {
       if (!row.taskDesc) {return;}
-      const appIdList = matchAppIdList(row.taskDesc);
-      appIdList.forEach(appId => {
-        row.taskDesc = row.taskDesc.replace(new RegExp(`__appUrl-${appId}__`, 'g'), appUrlMap[appId]||`/${appId}`);
-      });
+      const matcheStrList = row.taskDesc.match(/__appUrl-([^_]+)__/g);
+      const appItem = enterpriseAppList.find(item=> item.appId==row.appId) || {};
+      if (matcheStrList) {
+        matcheStrList.forEach(matcheStr => {
+          row.taskDesc.replace(new RegExp(`${matcheStr}`, 'g'), appUrlMap[matcheStr]);
+        });
+        row.taskDesc.replace(new RegExp(`__appUrl__`, 'g'), appItem.appUrl);
+      }
     })
-    // rows.forEach(row=> {
-      // 如果a标签href包含全路径，http或者https，则不替换
-      // if (row.taskDesc.includes('http') || row.taskDesc.includes('https')) return;
-      // if (!row.taskDesc.includes('href')) {
-      //   // 没有路径的话，就加上
-      //   row.taskDesc = row.taskDesc.replace(/<a>/g, `<a href="${appItem.appUrl}/page/noticeManagement?taskId=${row.taskBizId}" target="_blank">`)
-      // } else {
-      //   // 有路径的话，加上全路径
-      //   row.taskDesc = row.taskDesc.replace(/<a href="/g, `<a href="${appItem.appUrl}`)
-      // }
-    // })
     this.ctx.response.body.appData.resultData.rows = rows;
   }
 }
