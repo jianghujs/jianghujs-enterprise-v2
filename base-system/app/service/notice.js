@@ -56,20 +56,6 @@ class NoticeService extends Service {
     })
     idSequence--;
 
-    // Tips: 传href就是跳转其他业务页面，不传就是在当前页看
-    if (!taskDesc) {
-      switch (taskType) {
-        case '审批':
-          taskDesc = `${username} 提交了<a>《${taskTitle}》</a>，请及时处理`;
-          taskTitle = '待审批提醒';
-          break;
-        default:
-          taskDesc = `有一个新通知 <a>《${taskTitle}》</a> ，请及时查看`;
-          taskTitle = `${taskTitle}提醒`;
-          break;
-      }
-    }
-
 
     const insertData = taskMemberIdList.map(item => {
 
@@ -90,7 +76,6 @@ class NoticeService extends Service {
       return insertItem
     })
 
-    // 判断taskType类型
 
 
     await jianghuKnex(tableEnum.task).jhInsert(insertData)
@@ -126,32 +111,21 @@ class NoticeService extends Service {
 
   // 添加消息通知AfterHook
   async addNoticeAfterHook(actionData) {
-    const { userId } = actionData
-    const { actionId } = this.ctx.request.body.appData
+    const { taskNotice } = this.ctx.request.body.appData
+    if (!taskNotice) return;
 
-    let taskTitle = null, taskContent = null
-    switch (actionId) {
-      case 'resetUserPassword':
-        taskTitle = '修改密码'
-        taskContent = `您的密码已被修改为[${actionData.clearTextPassword}]，请重新登录`
-        break;
-      case 'insertUserGroupRole':
-        taskTitle = '角色变更'
-        taskContent = `您的角色已被修改为[${actionData.groupId}]，请重新登录`
-      default:
-        break;
+    if (!taskNotice.taskDesc) {
+      taskNotice.taskDesc = `有一个新通知 <a>《${taskNotice.taskTitle}》</a> ，请及时查看`
+    }
+    taskNotice.taskTitle += '提醒'
+
+    if (!taskNotice.taskContent) {
+      taskNotice.taskContent = taskNotice.taskTitle
     }
 
-    await this.addNotice({
-      taskMemberIdList: [userId],
-      taskTitle,
-      taskContent,
-    })
+    await this.addNotice(taskNotice)
   }
 
-  async replaceNoticeUrlAfterHook() {
-
-  }
 }
 
 module.exports = NoticeService;

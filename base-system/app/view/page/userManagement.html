@@ -604,7 +604,11 @@ new Vue({
             pageId: 'userManagement',
             actionId: 'resetUserPassword',
             actionData: {userId: this.resetPasswordUserId, clearTextPassword: this.clearTextPassword},
-            where: {}
+            where: {},
+            taskNotice: {
+              taskTitle: '修改密码',
+              taskMemberIdList: [this.resetPasswordUserId],
+            }
           }
         }
       });
