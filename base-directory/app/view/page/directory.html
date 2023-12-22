@@ -81,8 +81,8 @@
                                     </div>
                                     <!-- 展开收起 -->
                                     <template v-if="app.children.length > 0">
-                                      <v-icon size="16" class="success--text" v-if="!_.includes(expandApp, catalogIndex + '-' + appIndex)" @click="doUiAction('changeExpandApp', { key: catalogIndex + '-' + appIndex, actionType: 'expand' })">mdi-plus</v-icon>
-                                      <v-icon size="16" class="success--text" v-else @click="doUiAction('changeExpandApp', { key: catalogIndex + '-' + appIndex, actionType: 'collapse' })">mdi-minus</v-icon>
+                                      <v-icon size="16" v-if="!_.includes(expandApp, catalogIndex + '-' + appIndex)" @click="doUiAction('changeExpandApp', { key: catalogIndex + '-' + appIndex, actionType: 'expand' })">mdi-plus</v-icon>
+                                      <v-icon size="16" v-else @click="doUiAction('changeExpandApp', { key: catalogIndex + '-' + appIndex, actionType: 'collapse' })">mdi-minus</v-icon>
                                     </template>
                                   </div>
                                   <!-- 子页面 -->
