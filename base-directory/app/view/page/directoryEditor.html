@@ -77,8 +77,8 @@
 
 <!-- 引入额外的库文件 >>>>>>>>>>>>> -->
 <script src="/<$ ctx.app.config.appId $>/public/lib/jquery/jquery.min.js"></script>
-<script src="/<$ ctx.app.config.appId $>/public/lib/Sortable/Sortable.min.js"></script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/Vue.Draggable/2.20.0/vuedraggable.umd.min.js"></script>
+<script src="/<$ ctx.app.config.appId $>/public/lib/sortable/Sortable.min.js"></script>
+<script src="/<$ ctx.app.config.appId $>/public/draggable/vuedraggable.umd.min.js"></script>
 <!-- <<<<<<<<<<<<< 引入额外的库文件 -->
 {% include 'component/directory-draggable-editor.html' %}
 {% include 'component/vueJsonEditor.html' %}
@@ -225,6 +225,7 @@
           catalog.children.forEach(appTmp => {
             const appItem = {
               name: appTmp.name,
+              icon: appTmp.icon,
               children: appTmp.children.map(pageTmp => {
                 let { appId, pageId, link, name, children, type } = pageTmp;
                 if (type == 'app') {
@@ -261,6 +262,7 @@
             const appItem = {
               name: appTmp.name,
               type: 'app',
+              icon: appTmp.icon,
               children: appTmp.children.map(pageTmp => {
                 const { appId, pageId, link, name } = pageTmp;
                 const currentApp = this.constantObj.appList.find(e => e.appId == appId);
