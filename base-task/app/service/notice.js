@@ -141,9 +141,9 @@ class NoticeService extends Service {
       const appItem = enterpriseAppList.find(item=> item.appId==row.appId) || {};
       if (matcheStrList) {
         matcheStrList.forEach(matcheStr => {
-          row.taskDesc.replace(new RegExp(`${matcheStr}`, 'g'), appUrlMap[matcheStr]);
+          row.taskDesc = row.taskDesc.replace(new RegExp(`${matcheStr}`, 'g'), appUrlMap[matcheStr]);
         });
-        row.taskDesc.replace(new RegExp(`__appUrl__`, 'g'), appItem.appUrl);
+        row.taskDesc = row.taskDesc.replace(new RegExp(`__appUrl__`, 'g'), appItem.appUrl);
       }
     })
     this.ctx.response.body.appData.resultData.rows = rows;
