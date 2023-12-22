@@ -1,5 +1,7 @@
 'use strict';
 
+const _ = require('lodash');
+
 const Service = require('egg').Service;
 
 class DirectoryService extends Service {
@@ -9,13 +11,31 @@ class DirectoryService extends Service {
     const { userInfo } = this.ctx;
     const { userAppList } = userInfo;
     const appIdList = userAppList.map(userApp => userApp.appId);
-    const rows = await jianghuKnex('directory')
-      .orWhere(function() {
-        this.whereIn('appId', appIdList);
-      })
-      .orWhere('accessType', 'public')
-      .select();
-    return { rows };
+    
+    // 旧版
+    // const rows = await jianghuKnex('directory')
+    //   .orWhere(function() {
+    //     this.whereIn('appId', appIdList);
+    //   })
+    //   .orWhere('accessType', 'public')
+    //   .select();
+
+    const directoryConfigConstant = await jianghuKnex('_constant').where('constantKey', 'directoryConfig').first();
+    const appList = await jianghuKnex('enterprise_app').select();
+    const directoryConfig = JSON.parse(directoryConfigConstant.constantValue);
+    directoryConfig.forEach(catalog => {
+      catalog.children.forEach(app => {
+        app.children.forEach(page => {
+          const appItem = appList.find(app => app.appId === page.appId);
+          let url = appItem.appUrl;
+          if (page.pageId) {
+            url += `/page/${page.pageId}`;
+          }
+          page.link = page.link || url;
+        });
+      });
+    })
+    return { rows: directoryConfig };
   }
 
   async saveDirectoryConfig() {
