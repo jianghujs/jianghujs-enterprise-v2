@@ -346,9 +346,11 @@ new Vue({
   computed: {},
   watch: {},
   async created() {
+    
   },
-  mounted() {
-    this.doUiAction('getTableData');
+  async mounted() {
+    await this.doUiAction('getTableData');
+    await this.getPageParams();
   },
   methods: {
     async doUiAction(uiActionId, uiActionData) {
@@ -493,6 +495,7 @@ new Vue({
     prepareDoUpdateItem() {
       const {id, userId, ...data} = this.updateItem;
       this.updateItemId = id;
+      this.updateUserId = userId
       this.updateActionData = data;
     },
     async doUpdateItem() {
@@ -503,7 +506,12 @@ new Vue({
             pageId: 'userManagement',
             actionId: 'updateItem',
             actionData: this.updateActionData,
-            where: {id: this.updateItemId}
+            where: {id: this.updateItemId},
+            taskNotice: {
+              taskTitle: '修改用户信息',
+              taskMemberIdList: [this.updateUserId],
+              taskDesc: `有一个新通知 <a href="/page/userManagement?userId=${this.updateUserId}" target="_blank">《修改用户信息》</a> ，请及时查看`
+            }
           }
         }
       });
@@ -630,6 +638,15 @@ new Vue({
     // 跳转
     jump(url) {
       window.location.href = url;
+    },
+    async getPageParams() {
+      var queryString = window.location.search;
+      var urlParams = new URLSearchParams(queryString);
+      var userId = urlParams.get('userId');
+      if (userId) {
+        const item = this.tableData.find(item => item.userId === userId);
+        await this.doUiAction('startUpdateItem', item)
+      };
     },
   }
 })
