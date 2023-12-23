@@ -5,7 +5,7 @@ const path = require('path');
 module.exports = appInfo => {
 
   return {
-    appLoginId: 'directory',
+    loginAppId: 'directory',
     appDirectoryLink: 'http://127.0.0.1:7273/directory',
     jiangHuConfig: {
       packageIdCheck: true,

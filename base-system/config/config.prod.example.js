@@ -5,7 +5,7 @@ const path = require('path');
 module.exports = appInfo => {
 
   return {
-    appLoginId: 'directory',
+    loginAppId: 'directory',
     jiangHuConfig: {
       packageIdCheck: false,
       updateRequestDemoAndResponseDemo: false,
