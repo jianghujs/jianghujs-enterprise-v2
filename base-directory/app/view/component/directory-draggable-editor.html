@@ -1,17 +1,17 @@
 <template id="directory-draggable-editor">
-  <div class="directory-edit-container pa-3" :style="{'padding-right': isOtherAppListShown ? '268px !important' : '12px'}">
+  <div class="directory-edit-container pa-4" :style="{'padding-right': isOtherAppListShown ? '268px !important' : '12px'}">
+    
     <draggable class="dragArea no-gutters" tag="v-row" :list="directoryTmpConfig" :group="{ name: 'name' }" :move="onMove">
       <v-col cols="12" v-for="(el, catalogIndex) in directoryTmpConfig" :key="el.name">
-        <div>
+        <div class="catalog-title pb-1" :style="{'padding-top': catalogIndex ? '12px' : '0'}">
           <v-badge left color="primary" inline dot>
-            <span class="text-h6 pt-4 pb-3">{{el.name}}</span>
+            <span class="text-h6">{{el.name}}</span>
           </v-badge>
           <v-icon @click.stop="catalogAddCard(el.name)">mdi-plus</v-icon>
         </div>
-        
-        <draggable class="dragArea no-gutters" tag="v-row" :list="el.children" :group="{ name: 'name' }" :move="onMove">
+        <draggable class="dragArea no-gutters gap-row" tag="v-row" :list="el.children" handle=".handle-item" :group="{ name: 'name' }" :move="onMove">
           <v-col cols="3" v-for="(app, appIndex) in el.children" :key="el.name">
-            <v-card class="rounded-lg pa-0" outlined role="button" style="height: 100%;">
+            <v-card class="rounded-lg handle-item" outlined role="button" style="height: 100%;">
               <div class="px-4 px-sm-0" style="height: 100%;">
                 <div class="d-flex align-center justify-space-between pa-2">
                   <div class="d-flex align-center" style="flex: 1">
@@ -29,19 +29,32 @@
                     </label>
                     <v-file-input v-model="uploadFile" class="jh-v-input" :id="catalogIndex + '-' + appIndex" style="display: none;" dense filled single-line chips label="请选择文件" @change="doUiAction('doUploadFile', catalogIndex + '-' + appIndex)"></v-file-input>
                     <!-- app name -->
-                    <!-- <div class="font-weight-medium text-subtitle-1 grey--text text--darken-4 mx-3">{{app.name}}</div> -->
-                    <v-text-field
-                      class="jh-v-input font-weight-medium mt-0 pt-0 custom-text-field"
-                      v-model="app.name"
-                      fulled
-                      single-line
-                    ></v-text-field>
+                    <div contenteditable="true" style="flex: 1" class="font-weight-medium text-subtitle-1 grey--text text--darken-4 mx-3" @input="app.name = event.target.innerText">
+                      {{app.name}}
+                    </div>
                   </div>
-                  <v-spacer></v-spacer>
                   <div class="d-flex align-center" draggable="false">
-                    <v-icon size="25" color="error" @click="el.children.splice(appIndex, 1)" small>mdi-close-circle</v-icon>
+                    <v-icon @click="el.children.splice(appIndex, 1)" small>mdi-trash-can-outline</v-icon>
                   </div>
                 </div>
+
+                <v-menu offset-y v-if="app.children[0] && notInAppPageList[app.children[0].appId].length">
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-btn block x-small v-bind="attrs" v-on="on">
+                      <v-icon small>mdi-plus</v-icon>Page
+                    </v-btn>
+                  </template>
+                  <v-list dense>
+                    <v-list-item v-for="(page, index) in notInAppPageList[app.children[0].appId]" @click="app.children.push({
+                      name: page.pageName,
+                      type: 'page',
+                      appId: page.appId,
+                      pageId: page.pageId,
+                    })">
+                      <v-list-item-title>{{page.pageName}}</v-list-item-title>
+                    </v-list-item>
+                  </v-list>
+                </v-menu>
                 <!-- 子页面 -->
 
                 <!-- <div class="draggable-placeholder" style="height: 50px;" v-if="!app.children.length"></div> -->
@@ -51,7 +64,7 @@
                     <v-chip x-small :color="page.type == 'app' ? 'warning' : 'default'">{{page.type}}</v-chip>
                     <span class="ml-2">{{page.name}}</span>
                     <v-chip v-if="page.link" x-small color="success">link</v-chip>
-                    <v-icon size="25" color="error" class="float-right" @click="app.children.splice(childIndex, 1)" small>mdi-close</v-icon>
+                    <v-icon class="float-right" @click="app.children.splice(childIndex, 1)" small>mdi-close</v-icon>
                   </div>
                 </draggable>
               </div>
@@ -62,9 +75,9 @@
     </draggable>
 
     <v-navigation-drawer v-model="isOtherAppListShown" right :permanent="isOtherAppListShown" absolute>
-      <div class="pl-4 pt-4 text-body-1">不在目录内的应用</div>
-      <draggable class="dragArea other-app-list" tag="div" :list="notInAppList" :group="{ name: 'name' }" :move="onMove">
-        <div v-for="(app, index) in notInAppList" class="pa-4">
+      <div class="pl-4 pt-4 text-h6">其他应用</div>
+      <draggable class="dragArea other-app-list px-2" tag="div" :list="notInAppList" :group="{ name: 'name' }" :move="onMove">
+        <div v-for="(app, index) in notInAppList" class="pa-2">
           <v-card class="rounded-lg pa-0" outlined role="button" style="height: 100%;">
             <div class="px-4 px-sm-0" style="height: 100%;">
               <div class="d-flex align-center justify-space-between pa-2">
@@ -78,7 +91,7 @@
       </draggable>
       <!-- 抽屉关闭按钮 -->
       <v-btn
-        elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn"
+        elevation="0" icon absolute top right small
         @click="isOtherAppListShown = false">
         <v-icon>mdi-close</v-icon>
       </v-btn>
@@ -88,7 +101,7 @@
       v-if="!isOtherAppListShown && notInAppList.length"
       elevation="0" color="success" fab absolute top right small tile
       @click="isOtherAppListShown = true" style="right: 0 !important; top: 120px">
-      {{notInAppList.length}}
+      其他
     </v-btn>
   </div>
 
@@ -183,6 +196,38 @@ Vue.component("directory-draggable-editor", {
         }
       })
     },
+    notInAppPageList() {
+      const appObj = {};
+      this.directoryTmpConfig.forEach((catalog) => {
+
+        catalog.children.forEach((app) => {
+          if (!app.children.length) {
+            return;
+          }
+          const appId = app.children[0].appId;
+          if (!appObj[appId]) {
+            appObj[appId] = [];
+          }
+          if (app.children.length) {
+            appObj[appId].push(...app.children.map((page) => {
+              return page.pageId;
+            }))
+          }
+        })
+      })
+      // 获取每个 app 有哪些页面没有在内
+      const notInAppPageList = {};
+      console.log(appObj)
+      _.forEach(appObj, (value, key) => {
+        notInAppPageList[key] = this.appList.find((app) => {
+          console.log(key)
+          return app.appId === key;
+        }).appPageList.filter((page) => {
+          return !value.includes(page.pageId);
+        })
+      })
+      return notInAppPageList;
+    }
   },
   // inject: ["formItemSelect", "uuid", "optionKey"],
   mounted () {
@@ -220,6 +265,14 @@ Vue.component("directory-draggable-editor", {
       if (self && target && (self.type == 'page' && target.type == 'catalog') || (self.type == 'catalog' && target.type == 'page')) {
         return false;
       }
+      // console.log(e.relatedContext)
+      // // 判断鼠标位置是否在 e.relatedContext 内部 padding 20px 内才允许
+      // const {clientX, clientY} = originalEvent;
+      // const {top, bottom, left, right} = e.relatedContext.element.getBoundingClientRect();
+      // if (clientX < left + 20 || clientX > right - 20 || clientY < top + 20 || clientY > bottom - 20) {
+      //   return false;
+      // }
+
       return true;
     },  
 
