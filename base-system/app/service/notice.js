@@ -111,19 +111,21 @@ class NoticeService extends Service {
 
   // 添加消息通知AfterHook
   async addNoticeAfterHook(actionData) {
-    const { taskNotice } = this.ctx.request.body.appData
-    if (!taskNotice) return;
+    const { taskNoticeList } = this.ctx.request.body.appData
+    if (!taskNoticeList || taskNoticeList.length == 0) return;
 
-    if (!taskNotice.taskDesc) {
-      taskNotice.taskDesc = `有一个新通知 <a>《${taskNotice.taskTitle}》</a> ，请及时查看`
+    for (const taskNotice of taskNoticeList) {
+      if (!taskNotice.taskDesc) {
+        taskNotice.taskDesc = `有一个新通知 <a>《${taskNotice.taskTitle}》</a> ，请及时查看`
+      }
+      taskNotice.taskTitle += '提醒'
+  
+      if (!taskNotice.taskContent) {
+        taskNotice.taskContent = taskNotice.taskTitle
+      }
+      await this.addNotice(taskNotice)
     }
-    taskNotice.taskTitle += '提醒'
 
-    if (!taskNotice.taskContent) {
-      taskNotice.taskContent = taskNotice.taskTitle
-    }
-
-    await this.addNotice(taskNotice)
   }
 
 }

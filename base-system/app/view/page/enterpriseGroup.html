@@ -299,6 +299,7 @@ new Vue({
 
     tabActive: 0,
     activeGroup: null,
+    activeGroupName: null,
     activeGroupPath: null,
     activeRole: '*',
 
@@ -507,6 +508,7 @@ new Vue({
     changeActiveGroup(item) {
       console.log('group', item)
       this.activeGroup = item.groupId;
+      this.activeGroupName = item.groupName;
       this.activeGroupPath = item.groupPath;
       this.getRoleData();
       if (this.activeGroup == '超级管理员') {
@@ -554,17 +556,26 @@ new Vue({
     async doCreateItem() {
       await window.jhMask.show();
       await window.vtoast.loading("新增");
+      const groupUserIdList = this.tableData.map(v => v.userId);
+      const username = this.constantObj.userList.find(v => v.value == this.createActionData.userId)?.text;
       await window.jianghuAxios({
         data: {
           appData: {
             pageId: 'enterpriseGroup',
             actionId: 'insertUserGroupRole',
             actionData: this.createActionData,
-            taskNotice: {
-              taskTitle: '权限更新',
-              taskMemberIdList: [this.createActionData.userId],
-              taskDesc: `你的权限已更新, 请点击<a href="/directory/page/directory" target="_blank">《回到目录》</a>查看最新权限。`,
-            }
+            taskNoticeList: [
+              {
+                taskTitle: '权限更新',
+                taskMemberIdList: [this.createActionData.userId],
+                taskDesc: `你的权限已更新, 请点击<a href="/directory/page/directory" target="_blank">《回到目录》</a>查看最新权限。`,
+              },
+              {
+                taskTitle: '加入组织',
+                taskMemberIdList: groupUserIdList,
+                taskDesc: `${username} 加入了 ${this.activeGroupName}`,
+              }
+            ]
           },
         }
       })

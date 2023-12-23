@@ -47,7 +47,7 @@ module.exports = options => {
 
     const { jianghuKnex, config, logger } = ctx.app;
     const { jianghuConfig } = config;
-    const { pageId, actionId, taskNotice } = body.appData;
+    const { pageId, actionId, taskNoticeList } = body.appData;
 
     const resourceId = `${pageId}.${actionId}`;
 
@@ -61,7 +61,7 @@ module.exports = options => {
 
     await next();
 
-    if (taskNotice) {
+    if (taskNoticeList) {
       // 发通知
       await ctx.service.notice.addNoticeAfterHook()
     }
