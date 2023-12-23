@@ -566,12 +566,12 @@ new Vue({
             actionData: this.createActionData,
             taskNoticeList: [
               {
-                taskTitle: '权限更新',
+                taskTitle: '加入组织通知',
                 taskMemberIdList: [this.createActionData.userId],
-                taskDesc: `你的权限已更新, 请点击<a href="/directory/page/directory" target="_blank">《回到目录》</a>查看最新权限。`,
+                taskDesc: `你已加入${this.activeGroupName}, 请点击<a href="/directory/page/directory" target="_blank">《回到目录》</a>查看最新权限。`,
               },
               {
-                taskTitle: '加入组织',
+                taskTitle: '组织新增成员通知',
                 taskMemberIdList: groupUserIdList,
                 taskDesc: `${username} 加入了 ${this.activeGroupName}`,
               }
