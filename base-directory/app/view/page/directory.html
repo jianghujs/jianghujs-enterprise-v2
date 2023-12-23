@@ -4,6 +4,9 @@
   .jh-font-size-14 {
     font-size: 14px;
   }
+  .vertical-middle {
+    vertical-align: middle;
+  }
 </style>
 {% endblock %}
 {% block vueTemplate %}
@@ -41,10 +44,10 @@
                         v-if="isDirectoryLoading"
                       ></v-skeleton-loader>
                       <template v-else>
-                        <div v-for="(value, key, index) in groupedItems" :key="index" class="mb-4">
-                          <div class="font-weight-medium text-subtitle-2 text--darken-2 my-2">{{key}}</div>
-                          <div class="mb-2" v-for="(val, i) in value" :key="i">
-                            <a class="jh-font-size-14 text-decoration-none"  :class="activeDirectory === val.name ? 'success--text' : 'grey--text text--darken-2'" :href="`#${val.name}`" @click="activeDirectory = val.name">{{val.name}}</a>
+                        <div v-for="(value, key, index) in groupedItems" :key="index" class="mb-5">
+                          <div class="font-weight-medium text-subtitle-2 text--darken-2 mb-3">{{key}}</div>
+                          <div class="mb-3" v-for="(val, i) in value" :key="i">
+                            <a class="jh-font-size-14 text-decoration-none vertical-middle"  :class="activeDirectory === val.name ? 'success--text' : 'grey--text text--darken-2'" :href="`#${val.name}`" @click="activeDirectory = val.name">{{val.name}}</a>
                           </div> 
                         </div>
                       </template>
