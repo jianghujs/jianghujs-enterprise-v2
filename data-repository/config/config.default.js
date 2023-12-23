@@ -13,8 +13,8 @@ module.exports = appInfo => {
 
   return {
     triggerPrefix: 'jh',
-
     appId,
+    appLoginId: 'directory',
     appTitle: '数据中心',
     appLogo: `${appId}/public/img/logo.png`,
     appType: 'multiApp', // single: 单应用; multiApp: 多应用
