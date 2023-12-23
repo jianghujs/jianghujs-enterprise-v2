@@ -158,7 +158,6 @@ Vue.component("directory-draggable-editor", {
     },
     directoryTmpConfig: {
       handler: function (val, oldVal) {
-        console.log('directoryTmpConfig', val);
         this.$emit('update:directoryTmpConfig', val);
       },
       deep: true
@@ -217,10 +216,8 @@ Vue.component("directory-draggable-editor", {
       })
       // 获取每个 app 有哪些页面没有在内
       const notInAppPageList = {};
-      console.log(appObj)
       _.forEach(appObj, (value, key) => {
         notInAppPageList[key] = this.appList.find((app) => {
-          console.log(key)
           return app.appId === key;
         }).appPageList.filter((page) => {
           return !value.includes(page.pageId);
