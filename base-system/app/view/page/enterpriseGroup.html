@@ -626,11 +626,11 @@ new Vue({
             actionId: 'updateUserGroupRole',
             actionData: this.updateActionData,
             where: {id: this.updateItemId},
-            taskNotice: {
+            taskNoticeList: [{
               taskTitle: '权限更新',
               taskMemberIdList: [this.updateItem.userId],
               taskDesc: `你的权限已更新, 请点击<a href="/directory/page/directory" target="_blank">《回到目录》</a>查看最新权限。`,
-            }
+            }]
           }
         }
       })
