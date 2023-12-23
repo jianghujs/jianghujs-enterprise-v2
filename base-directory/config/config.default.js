@@ -14,6 +14,7 @@ module.exports = appInfo => {
 
   return {
     appId,
+    // appLoginId: 'directory',
     projectId,
     appTitle: '江湖目录',
     appLogo: `${appId}/public/img/logo.png`,

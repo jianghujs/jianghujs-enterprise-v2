@@ -103,6 +103,7 @@ class AppService extends Service {
         currentKnex.raw(`DROP VIEW IF EXISTS _user_group_role;`),
         currentKnex.raw(`DROP VIEW IF EXISTS _user_group_role_page;`),
         currentKnex.raw(`DROP VIEW IF EXISTS _user_group_role_resource;`),
+        currentKnex.raw(`DROP VIEW IF EXISTS _enterprise_user_session;`),
         currentKnex.raw(`DROP VIEW IF EXISTS _view01_user;`),
         currentKnex.raw(`DROP VIEW IF EXISTS _view02_user_app;`),
       ];
@@ -112,8 +113,10 @@ class AppService extends Service {
         currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role AS ${getJhIdViewSql(appListByDatabase, 'enterprise_user_group_role')};`),
         currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role_page AS ${getJhIdViewSql(appListByDatabase, 'enterprise_user_group_role_page')};`),
         currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role_resource AS ${getJhIdViewSql(appListByDatabase, 'enterprise_user_group_role_resource')};`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _enterprise_user_session AS ${getJhIdViewSql(appListByDatabase, 'enterprise_user_session')};`),
         currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view01_user AS ${getJhIdViewSql(appListByDatabase, 'enterprise_user')};`),
         currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view02_user_app AS ${getJhIdViewSql(appListByDatabase, 'enterprise_user_app')};`),
+
       ];
       if (appIdList.includes('directory')) { 
         // 替换 createViewSql 的最后一个
