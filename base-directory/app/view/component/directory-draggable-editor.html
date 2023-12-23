@@ -1,5 +1,5 @@
 <template id="directory-draggable-editor">
-  <div class="directory-edit-container pa-4" :style="{'padding-right': isOtherAppListShown ? '268px !important' : '12px'}">
+  <div class="directory-edit-container pa-4 rounded-lg" :style="{'padding-right': isOtherAppListShown ? '268px !important' : '12px'}">
     
     <draggable class="dragArea no-gutters" tag="v-row" :list="directoryTmpConfig" :group="{ name: 'name' }" :move="onMove">
       <v-col cols="12" v-for="(el, catalogIndex) in directoryTmpConfig" :key="el.name">
@@ -304,7 +304,7 @@ Vue.component("directory-draggable-editor", {
 
 <style scoped>
 .directory-edit-container {
-  max-height: calc(100vh - 117px);
+  max-height: calc(100vh - 108px);
   overflow-y: auto;
 }
 .directory-edit-container .sortable-chosen {
