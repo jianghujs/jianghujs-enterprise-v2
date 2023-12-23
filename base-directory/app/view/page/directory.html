@@ -4,12 +4,12 @@
   <div>
     <v-app mobile-breakpoint="sm">
       <jh-menu />
-      <v-main class="mt-15">
+      <v-main class="mt-13">
         <!-- 头部内容 >>>>>>>>>>>>> -->
         <div class="jh-page-second-bar px-8">
           <v-row class="align-center">
             <v-col cols="12" xs="12" sm="12" md="4" xl="3">
-              <div class="py-4 text-body-1 font-weight-bold">全部应用
+              <div class="py-4 text-body-1 font-weight-bold d-flex align-center">全部应用
                 <!-- 帮助页按钮 -->
                 <span role="button" class="success--text font-weight-regular jh-font-size-13 ml-2" @click="isHelpPageDrawerShown = true">
                   <v-icon size="13" class="success--text">mdi-help-circle-outline</v-icon>帮助
@@ -27,7 +27,7 @@
               <v-row dense no-gutters v-if="isDirectoryLoading || (!isDirectoryLoading && directoryList)">
                 <!-- 目录 -->
                 <v-col cols="12" xs="12" sm="3" md="2" class="pr-sm-2">
-                  <v-card flat class="pa-6 jh-directory-card">
+                  <v-card flat class="pa-4 jh-directory-card">
                     <div class="jh-card-body px-6 px-sm-0">
                       <v-skeleton-loader
                         type="list-item-three-line, list-item-three-line, list-item-three-line"
@@ -49,7 +49,7 @@
 
                 <!-- 应用 -->
                 <v-col cols="12" xs="12" sm="9" md="10">
-                  <v-card flat class="pa-6 jh-list-card">
+                  <v-card flat class="pa-4 jh-list-card">
                     <div class="jh-card-body px-6 px-sm-0">
                       <v-skeleton-loader
                         type="list-item-three-line, list-item-three-line, list-item-three-line"
