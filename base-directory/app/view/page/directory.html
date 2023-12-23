@@ -26,7 +26,7 @@
             <v-card class="jh-wrapper-card">
               <v-row dense no-gutters v-if="isDirectoryLoading || (!isDirectoryLoading && directoryList)">
                 <!-- 目录 -->
-                <v-col cols="12" xs="12" sm="3" md="2" class="pr-sm-2">
+                <v-col cols="12" xs="12" sm="3" md="2">
                   <v-card flat class="pa-4 jh-directory-card">
                     <div class="jh-card-body px-6 px-sm-0">
                       <v-skeleton-loader
@@ -48,7 +48,7 @@
                 </v-col>
 
                 <!-- 应用 -->
-                <v-col cols="12" xs="12" sm="9" md="10">
+                <v-col cols="12" xs="12" sm="9" md="10"> 
                   <v-card flat class="pa-4 jh-list-card">
                     <div class="jh-card-body px-6 px-sm-0">
                       <v-skeleton-loader
@@ -58,10 +58,11 @@
                       <template v-else>
                         <div class="mb-6" v-for="(catalog, catalogIndex) in directoryList" :key="catalogIndex">
                           <div class="font-weight-medium text-subtitle-1 grey--text text--darken-2 mb-1" :id="`${catalog.name}`">{{catalog.name}}</div>
-                          <v-row dense>
+                          <v-row style="margin: -8px">
                             <v-col cols="12" xs="12" sm="6" md="3"
                               v-for="(app, appIndex) in catalog.children"  
                               :key="catalogIndex + '-' + appIndex"
+                              class="pa-2"
                              >
                               <v-card class="rounded-lg pa-4 jh-app-card" role="button">
                                 <div class="px-4 px-sm-0">
