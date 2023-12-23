@@ -13,7 +13,6 @@ module.exports = appInfo => {
 
   return {
     appId,
-    appLoginId: 'directory',
     appTitle: '系统管理',
     appLogo: `${appId}/public/img/logo.png`,
     appType: 'multiApp',

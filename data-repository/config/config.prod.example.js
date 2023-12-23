@@ -5,6 +5,7 @@ const path = require('path');
 module.exports = appInfo => {
 
   return {
+    appLoginId: 'directory',
     dataSyncStatus: '启用', // 是否启用同步，启用/禁用
     appDirectoryLink: 'http://127.0.0.1:7273/directory',
     jiangHuConfig: {
