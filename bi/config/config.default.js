@@ -17,7 +17,6 @@ module.exports = appInfo => {
 
   return {
     appId,
-    appLoginId: 'directory',
     appTitle: '数据统计',
     appLogo: `${appId}/public/img/logo.png`,
     appType: 'multiApp',

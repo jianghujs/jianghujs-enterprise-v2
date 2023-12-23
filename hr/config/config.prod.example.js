@@ -5,7 +5,9 @@ const path = require('path');
 module.exports = appInfo => {
 
   return {
-    appLoginId: 'directory',
+    authTokenKey: 'directory',
+    loginPage: '/directory/page/login',
+    appDirectoryLink: '/directory',
     static: {
       maxAge: 0,
       buffer: false,
