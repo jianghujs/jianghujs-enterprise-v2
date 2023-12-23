@@ -5,7 +5,7 @@ const path = require('path');
 module.exports = appInfo => {
 
   return {
-    loginAppId: 'directory',
+    appLoginId: 'directory',
     static: {
       maxAge: 0,
       buffer: false,
