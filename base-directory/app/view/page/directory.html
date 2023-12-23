@@ -1,4 +1,11 @@
 {% extends 'template/jhTemplateV4.html'%}
+{% block htmlHead %}
+<style>
+  .jh-font-size-14 {
+    font-size: 14px;
+  }
+</style>
+{% endblock %}
 {% block vueTemplate %}
 <script type="text/html" id="app-template">
   <div>
@@ -26,20 +33,18 @@
             <v-card class="jh-wrapper-card">
               <v-row dense no-gutters v-if="isDirectoryLoading || (!isDirectoryLoading && directoryList)">
                 <!-- 目录 -->
-                <v-col cols="12" xs="12" sm="3" md="2">
-                  <v-card flat class="pa-4 jh-directory-card">
+                <v-col cols="12" xs="12" sm="3" md="2" class="jh-fixed-table-height overflow-y-auto">
+                  <v-card flat class="pa-4 px-8 jh-directory-card">
                     <div class="jh-card-body px-6 px-sm-0">
                       <v-skeleton-loader
                         type="list-item-three-line, list-item-three-line, list-item-three-line"
                         v-if="isDirectoryLoading"
                       ></v-skeleton-loader>
                       <template v-else>
-                        <div class="d-flex align-center">
-                          <span class="font-weight-medium text-subtitle-1">目录</span>
-                        </div>
-                        <div class="mt-4">
-                          <div class="mb-2" v-for="(value, index) in directoryList" :key="index">
-                            <a class="jh-font-size-13 text-decoration-none" :class="activeDirectory === value.name ? 'success--text' : 'grey--text text--darken-2'" :href="`#${value.name}`" @click="activeDirectory = value.name">{{value.name}}</a>
+                        <div v-for="(value, key, index) in groupedItems" :key="index" class="mb-4">
+                          <div class="font-weight-medium text-subtitle-2 text--darken-2 my-2">{{key}}</div>
+                          <div class="mb-2" v-for="(val, i) in value" :key="i">
+                            <a class="jh-font-size-14 text-decoration-none"  :class="activeDirectory === val.name ? 'success--text' : 'grey--text text--darken-2'" :href="`#${val.name}`" @click="activeDirectory = val.name">{{val.name}}</a>
                           </div> 
                         </div>
                       </template>
@@ -48,7 +53,7 @@
                 </v-col>
 
                 <!-- 应用 -->
-                <v-col cols="12" xs="12" sm="9" md="10"> 
+                <v-col cols="12" xs="12" sm="9" md="10" class="jh-fixed-table-height overflow-y-auto"> 
                   <v-card flat class="pa-4 jh-list-card">
                     <div class="jh-card-body px-6 px-sm-0">
                       <v-skeleton-loader
@@ -88,8 +93,8 @@
                                   </div>
                                   <!-- 子页面 -->
                                   <div class="mt-4" v-if="_.includes(expandApp, catalogIndex + '-' + appIndex)">
-                                    <div v-for="(children, childIndex) in app.children"  key="childIndex" class="jh-font-size-13 grey--text text--darken-4 text-truncate mt-3"  @click="doUiAction('jump', children.link)">
-                                      <v-avatar size="16" v-if="app.icon" tile>
+                                    <div v-for="(children, childIndex) in app.children"  key="childIndex" class="jh-font-size-14 grey--text text--darken-4 text-truncate mt-3"  @click="doUiAction('jump', children.link)">
+                                      <v-avatar size="20" v-if="app.icon" tile>
                                         <img
                                           :src="'/<$ ctx.app.config.appId $>' + app.icon"
                                         >
@@ -135,6 +140,7 @@
 </div>
 {% endblock %}
 {% block vueScript %}
+{% include 'common/jianghuJs/fixedTableHeightV4.html' %}
 <script type="module">
 
   new Vue({
@@ -150,7 +156,25 @@
       activeDirectory: null,
       expandApp: []
     },
-    computed: { },
+    computed: {
+      groupedItems() {
+        const jianghuItems = this.directoryList.filter(item => item.name.startsWith('江湖')).map(item => {
+          return {
+            name: item.name
+          }
+        });
+        const otherItems = this.directoryList.filter(item => !item.name.startsWith('江湖')).map(item => {
+          return {
+            name: item.name
+          }
+        });
+
+        return {
+          '江湖应用': jianghuItems,
+          '江湖应用Pro': otherItems
+        };
+      }
+    },
     watch: { },
     async created() { },
     mounted() {
