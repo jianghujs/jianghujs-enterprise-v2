@@ -145,10 +145,12 @@ class NoticeService extends Service {
         row.taskDesc = row.taskDesc.replace(/<a>/g, `<a href="${appItem.appUrl}/page/noticeManagement?taskId=${row.taskBizId}" target="_blank">`)
       } else {
         // 取row.taskDesc中a标签的appId
-        const appId = row.taskDesc.match(/href="\/(.*?)\//)[1]
-        appItem = enterpriseAppList.find(app=> app.appId == appId) || {}
+        const appIdMatch = row.taskDesc.match(/href="\/(.*?)\//)
+        if (appIdMatch) {
+          appItem = enterpriseAppList.find(app=> app.appId == appIdMatch[1]) || {}
+        }
         // 有路径的话，加上全路径
-        appItem.appUrl = appItem.appUrl.replace(`/${appId}`, '');
+        appItem.appUrl = appItem.appUrl.replace(`/${appItem.appId}`, '');
         row.taskDesc = row.taskDesc.replace(/<a href="/g, `<a href="${appItem.appUrl}`)
       }
     })
