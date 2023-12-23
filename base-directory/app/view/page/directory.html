@@ -93,7 +93,7 @@
                                   </div>
                                   <!-- 子页面 -->
                                   <div class="mt-4" v-if="_.includes(expandApp, catalogIndex + '-' + appIndex)">
-                                    <div v-for="(children, childIndex) in app.children"  key="childIndex" class="jh-font-size-14 grey--text text--darken-4 text-truncate mt-3"  @click="doUiAction('jump', children.link)">
+                                    <div v-for="(children, childIndex) in app.children"  key="childIndex" class="jh-font-size-14 grey--text text--darken-4 text-truncate mt-2"  @click="doUiAction('jump', children.link)">
                                       <v-avatar size="20" v-if="app.icon" tile>
                                         <img
                                           :src="'/<$ ctx.app.config.appId $>' + app.icon"
