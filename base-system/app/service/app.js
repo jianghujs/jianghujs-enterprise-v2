@@ -12,12 +12,6 @@ const Knex = require('knex');
 const getJhIdViewSql = (appList, tableName) => {
   let whereClause = ''; // 初始化 WHERE 子句
 
-  if (['enterprise_user_group_role_page', 'enterprise_user_group_role_resource'].includes(tableName)) {
-    whereClause = ` WHERE appId = '{APPID}' OR appId = '*'`;
-  } else if (tableName === 'enterprise_user_app') {
-    whereClause = ` WHERE appId = '{APPID}'`;
-  }
-
   // 检查 appList 中是否存在非空的 jhId
   if (!appList.some(({appJhId}) => !!appJhId)) {
     // 如果所有的 jhId 都是空，生成一个简单的 SELECT 查询
@@ -29,11 +23,36 @@ const getJhIdViewSql = (appList, tableName) => {
     return `SELECT '${appJhId}' as jhId`;
   }).join(' UNION ALL ');
 
-  const crossJoinSql = `SELECT jhId_values.jhId, jh_enterprise_v2_data_repository.${tableName}.* 
-                        FROM (${jhIdValuesSql}) AS jhId_values 
-                        CROSS JOIN jh_enterprise_v2_data_repository.${tableName}${whereClause.replace('{APPID}', appList[0].appId)}`;
+  if (['enterprise_user_group_role_page', 'enterprise_user_group_role_resource', 'enterprise_user_app'].includes(tableName)) {
+    const appIdJhidMap = _.fromPairs(appList.map(({appId, appJhId}) => [appId, appJhId]));
+    const appIdList = _.uniq(appList.map(({appId}) => appId));
+    /**
+     * CASE my_field
+          WHEN 'haha' THEN 'Result for haha'
+          WHEN 'hehe' THEN 'Result for hehe'
+          ELSE 'Result for heihei'
+      END 
+    */
+    let ifClasus = 'CASE appId';
+    _.forEach(appIdJhidMap, (jhId, appId) => {
+      ifClasus += ` WHEN '${appId}' THEN '${jhId}'`;
+    });
+    let userAppWhereClause = appIdList.length > 1 ? ` WHERE appId IN ('${appIdList.join("','")}')` : ` WHERE appId = '${appIdList[0]}'`;
+    if (tableName != 'enterprise_user_app') {
+      userAppWhereClause += ` union all 
+      SELECT jhId_values.jhId, jh_enterprise_v2_data_repository.${tableName}.* 
+          FROM (${jhIdValuesSql}) AS jhId_values 
+          CROSS JOIN jh_enterprise_v2_data_repository.${tableName} where appId = '*'
+      `;
+    }
+    ifClasus += ' ELSE NULL END AS jhId';
+    return `SELECT ${ifClasus}, jh_enterprise_v2_data_repository.${tableName}.* 
+            FROM jh_enterprise_v2_data_repository.${tableName}${userAppWhereClause}`;
+  }
 
-  return crossJoinSql;
+  return `SELECT jhId_values.jhId, jh_enterprise_v2_data_repository.${tableName}.* 
+          FROM (${jhIdValuesSql}) AS jhId_values 
+          CROSS JOIN jh_enterprise_v2_data_repository.${tableName}`;
 }
 
 
