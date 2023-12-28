@@ -29,9 +29,7 @@
                     </label>
                     <v-file-input v-model="uploadFile" class="jh-v-input" :id="catalogIndex + '-' + appIndex" style="display: none;" dense filled single-line chips label="请选择文件" @change="doUiAction('doUploadFile', catalogIndex + '-' + appIndex)"></v-file-input>
                     <!-- app name -->
-                    <div contenteditable="true" style="flex: 1" class="font-weight-medium text-subtitle-1 grey--text text--darken-4 mx-3" @input="app.name = event.target.innerText">
-                      {{app.name}}
-                    </div>
+                    <input class="font-weight-medium text-subtitle-1 grey--text text--darken-4 mx-3" v-model="app.name"></input>
                   </div>
                   <div class="d-flex align-center" draggable="false">
                     <v-icon @click="el.children.splice(appIndex, 1)" small>mdi-trash-can-outline</v-icon>
@@ -104,7 +102,6 @@
       其他
     </v-btn>
   </div>
-
 </template>
 <script>
   var draggableElements = document.querySelectorAll('[draggable=true]');
@@ -296,7 +293,7 @@ Vue.component("directory-draggable-editor", {
           throw new Error("文件上传失败");
         }
       }
-    },
+    }
     
   },
 })
