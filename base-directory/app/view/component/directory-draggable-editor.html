@@ -46,7 +46,7 @@
                     <v-list-item v-for="(page, index) in notInAppPageList[app.children[0].appId]" @click="app.children.push({
                       name: page.pageName,
                       type: 'page',
-                      appId: page.appId,
+                      appId: app.children[0].appId,
                       pageId: page.pageId,
                     })">
                       <v-list-item-title>{{page.pageName}}</v-list-item-title>
