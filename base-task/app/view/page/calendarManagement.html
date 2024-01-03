@@ -53,35 +53,41 @@
                   full-width
                   no-title
                 ></v-date-picker>
-                <v-expansion-panels
-                  disabled
-                  flat
-                  light
-                  multiple
-                  v-model="panel"
-                >
-                  <v-expansion-panel :key="0">
-                    <v-expansion-panel-header>
-                      系统类型
-                    </v-expansion-panel-header>
-                    <v-expansion-panel-content>
-                      <v-list-item v-for="i in 5">
-                        <v-list-item-action>
-                          <v-checkbox></v-checkbox>
-                        </v-list-item-action>
-                        分配的任务{{i}}</v-list-item
-                      >
-                    </v-expansion-panel-content>
-                  </v-expansion-panel>
-                  <v-expansion-panel :key="1">
-                    <v-expansion-panel-header>
-                      自定义类型
-                    </v-expansion-panel-header>
-                    <v-expansion-panel-content>
-                      <v-list-item>分配的任务</v-list-item>
-                    </v-expansion-panel-content>
-                  </v-expansion-panel>
-                </v-expansion-panels>
+
+                <v-list dense>
+                  <v-subheader>系统类型</v-subheader>
+                  <v-list-item-group color="primary">
+                    <v-list-item v-for="i in 5" :key="i" @click="toggleTask(`分配的任务${i}`)">
+                      <v-list-item-icon>
+                        <v-checkbox
+                          :value="`分配的任务${i}`"
+                          v-model="taskType"
+                          class="ma-0 pa-0"
+                        ></v-checkbox>
+                      </v-list-item-icon>
+                      <v-list-item-content>
+                        分配的任务{{i}}
+                      </v-list-item-content>
+                    </v-list-item>
+                  </v-list-item-group>
+                </v-list>
+                <v-list dense>
+                  <v-subheader>自定义类型</v-subheader>
+                  <v-list-item-group color="primary">
+                    <v-list-item @click="toggleTask(`自定义类型${i}`)" v-for="i in 5" :key="i">
+                      <v-list-item-icon>
+                        <v-checkbox
+                          :value="`自定义类型${i}`"
+                          v-model="taskType"
+                          class="ma-0 pa-0"
+                        ></v-checkbox>
+                      </v-list-item-icon>
+                      <v-list-item-content>
+                        自定义类型{{i}}
+                      </v-list-item-content>
+                    </v-list-item>
+                  </v-list-item-group>
+                </v-list>
               </v-col>
               <v-col cols="10" style="height: 86vh;">
                 <div id="calendar"></div>
@@ -285,7 +291,8 @@
         requireRules: [(v) => !!v || '必填'],
       },
 
-      tasks: []
+      tasks: [],
+      taskType: [],
     }),
     watch: {},
     async created() {},
@@ -327,13 +334,13 @@
           start: this.createItem.taskStartTime,
           end: this.createItem.taskEndTime,
           allDay: true,
-        })
+        });
         this.initCalendar();
         this.isCreateDialogShown = false;
       },
       // 初始化日历
       initCalendar() {
-        const that = this
+        const that = this;
         var calendarEl = document.getElementById('calendar');
         var calendar = new FullCalendar.Calendar(calendarEl, {
           // initialView: style,
@@ -357,13 +364,26 @@
           events: this.tasks,
           editable: true,
           eventClick(info) {
-            that.doUiAction('startCreateItem', { taskContent: info.event.title, dateStr: info.event.startStr})
+            that.doUiAction('startCreateItem', {
+              taskContent: info.event.title,
+              dateStr: info.event.startStr,
+            });
           },
           dateClick(info) {
-            that.doUiAction('startCreateItem', info)
-          }
+            that.doUiAction('startCreateItem', info);
+          },
         });
         calendar.render();
+      },
+      toggleTask(task) {
+        const index = this.taskType.indexOf(task);
+        if (index >= 0) {
+          // 如果任务已经在数组中，将其移除
+          this.taskType.splice(index, 1);
+        } else {
+          // 如果任务不在数组中，将其添加到数组中
+          this.taskType.push(task);
+        }
       },
     },
   });
@@ -391,15 +411,8 @@
   .v-application--is-ltr .v-list-item__icon:first-child {
     margin-right: 5px;
   }
-  .v-expansion-panel-content__wrap {
-    padding: 0 0 16px;
-  }
-  .v-expansion-panel-header {
-    padding: 16px 0;
-  }
-  .v-expansion-panel--active + .v-expansion-panel,
-  .v-expansion-panel--active:not(:first-child) {
-    margin-top: 0;
+  .v-input--selection-controls__ripple {
+    margin: 0;
   }
 </style>
 
