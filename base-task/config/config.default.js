@@ -19,7 +19,7 @@ module.exports = appInfo => {
     appLogo: `${appId}/public/img/logo.png`,
     appType: 'multiApp',
     appDirectoryLink: 'http://127.0.0.1:7273/directory',
-    indexPage: `/${appId}/page/taskManagement`,
+    indexPage: `/${appId}/page/workbench`,
     loginPage: `/${appId}/page/login`,
     helpPage: `/${appId}/page/help`,
 
