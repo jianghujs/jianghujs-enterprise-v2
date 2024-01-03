@@ -26,14 +26,180 @@
               ></v-breadcrumbs>
             </v-col>
             <!-- <<<<<<<< 搜索条件表单 -->
+            <v-col cols="12" xs="12" sm="12" md="8" xl="9">
+              <v-row
+                class="jh-backend-form-container justify-end ma-0 py-1 pb-xs-2"
+              >
+                <v-btn
+                  class="jh-backend-search-btn elevation-0 ml-0 mt-3"
+                  color="success"
+                  small
+                  @click="doUiAction('startCreateItem')"
+                >
+                  新建日程
+                </v-btn>
+              </v-row>
+            </v-col>
           </v-row>
         </div>
         <!-- <<<<<<<<<<<<< 头部内容 -->
 
         <div class="jh-page-body-container px-8">
-          <v-card class="pa-4">
-            <div id='calendar'></div>
+          <v-card class="pa-4" style="height: 86vh;">
+            <v-row>
+              <v-col cols="2">
+                <v-date-picker
+                  v-model="today"
+                  full-width
+                  no-title
+                ></v-date-picker>
+                <v-expansion-panels
+                  disabled
+                  flat
+                  light
+                  multiple
+                  v-model="panel"
+                >
+                  <v-expansion-panel :key="0">
+                    <v-expansion-panel-header>
+                      系统类型
+                    </v-expansion-panel-header>
+                    <v-expansion-panel-content>
+                      <v-list-item v-for="i in 5">
+                        <v-list-item-action>
+                          <v-checkbox></v-checkbox>
+                        </v-list-item-action>
+                        分配的任务{{i}}</v-list-item
+                      >
+                    </v-expansion-panel-content>
+                  </v-expansion-panel>
+                  <v-expansion-panel :key="1">
+                    <v-expansion-panel-header>
+                      自定义类型
+                    </v-expansion-panel-header>
+                    <v-expansion-panel-content>
+                      <v-list-item>分配的任务</v-list-item>
+                    </v-expansion-panel-content>
+                  </v-expansion-panel>
+                </v-expansion-panels>
+              </v-col>
+              <v-col cols="10" style="height: 86vh;">
+                <div id="calendar"></div>
+              </v-col>
+            </v-row>
           </v-card>
+
+          <!-- 新建日程 -->
+          <v-dialog
+            v-model="isCreateDialogShown"
+            max-width="600px"
+            class="elevation-24"
+          >
+            <v-card>
+              <v-card-title class="headline">新建日程</v-card-title>
+              <v-card-text>
+                <v-form ref="form" lazy-validation>
+                  <v-row>
+                    <v-col cols="12">
+                      <span class="jh-input-label"
+                        ><span class="red--text text--accent-2 ml-1">*</span
+                        >日程内容</span
+                      >
+
+                      <v-text-field
+                        v-model="createItem.taskContent"
+                        :rules="validationRules.requireRules"
+                        required
+                        class="jh-v-input"
+                        dense
+                        filled
+                        single-line
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="12">
+                      <span class="jh-input-label"
+                        ><span class="red--text text--accent-2 ml-1">*</span
+                        >日程类型</span
+                      >
+
+                      <v-autocomplete
+                        :items="['开会', '约会', '出差', '其他']"
+                        v-model="createItem.taskType"
+                        :rules="validationRules.requireRules"
+                        required
+                        class="jh-v-input"
+                        dense
+                        filled
+                        single-line
+                      ></v-autocomplete>
+                    </v-col>
+                    <v-col cols="12">
+                      <span class="jh-input-label"
+                        ><span class="red--text text--accent-2 ml-1">*</span
+                        >开始时间</span
+                      >
+
+                      <v-text-field
+                        v-model="createItem.taskStartTime"
+                        :rules="validationRules.requireRules"
+                        required
+                        class="jh-v-input"
+                        dense
+                        filled
+                        single-line
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="12">
+                      <span class="jh-input-label"
+                        ><span class="red--text text--accent-2 ml-1">*</span
+                        >结束时间</span
+                      >
+                      <v-text-field
+                        v-model="createItem.taskEndTime"
+                        :rules="validationRules.requireRules"
+                        required
+                        class="jh-v-input"
+                        dense
+                        filled
+                        single-line
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="12">
+                      <span class="jh-input-label"
+                        ><span class="red--text text--accent-2 ml-1">*</span
+                        >参与人员</span
+                      >
+
+                      <v-autocomplete
+                        :items="['admin', 'a1', 'a3', 'a4']"
+                        v-model="createItem.taskMemberListId"
+                        :rules="validationRules.requireRules"
+                        multiple
+                        required
+                        class="jh-v-input"
+                        dense
+                        filled
+                        single-line
+                      ></v-autocomplete>
+                    </v-col>
+                  </v-row>
+                </v-form>
+              </v-card-text>
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn
+                  color="green darken-1"
+                  text
+                  @click="isCreateDialogShown = false"
+                >
+                  取消
+                </v-btn>
+                <v-btn color="primary" @click="doUiAction('createItem')">
+                  确定
+                </v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
         </div>
 
         <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
@@ -80,10 +246,10 @@
 
 <div id="app"></div>
 
-{% endblock %} {% block vueScript %}
-{% include 'common/jianghuJs/fixedTableHeightV4.html' %}
-{% include 'common/excelUtil.html'%}
-<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+{% endblock %} {% block vueScript %} {% include
+'common/jianghuJs/fixedTableHeightV4.html' %} {% include
+'common/excelUtil.html'%}
+<script src="/<$ ctx.app.config.appId $>/public/lib/fullcalendar/index.global.min.js"></script>
 
 <script type="module">
   new Vue({
@@ -103,37 +269,138 @@
           disabled: true,
         },
       ],
+      today: dayjs().format('YYYY-MM-DD'),
+      panel: [0, 1],
+
+      // 新建日程
+      isCreateDialogShown: false,
+      createItem: {
+        taskContent: '发工资',
+        taskType: '开会',
+        taskStartTime: dayjs().format('YYYY-MM-DD'),
+        taskEndTime: dayjs().format('YYYY-MM-DD'),
+        taskMemberListId: ['admin'],
+      },
+      validationRules: {
+        requireRules: [(v) => !!v || '必填'],
+      },
+
+      tasks: []
     }),
-    watch: {
-    
-    },
+    watch: {},
     async created() {},
     mounted() {
       this.initCalendar();
+      this.doCreateItem();
     },
     methods: {
       async doUiAction(uiActionId, uiActionData) {
         switch (uiActionId) {
+          case 'startCreateItem':
+            await this.prepareCreateFormData(uiActionData);
+            await this.openCreateDrawer();
+            this.isCreateDialogShown = true;
+            break;
+          case 'createItem':
+            await this.doCreateItem();
+            break;
           default:
             console.error('[doUiAction] uiActionId not find', { uiActionId });
             break;
         }
       },
+      async prepareCreateFormData(item = {}) {
+        this.createItem = {
+          taskContent: item.taskContent || '发工资',
+          taskType: item.taskContent || '开会',
+          taskStartTime: item.dateStr || dayjs().format('YYYY-MM-DD'),
+          taskEndTime: item.dateStr || dayjs().format('YYYY-MM-DD'),
+          taskMemberListId: ['admin'],
+        };
+      },
+      async openCreateDrawer() {
+        this.isCreateDialogShown = true;
+      },
+      async doCreateItem() {
+        this.tasks.push({
+          title: this.createItem.taskContent,
+          start: this.createItem.taskStartTime,
+          end: this.createItem.taskEndTime,
+          allDay: true,
+        })
+        this.initCalendar();
+        this.isCreateDialogShown = false;
+      },
       // 初始化日历
-      initCalendar(style = 'dayGridMonth') {
+      initCalendar() {
+        const that = this
         var calendarEl = document.getElementById('calendar');
         var calendar = new FullCalendar.Calendar(calendarEl, {
-          initialView: style
+          // initialView: style,
+          height: '100%',
+          locale: 'zh-cn',
+          headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth',
+          },
+          buttonText: {
+            prev: '上月',
+            next: '下月',
+            today: '今天',
+            year: '年',
+            month: '月',
+            week: '周',
+            day: '日',
+            list: '日程',
+          },
+          events: this.tasks,
+          editable: true,
+          eventClick(info) {
+            that.doUiAction('startCreateItem', { taskContent: info.event.title, dateStr: info.event.startStr})
+          },
+          dateClick(info) {
+            that.doUiAction('startCreateItem', info)
+          }
         });
         calendar.render();
       },
     },
   });
 </script>
-
 <style scoped>
+  :root {
+    --fc-button-bg-color: #5ab55e;
+    --fc-button-border-color: #5ab55e;
+    --fc-button-active-bg-color: #2db133;
+    --fc-button-active-border-color: #2db133;
 
+    --fc-button-hover-bg-color: #2db133;
+    --fc-button-hover-border-color: #2db133;
+  }
+  .v-application a {
+    color: black;
+  }
 
+  .fc-event {
+    background-color: #5ab55e;
+    border-color: #5ab55e;
+  }
+
+  .v-application--is-ltr .v-list-item__action:first-child,
+  .v-application--is-ltr .v-list-item__icon:first-child {
+    margin-right: 5px;
+  }
+  .v-expansion-panel-content__wrap {
+    padding: 0 0 16px;
+  }
+  .v-expansion-panel-header {
+    padding: 16px 0;
+  }
+  .v-expansion-panel--active + .v-expansion-panel,
+  .v-expansion-panel--active:not(:first-child) {
+    margin-top: 0;
+  }
 </style>
 
 {% endblock %}

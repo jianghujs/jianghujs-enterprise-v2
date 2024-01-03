@@ -43,7 +43,7 @@
 
         <div class="jh-page-body-container px-8">
           <!-- 快捷操作列表 -->
-          <v-card class="rounded-lg mb-3">
+          <v-card class="rounded-lg mb-4">
             <v-row>
               <v-col class="text-center" cols="1" v-for="item in quickOperationList">
                 <div :href="item.link">
@@ -56,7 +56,7 @@
             </v-row>
           </v-card>
 
-          <v-row>
+          <v-row class="pa-0">
             <v-col cols="12" md="8">
               <v-card>
                 <v-tabs v-model="informTab">
@@ -150,7 +150,7 @@
           </v-row>
 
           <!-- 审批 -->
-          <v-row>
+          <v-row class="pa-0">
             <v-col cols="12" md="8">
               <v-card>
                 <v-tabs v-model="approvalTab">
@@ -186,7 +186,7 @@
           </v-row>
 
           <!-- 任务 -->
-          <v-row>
+          <v-row class="pa-0">
             <v-col cols="12" md="8">
               <v-card>
                 <v-tabs v-model="approvalTab">
