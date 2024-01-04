@@ -302,7 +302,7 @@
         </v-navigation-drawer>
 
         <!-- <<<<<<<<<<<<< 页面内容 -->
-        <task-detail-drawer :user-list="userList" ref="taskDetail" @save="doUiAction('refreshTableData')" />
+        <task-detail-drawer :user-list="userList" ref="taskDetail" @save="doUiAction('getTableData')" />
       </div>
 
       <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
@@ -372,13 +372,7 @@
       // 下拉选项
       constantObj: {
         ...constantObj,
-        // 优先级
-        taskLevel: [
-          { text: '无', value: null },
-          { text: '中', value: '中' },
-          { text: '低', value: '低' },
-          { text: '高', value: '高' },
-        ],
+       
       },
       sceneList: [
         {
@@ -477,9 +471,7 @@
             await this.closeCreateDrawer();
             await this.getTableData();
             break;
-          case 'startUpdateItem':
-            await this.$refs.taskDetail.doUiAction('open', uiActionData.item);
-            break;
+      
           case 'deleteItem':
             await this.prepareDeleteFormData(uiActionData);
             await this.confirmDeleteItemDialog();
@@ -505,6 +497,9 @@
           case 'useScene':
             await this.useScene(uiActionData);
             await this.getTableData();
+            break;
+          case 'startUpdateTask':
+            await this.$refs.taskDetail.doUiAction('open', uiActionData.item);
             break;
           case 'updateTask':
             await this.updateTask(uiActionData);
@@ -570,7 +565,7 @@
       async prepareCreateFormData() {
         const { userId } = window.userInfo;
         this.createItem = {
-          taskLevel: null,
+          taskLevel: '无',
           taskManagerId: userId,
           taskMemberIdList: [userId],
           taskChildList: [],
