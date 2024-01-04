@@ -236,6 +236,8 @@
       <!-- <<<<<<<<<<<<< 页面内容 -->
 
       <view-ticket-detail-drawer ref="ticketDetail" />
+      <select-ticket-type-dialog ref="selectTicketTypeDialog" @handleClick="doUiAction('startCreateTicket', $event)" />
+      <create-ticket-drawer ref="createTicketDrawer" />
     </div>
 
     <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
@@ -268,6 +270,9 @@
 {% include 'common/excelUtil.html' %}
 {% include 'component/view-ticket-detail-drawer.html' %}
 {% include 'component/task-attachment-list.html' %}
+{% include 'component/ticket/select-ticket-type-dialog.html' %}
+{% include 'component/ticket/create-ticket-drawer.html' %}
+
 <script type="module">
   new Vue({
     el: '#app',
@@ -383,8 +388,13 @@
             await this.getTableData();
             break;
           case 'startCreateItem':
-            await this.prepareCreateFormData();
-            await this.openCreateDrawer();
+            await this.$refs.selectTicketTypeDialog.doUiAction('open');
+
+            // await this.prepareCreateFormData();
+            // await this.openCreateDrawer();
+            break;
+          case 'startCreateTicket':
+            this.$refs.createTicketDrawer.doUiAction('open', uiActionData);
             break;
           case 'createItem':
             await this.prepareCreateValidate();
