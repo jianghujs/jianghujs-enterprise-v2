@@ -62,7 +62,7 @@
       },
       deleteTodo(index) {
         this.personList.splice(index, 1);
-        his.$emit('update:personList', this.personList)
+        this.$emit('update:personList', this.personList)
       },
       async getUserList() {
         const rows = (await window.jianghuAxios({
