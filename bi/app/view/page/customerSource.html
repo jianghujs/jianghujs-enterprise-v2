@@ -37,7 +37,7 @@
                     color="success"
                     prefix="时间："
                     class="jh-v-input bg-white"
-                    :items="[]"
+                    :items="constantObj.date"
                     dense
                     filled
                     single-line
@@ -57,7 +57,7 @@
                     color="success"
                     prefix="用户："
                     class="jh-v-input bg-white"
-                    :items="[]"
+                    :items="constantObj.user"
                     dense
                     filled
                     single-line
@@ -91,10 +91,8 @@
                 style="height: 400px;"
               />
 
-
               <v-row class="mt-4" no-gutters>
                 <v-col cols="12" md="12" class="justify-end text-right">
-                  
                   <v-btn class="mr-4" small>导出</v-btn>
                 </v-col>
               </v-row>
@@ -185,84 +183,77 @@
     data: {
       isMobile: window.innerWidth < 500,
       isHelpPageDrawerShown: false,
-      serverSearchInput: {},
+      serverSearchInput: {
+        date: '本年',
+        user: '本人及下属',
+      },
+      constantObj: {
+        date: ['今天', ' 昨天', '本周', '本月', '本季', '本年', '自定义'],
+        user: ['仅本人', '本部门', '本部门及下属部门', '本人及下属', '自定义'],
+      },
       headers: [
-        { text: '员工姓名', value: 'name', width: 120 },
-        { text: '当前客户数', value: 'currentNum', width: 120 },
-        { text: '新建客户数', value: 'newNum', width: 120 },
-        { text: '成交客户数', value: 'payNum', width: 120 },
-        { text: '客户成交率', value: 'payNuma', width: 120 },
-        { text: '合同总金额(元)', value: 'contrctMoney', width: 120 },
-        { text: '回款金额(元)', value: 'sMoney', width: 120 },
+        { text: '客户行业', value: 'name', width: 120 },
+        { text: '微信', value: 'a1', width: 120 },
+        { text: 'qq', value: 'a2', width: 120 },
+        { text: '抖音', value: 'a3', width: 120 },
+        { text: 'youtube', value: 'a4', width: 120 },
+        { text: '头条', value: 'a5', width: 120 },
       ],
       tableData: [
         {
-          name: '小明',
-          currentNum: 10,
-          newNum: 10,
-          payNum: 10,
-          payNuma: 10,
-          contrctMoney: 10,
-          sMoney: 10,
+          name: '所有客户（个）',
+          a1: 10,
+          a2: 10,
+          a3: 10,
+          a4: 10,
+          a5: 10,
+          a6: 10,
+        },
+        {
+          name: '成交客户（个）',
+          a1: 10,
+          a2: 10,
+          a3: 10,
+          a4: 10,
+          a5: 10,
+          a6: 10,
         },
       ],
       searchInput: null,
       isTableLoading: false,
       isTableZebraLineShown: true,
       customerGrossOption: {
+        title: {
+          left: 'center',
+        },
         tooltip: {
-          trigger: 'axis',
-          axisPointer: {
-            type: 'shadow',
-          },
+          trigger: 'item',
         },
-        grid: {
-          left: '3%',
-          right: '4%',
-          bottom: '3%',
-          containLabel: true,
+        legend: {
+          orient: 'vertical',
+          left: 'left',
         },
-        xAxis: [
+        series: [
           {
-            type: 'category',
-            data: Array.from({ length: 12 }, (v, i) =>
-              dayjs().month(i).format('YYYY-MM-01')
-            ),
-            axisTick: {
-              alignWithLabel: true,
+            name: 'Access From',
+            type: 'pie',
+            radius: '50%',
+            data: [
+              { value: 1048, name: '微信' },
+              { value: 735, name: 'qq' },
+              { value: 580, name: '抖音' },
+              { value: 484, name: 'youtube' },
+              { value: 300, name: '头条' },
+            ],
+            emphasis: {
+              itemStyle: {
+                shadowBlur: 10,
+                shadowOffsetX: 0,
+                shadowColor: 'rgba(0, 0, 0, 0.5)',
+              },
             },
           },
         ],
-        yAxis: [
-          {
-            type: 'value',
-          },
-        ],
-        series: [
-          {
-            name: '成交客户数',
-            type: 'bar',
-            barWidth: '60%',
-            data: [10, 52, 200, 334, 390, 330, 220],
-          },
-          {
-            name: '新建客户数',
-            type: 'bar',
-            barWidth: '60%',
-            data: [10, 52, 200, 334, 390, 330, 220],
-          },
-        ],
-legend: {
-          top: 10,
-          left: 'center',
-          data: ['成交客户数', '新建客户数',]
-        },
-toolbox: {
-          show: true,
-          feature: {
-            saveAsImage: {}
-          }
-        },
       },
     },
     computed: {
@@ -286,12 +277,9 @@ toolbox: {
             break;
         }
       },
-      
     },
   });
 </script>
 
-<style scoped>
-  
-</style>
+<style scoped></style>
 {% endblock %}

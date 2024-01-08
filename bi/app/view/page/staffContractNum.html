@@ -37,7 +37,7 @@
                     color="success"
                     prefix="时间："
                     class="jh-v-input bg-white"
-                    :items="[]"
+                    :items="constantObj.date"
                     dense
                     filled
                     single-line
@@ -57,7 +57,7 @@
                     color="success"
                     prefix="用户："
                     class="jh-v-input bg-white"
-                    :items="[]"
+                    :items="constantObj.user"
                     dense
                     filled
                     single-line
@@ -91,10 +91,8 @@
                 style="height: 400px;"
               />
 
-
               <v-row class="mt-4" no-gutters>
                 <v-col cols="12" md="12" class="justify-end text-right">
-                  
                   <v-btn class="mr-4" small>导出</v-btn>
                 </v-col>
               </v-row>
@@ -185,25 +183,68 @@
     data: {
       isMobile: window.innerWidth < 500,
       isHelpPageDrawerShown: false,
-      serverSearchInput: {},
+      serverSearchInput: {
+        date: '本年',
+        user: '本人及下属',
+      },
+      constantObj: {
+        date: ['今天', ' 昨天', '本周', '本月', '本季', '本年', '自定义'],
+        user: ['仅本人', '本部门', '本部门及下属部门', '本人及下属', '自定义'],
+      },
       headers: [
-        { text: '员工姓名', value: 'name', width: 120 },
-        { text: '当前客户数', value: 'currentNum', width: 120 },
-        { text: '新建客户数', value: 'newNum', width: 120 },
-        { text: '成交客户数', value: 'payNum', width: 120 },
-        { text: '客户成交率', value: 'payNuma', width: 120 },
-        { text: '合同总金额(元)', value: 'contrctMoney', width: 120 },
-        { text: '回款金额(元)', value: 'sMoney', width: 120 },
+        { text: '日期', value: 'date', width: 150 },
+        ...Array.from({ length: 12 }, (v, i) =>
+          ({
+            text: dayjs().month(i).format('YYYY-MM-01'),
+            value: dayjs().month(i).format('YYYY-MM-01'),
+          })
+        )
       ],
       tableData: [
+      {
+          date: '当月合同数量（个）',
+          "2024-01-01": 10,
+          "2024-02-01": 5,
+          "2024-03-01": 10,
+          "2024-04-01": 10,
+          "2024-05-01": 10,
+          "2024-06-01": 10,
+          "2024-07-01": 10,
+          "2024-08-01": 7,
+          "2024-09-01": 10,
+          "2024-10-01": 10,
+          "2024-11-01": 10,
+          "2024-12-01": 10
+        },
         {
-          name: '小明',
-          currentNum: 10,
-          newNum: 10,
-          payNum: 10,
-          payNuma: 10,
-          contrctMoney: 10,
-          sMoney: 10,
+          date: '环比增长（%）',
+          "2024-01-01": 10,
+          "2024-02-01": 5,
+          "2024-03-01": 10,
+          "2024-04-01": 10,
+          "2024-05-01": 10,
+          "2024-06-01": 10,
+          "2024-07-01": 10,
+          "2024-08-01": 7,
+          "2024-09-01": 10,
+          "2024-10-01": 10,
+          "2024-11-01": 10,
+          "2024-12-01": 10
+        },
+        {
+          date: '同比增长（%）',
+          "2024-01-01": 10,
+          "2024-02-01": 5,
+          "2024-03-01": 10,
+          "2024-04-01": 10,
+          "2024-05-01": 10,
+          "2024-06-01": 10,
+          "2024-07-01": 10,
+          "2024-08-01": 7,
+          "2024-09-01": 10,
+          "2024-10-01": 10,
+          "2024-11-01": 10,
+          "2024-12-01": 10
         },
       ],
       searchInput: null,
@@ -240,28 +281,36 @@
         ],
         series: [
           {
-            name: '成交客户数',
-            type: 'bar',
+            name: '当月合同数量',
+            type: 'line',
             barWidth: '60%',
             data: [10, 52, 200, 334, 390, 330, 220],
           },
           {
-            name: '新建客户数',
-            type: 'bar',
+            name: '环比增长',
+            type: 'line',
+            barWidth: '60%',
+            data: [10, 52, 200, 334, 390, 330, 220],
+          },
+          {
+            name: '同比增长',
+            type: 'line',
             barWidth: '60%',
             data: [10, 52, 200, 334, 390, 330, 220],
           },
         ],
-legend: {
+        legend: {
           top: 10,
           left: 'center',
-          data: ['成交客户数', '新建客户数',]
+          data: ['当月合同数量', '环比增长', '同比增长'],
         },
-toolbox: {
+        toolbox: {
           show: true,
           feature: {
-            saveAsImage: {}
-          }
+            saveAsImage: {},
+            magicType: { type: ['line', 'bar', 'pie'] },
+
+          },
         },
       },
     },
@@ -286,12 +335,9 @@ toolbox: {
             break;
         }
       },
-      
     },
   });
 </script>
 
-<style scoped>
-  
-</style>
+<style scoped></style>
 {% endblock %}

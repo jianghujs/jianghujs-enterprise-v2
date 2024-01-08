@@ -37,7 +37,7 @@
                     color="success"
                     prefix="时间："
                     class="jh-v-input bg-white"
-                    :items="[]"
+                    :items="constantObj.date"
                     dense
                     filled
                     single-line
@@ -57,7 +57,7 @@
                     color="success"
                     prefix="用户："
                     class="jh-v-input bg-white"
-                    :items="[]"
+                    :items="constantObj.user"
                     dense
                     filled
                     single-line
@@ -185,7 +185,14 @@
     data: {
       isMobile: window.innerWidth < 500,
       isHelpPageDrawerShown: false,
-      serverSearchInput: {},
+      serverSearchInput: {
+        date: '本年',
+        user: '本人及下属',
+      },
+      constantObj: {
+        date: ['今天', ' 昨天', '本周', '本月', '本季', '本年', '自定义'],
+        user: ['仅本人', '本部门', '本部门及下属部门', '本人及下属', '自定义']
+      },
       headers: [
         { text: '员工姓名', value: 'name', width: 120 },
         { text: '当前客户数', value: 'currentNum', width: 120 },
