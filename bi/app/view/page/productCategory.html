@@ -91,43 +91,7 @@
                 style="height: 400px;"
               />
 
-
-              <v-row class="mt-4" no-gutters>
-                <v-col cols="12" md="12" class="justify-end text-right">
-                  
-                  <v-btn class="mr-4" small>导出</v-btn>
-                </v-col>
-              </v-row>
-
-              <v-data-table
-                :headers="headers"
-                :items="tableData"
-                :search="searchInput"
-                :footer-props="{ itemsPerPageOptions: [20, 50, -1], itemsPerPageText: '每页行数', itemsPerPageAllText: '所有'}"
-                :items-per-page="-1"
-                mobile-breakpoint="0"
-                :loading="isTableLoading"
-                checkbox-color="success"
-                fixed-header
-                :class="{'zebraLine': isTableZebraLineShown }"
-                class="jh-fixed-table-height elevation-0 mt-0 mb-xs-4"
-              >
-                <!--没有数据-->
-                <template v-slot:loading>
-                  <div class="jh-no-data">数据加载中</div>
-                </template>
-                <template v-slot:no-data>
-                  <div class="jh-no-data">暂无数据</div>
-                </template>
-                <template v-slot:no-results>
-                  <div class="jh-no-data">暂无数据</div>
-                </template>
-                <!--表格分页-->
-                <template v-slot:footer.page-text="pagination">
-                  <span>{{pagination.pageStart}}-{{pagination.pageStop}}</span>
-                  <span class="ml-1">共{{pagination.itemsLength}}条</span>
-                </template>
-              </v-data-table>
+           
             </v-card>
           </v-container>
         </div>
@@ -191,84 +155,64 @@
       },
       constantObj: {
         date: ['今天', ' 昨天', '本周', '本月', '本季', '本年', '自定义'],
-        user: ['仅本人', '本部门', '本部门及下属部门', '本人及下属', '自定义']
+        user: ['仅本人', '本部门', '本部门及下属部门', '本人及下属', '自定义'],
       },
       headers: [
-        { text: '员工姓名', value: 'name', width: 120 },
-        { text: '当前客户数', value: 'currentNum', width: 120 },
-        { text: '新建客户数', value: 'newNum', width: 120 },
-        { text: '成交客户数', value: 'payNum', width: 120 },
-        { text: '客户成交率', value: 'payNuma', width: 120 },
-        { text: '合同总金额(元)', value: 'contrctMoney', width: 120 },
-        { text: '回款金额(元)', value: 'sMoney', width: 120 },
+        { text: '产品分类', value: 'category', width: 120 },
+        { text: '产品名称', value: 'productName', width: 120 },
+        { text: '合同数', value: 'contractNum', width: 120 },
+        { text: '数量合计', value: 'productNum', width: 120 },
+        { text: '订单产品小计', value: 'productOrder', width: 120 },
       ],
       tableData: [
         {
-          name: '小明',
-          currentNum: 10,
-          newNum: 10,
-          payNum: 10,
-          payNuma: 10,
-          contrctMoney: 10,
-          sMoney: 10,
+          category: '手机',
+          productName: 'iphone 14 pro',
+          contractNum: 10,
+          productNum: 10,
+          productOrder: 10,
         },
       ],
       searchInput: null,
       isTableLoading: false,
       isTableZebraLineShown: true,
       customerGrossOption: {
+        title: {
+          left: 'center',
+        },
         tooltip: {
-          trigger: 'axis',
-          axisPointer: {
-            type: 'shadow',
-          },
+          trigger: 'item',
         },
-        grid: {
-          left: '3%',
-          right: '4%',
-          bottom: '3%',
-          containLabel: true,
+        legend: {
+          orient: 'vertical',
+          left: 'left',
         },
-        xAxis: [
+        series: [
           {
-            type: 'category',
-            data: Array.from({ length: 12 }, (v, i) =>
-              dayjs().month(i).format('YYYY-MM-01')
-            ),
-            axisTick: {
-              alignWithLabel: true,
+            name: 'Access From',
+            type: 'pie',
+            radius: '50%',
+            data: [
+              { value: 1048, name: '手机' },
+              { value: 735, name: '笔记本' },
+              { value: 580, name: '平板' },
+              { value: 484, name: '耳机' },
+              { value: 300, name: '相机' },
+            ],
+            emphasis: {
+              itemStyle: {
+                shadowBlur: 10,
+                shadowOffsetX: 0,
+                shadowColor: 'rgba(0, 0, 0, 0.5)',
+              },
             },
           },
         ],
-        yAxis: [
-          {
-            type: 'value',
-          },
-        ],
-        series: [
-          {
-            name: '成交客户数',
-            type: 'bar',
-            barWidth: '60%',
-            data: [10, 52, 200, 334, 390, 330, 220],
-          },
-          {
-            name: '新建客户数',
-            type: 'bar',
-            barWidth: '60%',
-            data: [10, 52, 200, 334, 390, 330, 220],
-          },
-        ],
-legend: {
-          top: 10,
-          left: 'center',
-          data: ['成交客户数', '新建客户数',]
-        },
-toolbox: {
+        toolbox: {
           show: true,
           feature: {
-            saveAsImage: {}
-          }
+            saveAsImage: {},
+          },
         },
       },
     },
@@ -293,12 +237,9 @@ toolbox: {
             break;
         }
       },
-      
     },
   });
 </script>
 
-<style scoped>
-  
-</style>
+<style scoped></style>
 {% endblock %}
