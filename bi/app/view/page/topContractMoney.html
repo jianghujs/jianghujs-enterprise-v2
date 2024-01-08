@@ -94,7 +94,7 @@
 
               <v-row class="mt-4" no-gutters>
                 <v-col cols="12" md="12" class="justify-end text-right">
-                  <v-btn @click="downloadChart" class="mr-2" small>下载图表</v-btn>
+                  
                   <v-btn class="mr-4" small>导出</v-btn>
                 </v-col>
               </v-row>
@@ -252,6 +252,17 @@
             data: [10, 52, 200, 334, 390, 330, 220],
           },
         ],
+legend: {
+          top: 10,
+          left: 'center',
+          data: ['成交客户数', '新建客户数',]
+        },
+toolbox: {
+          show: true,
+          feature: {
+            saveAsImage: {}
+          }
+        },
       },
     },
     computed: {
@@ -275,21 +286,7 @@
             break;
         }
       },
-      downloadChart() {
-        if (!this.$refs.customerGrossChart) {
-          return;
-        }
-        const ecInstance = this.$refs.customerGrossChart;
-        const url = ecInstance.getDataURL({
-          type: 'png',
-          pixelRatio: 2,
-          backgroundColor: '#fff',
-        });
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'chart.png';
-        a.click();
-      },
+      
     },
   });
 </script>
