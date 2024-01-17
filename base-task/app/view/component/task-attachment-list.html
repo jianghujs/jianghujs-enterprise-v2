@@ -1,0 +1,124 @@
+<template id="task-attachment-list">
+  <div>
+    <input type="file" id="file-upload" ref="fileInput" style="display: none;" @change="handleFileUpload" />
+    <label for="file-upload">
+      <v-btn color="primary" outlined small @click="startUploadFile">
+        <!-- 添加icon -->
+        <v-icon size="14">mdi-plus</v-icon>
+        添加附件</v-btn>
+    </label>
+
+
+    <v-card class="mt-2 todo-list">
+      <div v-for="(item, index) in files" :key="index" class="todo-item d-flex align-center"
+        style="border: 1px solid #eee">
+        <p class="ma-0 todo-item-text">{{ item.filename }}</p>
+        <v-menu offset-y>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn v-if="!readonly" icon small v-bind="attrs" v-on="on">
+              <v-icon size="14">mdi-dots-vertical</v-icon>
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item @click="downloadFile(item)">
+              <v-list-item-title>下载</v-list-item-title>
+            </v-list-item>
+            <v-list-item @click="deleteFile(index)">
+              <v-list-item-title>删除</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+      </div>
+    </v-card>
+  </div>
+</template>
+
+<script type="module">
+  Vue.component("task-attachment-list", {
+    template: '#task-attachment-list',
+    props: {
+      files: {
+        type: Array,
+        default: () => [],
+      },
+      // 是否只读
+      readonly: {
+        type: Boolean,
+        default: false,
+      },
+    },
+    data: () => ({
+    }),
+    created() {
+    },
+    methods: {
+      deleteFile(index) {
+        this.files.splice(index, 1);
+        this.$emit('update:files', this.files)
+      },
+      downloadFile(item) {
+        const { downloadBasePath, downloadPath, filename } = item;
+        const fileUrl = `${window.origin}${downloadBasePath}${downloadPath}`;
+
+        // 下载文件
+        const link = document.createElement('a');
+        link.href = fileUrl;
+
+        // 设置链接元素的下载属性和文件名（如果需要）
+        link.setAttribute('download', filename); // 可以更改文件名
+
+        // 模拟点击链接以触发下载
+        link.click();
+      },
+      startUploadFile() {
+        this.$refs.fileInput.click();
+      },
+      async handleFileUpload() {
+        this.selectedFile = this.$refs.fileInput.files;
+        await this.doUploadUpdateItemFile(this.selectedFile[0]);
+      },
+      async doUploadUpdateItemFile(file) {
+        if (file && file.size) {
+          await window.vtoast.loading("文件上传");
+          const result = await window.jianghuAxios.httpUploadByStream({
+            file, fileDirectory: 'taskFile',
+            onProgress: (total, loaded) => {
+              let progress = Number((loaded * 100 / total).toFixed(2))
+              window.vtoast.loading(`文件上传进度${progress}%`);
+              if (progress === 100) {
+                window.vtoast.success('文件上传成功');
+              }
+            }
+          });
+
+          if (result.data.status === 'success') {
+            const item = result.data.appData.resultData
+            this.files.push(item);
+            this.$emit('update:files', this.files)
+          } else {
+            await window.vtoast.fail("文件上传失败");
+            throw new Error("文件上传失败");
+          }
+        }
+      },
+
+    },
+  })
+</script>
+<style scoped>
+  .text-decoration-line-through {
+    text-decoration: line-through;
+  }
+
+  .todo-item {
+    padding: 4px 0 4px 4px;
+  }
+
+  .todo-item input {
+    padding: 0;
+  }
+
+  .todo-item-text {
+    width: 100%;
+  }
+</style>

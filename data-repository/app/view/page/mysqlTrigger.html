@@ -1,0 +1,212 @@
+{% block htmlHead %}
+<style>
+/* css */
+</style>
+{% endblock %}
+
+{% extends 'template/jhTemplateV4.html'%}
+{% block vueTemplate %}
+<script type="text/html" id="app-template">
+<div>
+    <v-app mobile-breakpoint="sm">
+      <jh-menu />
+      <v-main class="mt-15">
+          <!-- 头部内容 >>>>>>>>>>>>> --> 
+          <div class="jh-page-second-bar px-8">
+              <v-row>
+                  <v-col cols="12" xs="12" sm="12" md="4" xl="3">
+                      <div class="pt-3 text-h7 font-weight-bold"> 
+                          <span>{{ breadcrumbList[breadcrumbList.length-1].text }}</span> 
+                          <v-icon @click="isHelpPageDrawerShown = true; isHelpPageDrawerLoaded = true;" color="success" small>mdi-help-circle-outline</v-icon>
+                      </div> 
+                      <v-breadcrumbs class="pb-3 pt-0 pl-0" :items="breadcrumbList" divider="-"></v-breadcrumbs>
+                  </v-col>
+                  <v-col cols="12" xs="12" sm="12" md="8" xl="9">
+                      <v-row class="jh-backend-form-container justify-end ma-0 py-1 pb-xs-2"> 
+                          <v-btn class="jh-backend-search-btn elevation-0 ml-0 mt-3" color="success" small @click="doUiAction('getTableData')">查询</v-btn>
+                      </v-row>
+                  </v-col>
+              </v-row>
+          </div>
+          <!-- <<<<<<<<<<<<< 头部内容 -->
+
+          <!-- 页面内容 >>>>>>>>>>>>> -->
+          <div class="jh-page-body-container px-8">
+            <v-card class="rounded-lg">
+                <v-row class="ma-0 pa-4">
+                <!-- 新增按钮 -->
+                <v-spacer></v-spacer>
+                <!-- 搜索过滤 -->
+                <v-col cols="12" xs="8" sm="4" md="3" xl="2" class="pa-0">
+                    <v-text-field color="success" v-model="tableSearchInput" prefix="搜索：" class="jh-v-input" dense filled single-line></v-text-field>
+                </v-col>
+                </v-row>
+                <!-- 表格 -->
+                <v-data-table
+                    :headers="tableHeaderList"
+                    :items="tableData"
+                    :search="tableSearchInput"
+                    :footer-props="{ itemsPerPageOptions: [20, 50, -1], itemsPerPageText: '每页', itemsPerPageAllText: '所有'}"
+                    :items-per-page="-1"
+                    mobile-breakpoint="0"
+                    :loading="tableLoading"
+                    checkbox-color="success"
+                    :class="{'zebraLine': true }"
+                    fixed-header
+                    class="jh-fixed-table-height elevation-0 mt-0 mb-xs-4">
+                <!-- 表格操作按钮 -->
+                <template v-slot:item.action="{ item }">
+                </template>
+                <!-- 没有数据 -->
+                <template v-slot:loading>
+                    <div class="jh-no-data">数据加载中</div>
+                </template>
+                <template v-slot:no-data>
+                    <div class="jh-no-data">暂无数据</div>
+                </template>
+                <template v-slot:no-results>
+                    <div class="jh-no-data">暂无数据</div>
+                </template>
+                <!-- 表格分页 -->
+                <template v-slot:footer.page-text="pagination">
+                    <span>{{pagination.pageStart}}-{{pagination.pageStop}}</span>
+                    <span class="ml-1">共{{pagination.itemsLength}}条</span>
+                </template>
+                </v-data-table>
+            </v-card>
+          </div>
+          <!-- <<<<<<<<<<<<< 页面内容 -->
+
+          <!-- 帮助页抽屉 >>>>>>>>>>>>> --> 
+          <v-navigation-drawer v-if="isHelpPageDrawerLoaded" v-model="isHelpPageDrawerShown" :permanent="isHelpPageDrawerShown" fixed temporary right width="80%" class="elevation-24">
+            <iframe style="border: 0" :src="`/${appInfo.appId}/pageDoc#404.md`" width="100%" height="100%"></iframe>
+            <v-btn elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn" @click="isHelpPageDrawerShown = false">
+                <v-icon>mdi-close</v-icon>
+            </v-btn>
+          </v-navigation-drawer>
+          <!-- <<<<<<<<<<<<< 帮助页抽屉 -->
+      </v-main>
+    </v-app>
+
+    <jh-toast />
+    <jh-mask />
+    <jh-confirm-dialog />
+</div>
+</script>
+<div id="app"></div>
+{% endblock %}
+
+{% block vueScript %}
+{% include 'common/jianghuJs/fixedTableHeightV4.html' %}
+<script type="module">
+new Vue({
+  el: '#app',
+  template: '#app-template',
+  vuetify: new Vuetify(),
+  data: () => ({
+    // ================================ common ================================
+    // constantObj: {},
+    // validationRules: {},
+
+    // ================================ headContent ================================
+    breadcrumbList: [
+      {text:"首页",disabled:true},
+      {text:"MYSQL触发器",disabled:true},
+    ],
+    serverSearchWhere: {
+      gender: "全部"
+    },
+    serverSearchWhereLike: {
+      name: null,
+      dateOfBirth: null
+    },
+    isHelpPageDrawerShown: false,
+    isHelpPageDrawerLoaded: false,
+
+    // ================================ pageContent ================================
+    tableHeaderList: [
+      {text:"触发器-所在仓库",value:"TRIGGER_SCHEMA",width:150,sortable:true},
+      {text:"触发器",value:"TRIGGER_NAME",width:80,sortable:true},
+      {text:"触发器-事件",value:"EVENT_MANIPULATION",width:80,sortable:true},
+      {text:"触发器-源表",value:"EVENT_OBJECT_TABLE",width:80,sortable:true},
+    ],
+    tableData: [],
+    tableLoading: true,
+    tableSearchInput: null,
+
+    // ================================ createDrawerContent ================================
+
+    // ================================ updateDrawerContent ================================
+
+    // ================================ deleteContent ================================
+  }),
+  watch: {
+  },
+  async created() {
+  },
+  async mounted() {
+    this.doUiAction('getTableData');
+  },
+  methods: {
+    async doUiAction(uiActionId, uiActionData) {
+      switch (uiActionId) {
+        case 'getTableData':
+          await this.getTableData();
+          break;
+
+        default:
+          console.error("[doUiAction] uiActionId not find", {uiActionId});
+          break;
+      }
+    },
+    // ---------- 获取表格数据 uiAction >>>>>>>>>> --------
+    async getTableData() {
+      this.tableLoading = true;
+      const where = {};
+      const whereLike = {};
+      for (const fieldKey in this.serverSearchWhere) {
+        const fieldValue = this.serverSearchWhere[fieldKey];
+        if(!!fieldValue && fieldValue != '全部') {
+          where[fieldKey] = fieldValue;
+        }
+      }
+      for (const fieldKey in this.serverSearchWhereLike) {
+        const fieldValue = this.serverSearchWhereLike[fieldKey];
+        if(!!fieldValue && fieldValue != '全部') {
+          whereLike[fieldKey] = fieldValue;
+        }
+      }
+
+      let rows = (await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'mysqlTrigger',
+            actionId: 'selectItemList',
+            actionData: {},
+            where,
+            whereLike,
+            orderBy: [{column: 'TRIGGER_SCHEMA', order: 'desc'},{column: 'TRIGGER_NAME', order: 'desc'}]
+          }
+        }
+      })).data.appData.resultData.rows;
+
+      rows = rows.filter(row => row.TRIGGER_SCHEMA != 'sys');
+      this.tableData = rows;
+      this.tableLoading = false;
+    },
+    // ---------- <<<<<<<<<<< 获取表格数据 uiAction ---------
+
+    // ---------- 新增数据 uiAction >>>>>>>>>> --------
+    // ---------- <<<<<<<<<<< 新增数据 uiAction ---------
+
+    // ---------- 修改数据 uiAction >>>>>>>>>>>> --------
+    // ---------- <<<<<<<<<<< 修改数据 uiAction ---------
+    
+    // ---------- 删除数据 uiAction >>>>>>>>>>>> --------
+    // ---------- <<<<<<<<<<< 删除数据 uiAction ---------
+  }
+})
+</script>
+
+<style scoped>
+</style>{% endblock %}

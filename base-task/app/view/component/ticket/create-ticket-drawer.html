@@ -1,0 +1,197 @@
+<template id="create-ticket-drawer">
+  <v-navigation-drawer v-if="isCreateDrawerShown" v-model="isCreateDrawerShown" :permanent="isCreateDrawerShown" fixed temporary right width="80%" class="elevation-24">
+    <v-form ref="createForm" lazy-validation>
+      <!-- 抽屉标题 -->
+      <v-row no-gutters>
+      <span class="text-h7 font-weight-bold pa-4">新建{{ticketApplyType}}</span>
+      </v-row>
+      <v-divider class="jh-divider"></v-divider>
+      <!-- 抽屉表单 -->
+      <!-- <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.xxxId" :rules="validationRules.requireRules"></v-text-field> -->
+      <v-row class="mt-0 px-4">
+         
+         
+        <v-col cols="12" sm="12" md="4">
+          <span class="jh-input-label"><span class="red--text">*</span>审批名称</span>
+          <v-text-field :rules="validationRules.requireRules" class="jh-v-input" dense single-line filled v-model="createItem.taskTitle"></v-text-field>
+        </v-col>
+         
+        <v-col cols="12" sm="12" md="4">
+          <span class="jh-input-label">审批描述</span>
+          <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.taskDesc"></v-text-field>
+        </v-col>
+        <v-col cols="12" sm="12" md="8">
+          <span class="jh-input-label">审批内容</span>
+          <v-textarea class="jh-v-input" dense single-line filled v-model="createItem.taskContent"></v-textarea>
+        </v-col>
+        <v-col cols="12" sm="12" md="4"></v-col>
+        <!-- <v-col cols="12" sm="12" md="4">
+          <span class="jh-input-label">任务模板</span>
+
+          <v-autocomplete v-model="createItem.taskTemplateId" class="jh-v-input mr-2" hide-actions hide-controls hide-details dense filled single-line clearable label="选择审批流程" :items="taskTemplateList" item-text="taskTemplateName" item-value="taskTemplateId"
+              :rules="validationRules.requireRules" @change="doUiAction('handleTaskTemplateChange', { taskTemplateId: $event, item: createItem})">
+            </v-autocomplete>
+        </v-col> -->
+
+        <v-col cols="12" sm="12" md="12" xl="12"
+        v-if="createItem.taskAuditConfig.length">
+        <span class="inputLabel">审批人列表</span>
+        <v-row v-for="item in createItem.taskAuditConfig">
+          <v-col cols="2">
+            <v-text-field hide-actions hide-controls hide-details class="jh-v-input " dense filled single-line v-model="item.position"
+              disabled></v-text-field>
+          </v-col>
+          <v-col cols="4">
+            <v-autocomplete hide-actions hide-controls hide-details :items="userList" item-text="username" item-value="userId" class="jh-v-input mr-2" dense
+              filled single-line :rules="validationRules.requireRules" v-model="item.userId" disabled>
+            </v-autocomplete>
+          </v-row>
+      </v-col>  
+      <v-col cols="12" sm="12" md="12">
+        <span class="jh-input-label">附件列表
+        <task-attachment-list :files.sync="createItem.taskFileList" />
+      </v-col>
+      </v-row>
+
+      <!-- 抽屉操作按钮 -->
+      <v-row class="justify-end mx-0 mt-8 px-6">
+        <v-btn color="success" @click="doUiAction('createItem')" small>保存</v-btn>
+        <v-btn class="elevation-0 ml-2" @click="isCreateDrawerShown = false" small>取消</v-btn>
+      </v-row>
+    </v-form>
+    <!-- 抽屉关闭按钮 -->
+    <v-btn elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn" @click="isCreateDrawerShown = false">
+      <v-icon>mdi-close</v-icon>
+    </v-btn>
+  </v-navigation-drawer>
+</template>
+
+<script type="module">
+  Vue.component('create-ticket-drawer', {
+    template: '#create-ticket-drawer',
+    props: {
+      taskTemplateList: {
+        type: Array,
+        default: () => [],
+      },
+    },
+    data: () => ({
+      isCreateDrawerShown: false,
+      createItem: {
+        taskAuditConfig: []
+      },
+      validationRules: {
+        requireRules: [
+          v => !!v || '必填',
+        ],
+      },
+    }),
+    methods: {
+      async doUiAction(uiActionId, uiActionData) {
+        switch (uiActionId) {
+          case 'open':
+            await this.open(uiActionData);
+            break;
+          case 'createItem':
+            await this.prepareCreateValidate();
+            await this.confirmCreateItemDialog();
+            await this.prepareDoCreateItem();
+            await this.doCreateItem();
+            await this.closeCreateDrawer();
+            await this.getTableData();
+            break;
+          default:
+            console.error('[doUiAction] uiActionId not find', { uiActionId });
+            break;
+        }
+      },
+      async open({ item = {} } = {}) {
+        this.isCreateDrawerShown = true;
+        this.ticketApplyType = item.name
+      },
+      // ---------- 新增数据 uiAction >>>>>>>>>> --------
+      async prepareCreateFormData() {
+        const { userId } = window.userInfo;
+        this.createItem = {
+          taskManagerId: userId,
+          taskAuditConfig: []
+        };
+      },
+
+      async openCreateDrawer() {
+        this.isCreateDrawerShown = true;
+      },
+
+      async prepareCreateValidate() {
+        if (await this.$refs.createForm.validate()) {
+          return true;
+        }
+        throw new Error("请完善表单信息")
+      },
+
+      async confirmCreateItemDialog() {
+        if (await window.confirmDialog({ title: "新增", content: "确定新增吗？" }) === false) {
+          throw new Error("[confirmCreateFormDialog] 否");
+        }
+      },
+
+      prepareDoCreateItem() {
+        const { id, ...data } = this.createItem;
+
+        data.taskAuditUserIdList = data.taskAuditConfig.map(item => item.userId).join(',')
+        data.taskMemberIdList = data.taskAuditUserIdList
+        data.taskAuditConfig = data.taskAuditConfig.map(item => {
+          // 查userList
+          const user = this.userList.find(user => user.userId === item.userId) || {}
+          return {
+            ...item,
+            username: user.username,
+          }
+        })
+        data.taskFileList = JSON.stringify(data.taskFileList)
+        data.taskAuditConfig = JSON.stringify(data.taskAuditConfig)
+        data.taskType = '审批'
+        data.taskCreateAt = dayjs().format('YYYY-MM-DD HH:mm:ss')
+        this.createActionData = data;
+      },
+
+      async doCreateItem() {
+        await window.jhMask.show();
+        await window.vtoast.loading("新增数据");
+        const result = await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'ticketManagement',
+              actionId: 'insertItem',
+              actionData: this.createActionData,
+              bizIdGenerate: {
+                tableName: "task",
+                prefix: "SP",
+                type: "idSequence",
+                bizId: "taskId",
+              },
+            }
+          }
+        })
+
+        await this.addNotice({
+          ...this.createActionData,
+          rowId: result.data.appData.resultData.rows[0]
+        })
+
+        await window.jhMask.hide();
+        await window.vtoast.success("新增数据成功");
+      },
+      async closeCreateDrawer() {
+        this.isCreateDrawerShown = false;
+        this.createItem = {};
+        this.createActionData = null;
+      },
+      // ---------- <<<<<<<<<<< 新增数据 uiAction ---------
+    },
+  });
+</script>
+
+<style scoped>
+
+</style>
