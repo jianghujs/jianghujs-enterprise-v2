@@ -10,10 +10,16 @@ const _ = require('lodash');
 const Knex = require('knex');
 
 const getJhIdViewSql = (appList, tableName) => {
-  let whereClause = ''; // 初始化 WHERE 子句
 
   // 检查 appList 中是否存在非空的 jhId
   if (!appList.some(({appJhId}) => !!appJhId)) {
+
+    let whereClause = ''; // 初始化 WHERE 子句
+    if (['enterprise_user_group_role_page', 'enterprise_user_group_role_resource'].includes(tableName)) {
+      whereClause = ` WHERE appId = '{APPID}' OR appId = '*'`;
+    } else if (tableName === 'enterprise_user_app') {
+      whereClause = ` WHERE appId = '{APPID}'`;
+    }
     // 如果所有的 jhId 都是空，生成一个简单的 SELECT 查询
     return `SELECT * FROM jh_enterprise_v2_data_repository.${tableName}${whereClause.replace('{APPID}', appList[0].appId)}`;
   }

@@ -132,7 +132,7 @@
             </template>
             <!--用户状态-->
             <template v-slot:item.userStatus="{ item }">
-              {{ getDisplayText({displayObj: constantObj.userStatus, displayValue: item.userStatus}) }}
+              <v-chip small :color="item.userStatus == 'active' ? 'success' : 'error'">{{ getDisplayText({displayObj: constantObj.userStatus, displayValue: item.userStatus}) }}</v-chip>
             </template>
             <!--没有数据-->
             <template v-slot:loading>
@@ -241,7 +241,7 @@
             <v-row class="mt-0 px-4">
               <v-col cols="12" sm="12" md="4">
                 <span class="jh-input-label">用户ID[登陆]<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-text-field class="jh-v-input" dense filled single-line disabled v-model="updateItem.userId" :rules="validationRules.requireRules"></v-text-field>
+                <v-text-field class="jh-v-input" dense filled single-line disabled v-model="updateItem.userId"></v-text-field>
               </v-col>
               <v-col cols="12" sm="12" md="4">
                 <span class="jh-input-label">用户名<span class="red--text text--accent-2 ml-1">*必填</span></span>
@@ -257,7 +257,7 @@
               </v-col>
               <v-col cols="12" sm="12" md="4">
                 <span class="jh-input-label">初始密码<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-text-field class="jh-v-input" dense filled single-line disabled v-model="updateItem.clearTextPassword" :rules="validationRules.requireRules"></v-text-field>
+                <v-text-field class="jh-v-input" dense filled single-line disabled v-model="updateItem.clearTextPassword"></v-text-field>
               </v-col>
             </v-row>
             <!-- <<<<<<<<<<< 抽屉的主体 -->
