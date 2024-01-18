@@ -682,7 +682,7 @@ new Vue({
       activePageList.forEach(e => {
         const [appId, pageId] = e.split('|');
         // 过滤脏数据
-        if (pageId != '*' && !this.constantObj.appList.find(e => e.appId == appId).appPageList.some(e => e.pageId == pageId)) {
+        if (pageId != '*' && !this.constantObj.appList.find(e => e.appId == appId)?.appPageList.some(e => e.pageId == pageId)) {
           return;
         } 
         updateList.push({appId, pageId});
