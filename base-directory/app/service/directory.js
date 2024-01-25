@@ -40,6 +40,9 @@ class DirectoryService extends Service {
       catalogTmp.children = catalogTmp.children.filter(app => {
         const appTmp = _.cloneDeep(app);
         appTmp.children = appTmp.children.filter(page => {
+          if (page.link && !app.appId && !page.pageId) {
+            return true;
+          }
           const pageTmp = _.cloneDeep(page);
           const allowPage = allowAllPageList.find(allowPage => allowPage.appId === pageTmp.appId && allowPage.pageId === pageTmp.pageId);
           if (allowPage) {
@@ -61,13 +64,19 @@ class DirectoryService extends Service {
       .forEach(catalog => {
       catalog.children.forEach(app => {
         app.children.forEach(page => {
-          const appItem = appList.find(app => app.appId === page.appId);
-          let url = appItem.appUrl;
-          if (page.pageId) {
-            url += `/page/${page.pageId}`;
+          if (page.link) {
+            page.name = (page.name || '').replace(/\[.*\]/g, '');
           }
-          page.link = page.link || url;
-          page.name = (page.name || '').replace(/\[.*\]/g, '');
+
+          if (!page.link) {
+            const appItem = appList.find(app => app.appId === page.appId);
+            let url = appItem.appUrl;
+            if (page.pageId) {
+              url += `/page/${page.pageId}`;
+            }
+            page.link = page.link || url;
+            page.name = (page.name || '').replace(/\[.*\]/g, '');
+          }
         });
       });
     })
