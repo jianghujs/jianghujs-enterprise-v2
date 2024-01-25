@@ -167,11 +167,19 @@ class DirectoryService extends Service {
       let isPublic = false;
       // 遍历并检查规则
       allRuleList.forEach(rule => {
+        if (item.appId !== rule.appId && rule.appId !== '*') {
+          return;
+        }
         // deny 的优先级高于全部，一旦有 deny 则不再需要判断
         if (resultAllowOrDeny === 'deny') {
           return;
         }
 
+        // 判断这条规则的资源是否和当前资源匹配
+        if (!this.checkResource(item[idFieldKey], rule[fieldKey])) {
+          return;
+        }
+        
         // 判断这条规则是否和当前用户匹配
         if (
           !this.checkRule(userIdList, rule.user) ||
@@ -180,13 +188,11 @@ class DirectoryService extends Service {
         ) {
           return;
         }
-        // 判断这条规则的资源是否和当前资源匹配
-        if (!this.checkResource(item[idFieldKey], rule[fieldKey])) {
-          return;
-        }
-        if (rule.group === 'public') {
-          isPublic = true;
-        }
+
+        // Tip: 过时的代码
+        // if (rule.group === 'public') {
+        //   isPublic = true;
+        // }
         resultAllowOrDeny = rule.allowOrDeny;
       });
 
