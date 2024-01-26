@@ -35,25 +35,6 @@ const appDataSchema = Object.freeze({
   },
 });
 
-function generateIdByIdSequence({ prefix, idSequence }) {
-  const idMapArray = [];
-  idSequence += '';
-  for (let i = 0; i < idSequence.length; i++) {
-    let charInt = parseInt(idSequence[i]);
-    charInt = (charInt + 1) % 10;
-    idMapArray.push(charInt);
-  }
-  const encodeIdValue = idMapArray.join('');
-  const mIdCube = Math.pow(encodeIdValue, 3);
-  const mIdCubeRt = Math.sqrt(mIdCube);
-  const roundMid = Math.round(mIdCubeRt);
-  const remainder = roundMid % 21;
-  const charList = [ 'A', 'B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'T', 'U', 'V', 'W', 'X', 'Y' ];
-  const checkSum = charList[remainder];
-  const id = prefix + encodeIdValue + checkSum;
-  return id;
-};
-
 class UserManagementService extends Service {
 
   async addUser() {
@@ -63,8 +44,13 @@ class UserManagementService extends Service {
     const { clearTextPassword } = actionData;
     const md5Salt = idGenerateUtil.randomString(12);
     const password = md5(`${clearTextPassword}_${md5Salt}`);
-    const idSequence = await this.getNextIdByTableAndField({ table: '_user', field: 'idSequence' });
-    const userId = generateIdByIdSequence({ prefix: 'U', idSequence });
+    const idSequence = await idGenerateUtil.idPlus({
+      knex: this.app.jianghuKnex,
+      tableName: '_user',
+      columnName: 'idSequence',
+      startValue: 10001,
+    });
+    const userId = "F"+ idSequence;
     const userExistCountResult = await jianghuKnex('_user', this.ctx).where({ userId }).count('*', {as: 'count'});
     const userExistCount = userExistCountResult[0].count;
     if (userExistCount > 0) {
@@ -90,37 +76,6 @@ class UserManagementService extends Service {
     await jianghuKnex('_user', this.ctx).where({userId}).update({ password, clearTextPassword, md5Salt });
     return {};
   }
-
-  async getNextIdByTableAndField({ table, field }) {
-    const knex = this.app.knex;
-    const rows = await knex(table).max(`${field} as maxValue`);
-    let maxValue = null;
-    if (rows.length > 0 && rows[0].maxValue) {
-      maxValue = parseInt(rows[0].maxValue) + 1;
-    } else {
-      maxValue = 26260000;
-    }
-    return maxValue;
-  }
 }
-
-module.exports.generateIdByIdSequence = ({ prefix, idSequence }) => {
-  const idMapArray = [];
-  idSequence += '';
-  for (let i = 0; i < idSequence.length; i++) {
-    let charInt = parseInt(idSequence[i]);
-    charInt = (charInt + 1) % 10;
-    idMapArray.push(charInt);
-  }
-  const encodeIdValue = idMapArray.join('');
-  const mIdCube = Math.pow(encodeIdValue, 3);
-  const mIdCubeRt = Math.sqrt(mIdCube);
-  const roundMid = Math.round(mIdCubeRt);
-  const remainder = roundMid % 21;
-  const charList = [ 'A', 'B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'T', 'U', 'V', 'W', 'X', 'Y' ];
-  const checkSum = charList[remainder];
-  const id = prefix + encodeIdValue + checkSum;
-  return id;
-};
 
 module.exports = UserManagementService;
