@@ -36,7 +36,7 @@
                   </div>
                 </div>
 
-                <v-menu offset-y v-if="app.children[0] && notInAppPageList[app.children[0].appId].length">
+                <v-menu offset-y v-if="app.children[0] && notInAppPageList[app.children[0].appId]?.length">
                   <template v-slot:activator="{ on, attrs }">
                     <v-btn block x-small v-bind="attrs" v-on="on">
                       <v-icon small>mdi-plus</v-icon>Page
@@ -201,6 +201,7 @@ Vue.component("directory-draggable-editor", {
             return;
           }
           const appId = app.children[0].appId;
+          if(!appId) return
           if (!appObj[appId]) {
             appObj[appId] = [];
           }
