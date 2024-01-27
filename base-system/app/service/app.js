@@ -235,6 +235,7 @@ class AppService extends Service {
           await jianghuKnex('enterprise_user_app').insert({
             userId: userId,
             appId: appId,
+            groupId: '超级管理员', roleId: '*',
           });
         }
       }
