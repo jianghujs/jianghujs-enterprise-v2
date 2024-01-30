@@ -33,7 +33,7 @@ class UserGroupRoleService extends Service {
 
   async updateUserGroupRolePage() {
     const { jianghuKnex } = this.app;
-    const {dataList, role = '*', group} = this.ctx.request.body.appData.actionData;
+    const {dataList, role, group} = this.ctx.request.body.appData.actionData;
     const dataListByAppId = _.groupBy(dataList, 'appId');
     const appIdList = Object.keys(dataListByAppId);
     const insertUserGroupRolePageList = [];
@@ -56,31 +56,25 @@ class UserGroupRoleService extends Service {
       })
     });
     // 查询该角色的所有user
-    const roleUserList = await jianghuKnex('enterprise_user_group_role').select('userId').where({ roleId: role });
+    const roleUserList = await jianghuKnex('enterprise_user_group_role').select('userId').where({ groupId: group, roleId: role });
     const userIdList = roleUserList.map(e => e.userId);
     const insertUserApp = [];
     _.forEach(userIdList, (userId, index) => {
-      _.forEach(dataListByAppId, (item, key) => {
-        insertUserApp.push({
-          userId: userId,
-          appId: key,
-        })
-      })
+      const userAppList =appIdList.map(appId => { return { groupId: group, roleId: role, userId, appId} });
+      insertUserApp.push(...userAppList);
     });
 
-    
     await jianghuKnex.transaction(async trx => {
       // 删除原有的 enterprise_user_group_role_page
-      await trx('enterprise_user_group_role_page').where({ role, group }).jhDelete();
+      await trx('enterprise_user_group_role_page').where({ group, role }).jhDelete();
       // 新增 enterprise_user_group_role_page
       insertUserGroupRolePageList.length && await trx('enterprise_user_group_role_page').jhInsert(insertUserGroupRolePageList);
-      await trx('enterprise_user_group_role_resource').where({ role, group }).jhDelete();
+      await trx('enterprise_user_group_role_resource').where({ group, role }).jhDelete();
       // 新增 enterprise_user_group_role_resource
       insertUserGroupRoleResourceList.length && await trx('enterprise_user_group_role_resource').jhInsert(insertUserGroupRoleResourceList);
 
       // 删除原有的 _user_app
-      await trx('enterprise_user_app').whereIn('userId', userIdList).whereIn('appId', appIdList).jhDelete();
-      // 新增 _user_app
+      await trx('enterprise_user_app').where({ groupId: group, roleId: role }).jhDelete();
       insertUserApp.length && await trx('enterprise_user_app').jhInsert(insertUserApp);
     })
   }

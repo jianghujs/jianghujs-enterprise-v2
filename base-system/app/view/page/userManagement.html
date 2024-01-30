@@ -59,8 +59,8 @@
             :headers="headers"
             :items="tableData"
             :search="searchInput"
-            :footer-props="{ itemsPerPageOptions: [20, 50, -1], itemsPerPageText: '每页', itemsPerPageAllText: '所有'}"
-            :items-per-page="20"
+            :footer-props="{ itemsPerPageOptions: [100, 200, -1], itemsPerPageText: '每页', itemsPerPageAllText: '所有'}"
+            :items-per-page="100"
             mobile-breakpoint="0"
             :loading="isTableLoading"
             :class="{'zebraLine': isTableZebraLineShown }"
@@ -194,20 +194,16 @@
             <!-- 抽屉的主体 >>>>>>>>>>>>> -->
             <v-row class="mt-0 px-4">
               <v-col cols="12" sm="12" md="4">
-                <span class="jh-input-label">用户ID[登陆]<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-text-field class="jh-v-input" dense filled single-line v-model="createItem.userId" :rules="validationRules.requireRules"></v-text-field>
-              </v-col>
-              <v-col cols="12" sm="12" md="4">
                 <span class="jh-input-label">用户名<span class="red--text text--accent-2 ml-1">*必填</span></span>
                 <v-text-field class="jh-v-input" dense filled single-line v-model="createItem.username" :rules="validationRules.requireRules"></v-text-field>
               </v-col>
               <v-col cols="12" sm="12" md="4">
                 <span class="jh-input-label">用户类型<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-select class="jh-v-input" dense filled single-line clearable v-model="createItem.userType" :items="constantObj.userType" :rules="validationRules.requireRules"></v-select>
+                <v-select class="jh-v-input" dense filled single-line v-model="createItem.userType" :items="constantObj.userType" :rules="validationRules.requireRules"></v-select>
               </v-col>
               <v-col cols="12" sm="12" md="4">
                 <span class="jh-input-label">用户状态<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-select class="jh-v-input" dense filled single-line clearable v-model="createItem.userStatus" :items="constantObj.userStatus" :rules="validationRules.requireRules"></v-select>
+                <v-select class="jh-v-input" dense filled single-line v-model="createItem.userStatus" :items="constantObj.userStatus" :rules="validationRules.requireRules"></v-select>
               </v-col>
               <v-col cols="12" sm="12" md="4">
                 <span class="jh-input-label">初始密码<span class="red--text text--accent-2 ml-1">*必填</span></span>
@@ -324,7 +320,7 @@ new Vue({
     // 常量列表
     constantObj: {
       userStatus: [{value: 'active', text: '正常'}, {value: 'banned', text: '禁用'}],
-      userType: [{value: 'common', text: '普通用户'}, {value: 'staff', text: '教职工'}, {value: 'student', text: '学生'}],
+      userType: [{value: 'common', text: '普通用户'}],
     },
     searchInput: null,
     isTableLoading: true,
@@ -424,6 +420,7 @@ new Vue({
           await this.prepareDoResetPasswordItem();
           await this.doResetPasswordItem();
           await this.closeResetPasswordDrawer();
+          await this.getTableData();
           break;
         case 'copyPassword':
           await this.copyPassword(uiActionData);
@@ -454,7 +451,11 @@ new Vue({
     },
     //   --------------- 新增数据 uiAction >>>>>>>>>>  ---------------
     async prepareCreateItem() {
-      this.createItem = {};
+      this.createItem = {
+        userStatus: "active",
+        userType: "common",
+        clearTextPassword: "123456"
+      };
     },
     async openCreateDrawer() {
       this.isCreateDrawerShown = true;
@@ -560,7 +561,7 @@ new Vue({
         data: {
           appData: {
             pageId: 'userManagement',
-            actionId: 'updateItem',
+            actionId: 'changeUserStatus',
             actionData: {userStatus: 'active'},
             where: {userId: this.activeUserId}
           }
@@ -589,7 +590,7 @@ new Vue({
         data: {
           appData: {
             pageId: 'userManagement',
-            actionId: 'updateItem',
+            actionId: 'changeUserStatus',
             actionData: {userStatus: 'banned'},
             where: {userId: this.bannedUserId}
           }

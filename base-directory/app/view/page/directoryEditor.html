@@ -264,14 +264,23 @@
               type: 'app',
               icon: appTmp.icon,
               children: appTmp.children.map(pageTmp => {
-                const { appId, pageId, link, name } = pageTmp;
+                const { appId, pageId, link, name, type } = pageTmp;
                 const currentApp = this.constantObj.appList.find(e => e.appId == appId);
-                const pageLine = {
-                  name: pageId ? currentApp.appPageList.find(e => e.pageId == pageId)?.pageName : currentApp.appName,
-                  type: pageId ? 'page' : 'app',
-                  appId,
-                  pageId
-                };
+                let pageLine = {}
+                if (!appId || !pageId) {
+                  pageLine = {
+                    name: name,
+                    type: type,
+                    link: link
+                  }
+                }else{
+                  pageLine = {
+                    name: pageId ? currentApp.appPageList.find(e => e.pageId == pageId)?.pageName : currentApp.appName,
+                    type: pageId ? 'page' : 'app',
+                    appId,
+                    pageId
+                  };
+                }
                 if (pageLine.type == 'app') {
                   pageLine.children = currentApp.appPageList.filter(e => currentApp.appPageDirectoryList.includes(e.pageId)).map(e => ({
                     name: e.pageName,
