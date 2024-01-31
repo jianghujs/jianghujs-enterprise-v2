@@ -16,8 +16,10 @@ module.exports = app => {
 
       await ctx.service.app.buildRelationByCommonAuth();
 
+      await ctx.service.app.buildSupperAdminUserApp();
+
       const endTime = new Date().getTime();
-      logger.info('[schedule/appPageList.js]', { useTime: `${endTime - startTime}/ms` });
+      logger.info('[schedule/enterpriseAuthBuild.js]', { useTime: `${endTime - startTime}/ms` });
     },
   };
 };

@@ -63,11 +63,16 @@ class UtilService extends Service {
     const actionData = this.ctx.request.body.appData.actionData;
     const {sourceDatabase} = actionData;
 
-    const rows = await jianghuKnex('information_schema.TABLES')
+    const tableRows = await jianghuKnex('information_schema.TABLES')
       .where({table_schema: sourceDatabase, table_type: 'BASE TABLE'})
       .orderBy('table_name', 'desc')
       .select('table_name as sourceTable', 'table_schema as sourceDatabase');
-    return {rows};
+    
+    const viewRows = await jianghuKnex('information_schema.TABLES')
+      .where({table_schema: sourceDatabase, table_type: 'VIEW'})
+      .orderBy('table_name', 'desc')
+      .select('table_name as sourceTable', 'table_schema as sourceDatabase');
+    return { tableRows, viewRows };
   }
 
   async deleteTableSyncConfig() {
@@ -168,8 +173,10 @@ class UtilService extends Service {
       .whereIn('id', tableSyncConfigIdList)
       .update({syncDesc: '同步中', lastSyncTime});
 
+    // 筛选要创建trigger的表
+    const tableSyncTriggerList = tableSyncConfigList.filter(x => x.isCreateTrigger === true);
     await this.tableConsistentCheckAndSync({tableSyncConfigList, allTableMap, outsideKnexMap});
-    await this.tableMysqlTriggerCheckAndSync({tableSyncConfigList});
+    await this.tableMysqlTriggerCheckAndSync({tableSyncTriggerList});
     await this.clearUselessMysqlTrigger({allTableMap, outsideKnexMap});
 
     // 标记为正常
@@ -215,6 +222,22 @@ class UtilService extends Service {
     return newTableSyncConfigList;
   }
 
+  async getCreateTableSqlFromView({targetTable,columnsDefinition,viewDefinition}){
+    // 构建sql语句
+    let sql = `CREATE TABLE \`${targetTable}\`(`
+    for(const index in columnsDefinition){
+      const {COLUMN_NAME,IS_NULLABLE,COLUMN_TYPE,CHARACTER_SET_NAME,COLLATION_NAME,COLUMN_COMMENT} = columnsDefinition[index];
+      sql += `\`${COLUMN_NAME}\` ${COLUMN_TYPE} ${CHARACTER_SET_NAME ? `CHARACTER SET ${CHARACTER_SET_NAME}`:''} ${COLLATION_NAME ? `COLLATE ${COLLATION_NAME}`:''} ${IS_NULLABLE==='YES'?'DEFAULT NULL':'NOT NULL'} COMMENT '${COLUMN_COMMENT}'`
+      if(index != columnsDefinition.length - 1){
+        sql += ","
+      }
+    }
+    const {CHARACTER_SET_CLIENT} = viewDefinition;
+    // 数据表排序规则、字符定义
+    sql += `) ENGINE=InnoDB DEFAULT CHARSET=${CHARACTER_SET_CLIENT}`
+    return sql;
+  }
+
   async tableConsistentCheckAndSync({tableSyncConfigList, allTableMap, outsideKnexMap}) {
     const {knex, jianghuKnex, logger} = this.app;
     for (const tableSyncConfig of tableSyncConfigList) {
@@ -238,18 +261,27 @@ class UtilService extends Service {
       const targetTableExist = allTableMap[`${targetDatabase}.${targetTable}`];
       const sourceTableDDLResult = await sourceKnex.raw(`SHOW CREATE TABLE ${sourceDatabaseInDb}.${sourceTable};`);
       const sourceTableDDL = sourceTableDDLResult[0][0]['Create Table'];
-      const exceptTargetTableDDL = sourceTableDDL
+      let exceptTargetTableDDL = sourceTableDDL && sourceTableDDL
         .replace(`CREATE TABLE \`${sourceTable}\``, `CREATE TABLE \`${targetTable}\``)
         .replace(/AUTO_INCREMENT=\d+ ?/, '');
+      // 不存在说明是VIEW
+      if(!sourceTableDDL){
+        // 查询information_schema中视图对应的字段定义并拼接sql
+        const columnsDefinition = (await sourceKnex.raw(`SELECT COLUMN_NAME,IS_NULLABLE,COLUMN_TYPE,CHARACTER_SET_NAME,COLLATION_NAME,COLUMN_COMMENT FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '${sourceDatabaseInDb}' AND TABLE_NAME = '${sourceTable}';`))[0]
+        const viewDefinition = (await sourceKnex.raw(`SELECT CHARACTER_SET_CLIENT,COLLATION_CONNECTION FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_SCHEMA = '${sourceDatabaseInDb}' AND TABLE_NAME = '${sourceTable}';`))[0][0]
+        exceptTargetTableDDL = await this.getCreateTableSqlFromView({targetTable,columnsDefinition,viewDefinition});
+      }
       let targetTableDDL = null;
 
       if (targetTableExist) {
         const targetTableDDLResult = await targetKnex.raw(`SHOW CREATE TABLE ${targetDatabase}.${targetTable};`);
-        targetTableDDL = targetTableDDLResult[0][0]['Create Table'].replace(/AUTO_INCREMENT=\d+ ?/, '');
+        targetTableDDL = targetTableDDLResult[0][0]['Create Table'].replace(/AUTO_INCREMENT=\d+ ?/, '').replace(/\n\s+/g, '');
       }
+      // 如果目标表存在则不用创建
       if (targetTableDDL !== exceptTargetTableDDL) {
         await targetKnex.raw(`DROP TABLE IF EXISTS ${targetDatabase}.${targetTable};`);
-        const excuteTargetTableDDL = sourceTableDDL.replace(`CREATE TABLE \`${sourceTable}\``, `CREATE TABLE \`${targetDatabase}\`.\`${targetTable}\``).replace(/AUTO_INCREMENT=\d+ ?/, '');
+        // const excuteTargetTableDDL = sourceTableDDL.replace(`CREATE TABLE \`${sourceTable}\``, `CREATE TABLE \`${targetDatabase}\`.\`${targetTable}\``).replace(/AUTO_INCREMENT=\d+ ?/, '');
+        const excuteTargetTableDDL = exceptTargetTableDDL
         await targetKnex.raw(excuteTargetTableDDL);
         if (outsideMode) {
           const syncDesc = '【表覆盖】结构不一致; 由于外部库，未触发覆盖仓库表逻辑;';
@@ -299,7 +331,7 @@ class UtilService extends Service {
     }
   }
 
-  async tableMysqlTriggerCheckAndSync({tableSyncConfigList}) {
+  async tableMysqlTriggerCheckAndSync({tableSyncTriggerList}) {
     const {jianghuKnex} = this.app;
     const { syncTriggerPrefix } = this.getConfig();
     const triggerList = await jianghuKnex('information_schema.triggers')
@@ -308,7 +340,7 @@ class UtilService extends Service {
       .select('TRIGGER_NAME as triggerName', 'ACTION_STATEMENT as triggerContent');
     const allTriggerContentMap = Object.fromEntries(triggerList.map(obj => [obj.triggerName, obj.triggerContent]));
 
-    for (const tableSyncConfig of tableSyncConfigList) {
+    for (const tableSyncConfig of tableSyncTriggerList) {
       await this.createMysqlTriggerForSourceTable({tableSyncConfig, allTriggerContentMap, syncTriggerPrefix});
     }
 
