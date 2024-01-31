@@ -174,7 +174,7 @@ class UtilService extends Service {
       .update({syncDesc: '同步中', lastSyncTime});
 
     // 筛选要创建trigger的表，使用==兼容数据库读出数据类型不一致的情况
-    const tableSyncTriggerList = tableSyncConfigList.filter(x => x.isCreateTrigger == 1);
+    const tableSyncTriggerList = tableSyncConfigList.filter(x => x.enableMysqlTrigger == '开启');
     await this.tableConsistentCheckAndSync({tableSyncConfigList, allTableMap, outsideKnexMap});
     await this.tableMysqlTriggerCheckAndSync({tableSyncTriggerList});
     await this.clearUselessMysqlTrigger({allTableMap, outsideKnexMap});

@@ -157,8 +157,8 @@
                 <v-text-field class="jh-v-input" dense single-line filled type="number" :rules="validationRules.numberRules" v-model="createItem.syncTimeSlot"></v-text-field>
               </v-col>
               <v-col cols="12" sm="12" md="4">
-                <span class="jh-input-label">&nbsp;</span>
-                <v-checkbox v-model="createItem.isCreateTrigger" label="同步创建触发器" dense :disabled="isCreateTriggerDisabled"></v-checkbox>
+                <span class="jh-input-label">Mysql Trigger 实时同步数据</span>
+                <v-checkbox v-model="createItem.enableMysqlTrigger" dense true-value="开启" false-value="关闭"></v-checkbox>
               </v-col>
             </v-row>
             <!--抽屉操作按钮-->
@@ -212,6 +212,10 @@
               <v-col cols="12" sm="12" md="4">
                 <span class="jh-input-label">定时检查/分钟</span>
                 <v-text-field class="jh-v-input" dense single-line filled type="number" :rules="validationRules.numberRules" v-model="updateItem.syncTimeSlot"></v-text-field>
+              </v-col>
+              <v-col cols="12" sm="12" md="4">
+                <span class="jh-input-label">Mysql Trigger 实时同步数据</span>
+                <v-checkbox v-model="updateItem.enableMysqlTrigger" dense true-value="开启" :false-value="关闭"></v-checkbox>
               </v-col>
             </v-row>
             <!--抽屉操作按钮-->
@@ -296,10 +300,7 @@ new Vue({
     defaultTargetDatabase: null,
     // 新增数据
     isCreateDrawerShown: false,
-    createItem: {
-      // 是否创建触发器
-      isCreateTrigger: true
-    },
+    createItem: {},
     createActionData: {},
     // 编辑数据
     isUpdateDrawerShown: false,
@@ -310,29 +311,9 @@ new Vue({
     deleteItemId: null,
     // 同步配置
     syncItem: null,
-    isCreateTriggerDisabled: false,
     viewRows: []
   },
   watch: {
-    createItem: {
-      handler(value, oldValue) {
-        if (!_.isEmpty(value.sourceDatabase)) {
-          this.doUiAction('getSourceTable', {sourceDatabase: value.sourceDatabase});
-        }
-        if (!_.isEmpty(value.sourceTable)) {
-          // 选中VIEW的话就取消勾选创建触发器
-          if(this.viewRows.some(item=>item.sourceTable === value.sourceTable)){
-            this.createItem.isCreateTrigger = false;
-            this.isCreateTriggerDisabled = true;
-          }else{
-            // 确保选择其他表时勾选框可选
-            this.isCreateTriggerDisabled = false;
-            this.createItem.isCreateTrigger = true;
-          }
-        }
-      },
-      deep: true
-    },
     updateItem: {
       handler(value, oldValue) {
         if (!_.isEmpty(value.sourceDatabase)) {
@@ -475,7 +456,7 @@ new Vue({
       this.createItem = {
         targetDatabase: this.defaultTargetDatabase,
         syncTimeSlot: 5,
-        isCreateTrigger: true,
+        enableMysqlTrigger: '开启',
       };
     },
 
