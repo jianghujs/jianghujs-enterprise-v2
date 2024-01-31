@@ -215,7 +215,7 @@
               </v-col>
               <v-col cols="12" sm="12" md="4">
                 <span class="jh-input-label">Mysql Trigger 实时同步数据</span>
-                <v-checkbox v-model="updateItem.enableMysqlTrigger" dense true-value="开启" :false-value="关闭"></v-checkbox>
+                <v-checkbox v-model="updateItem.enableMysqlTrigger" dense true-value="开启" false-value="关闭"></v-checkbox>
               </v-col>
             </v-row>
             <!--抽屉操作按钮-->
@@ -293,6 +293,7 @@ new Vue({
       {text: "同步-源库", value: "sourceDatabaseShowName"},
       {text: "同步-目标库", value: "targetDatabase"},
       {text: "定时检查/分钟", value: "syncTimeSlot", width: 140},
+      {text: "Trigger实时同步", value: "enableMysqlTrigger", width: 120},
       {text: "同步状态", value: "syncDesc", width: 120},
       {text: "同步触发时间", value: "lastSyncTime", width: 150},
       {text: '操作', value: 'action', align: 'center', sortable: false, width: window.innerWidth < 500 ? 80 : 180, class: 'fixed', cellClass: 'fixed'},
@@ -311,7 +312,6 @@ new Vue({
     deleteItemId: null,
     // 同步配置
     syncItem: null,
-    viewRows: []
   },
   watch: {
     updateItem: {
@@ -440,13 +440,11 @@ new Vue({
         }
       });
       const { tableRows, viewRows } = result.data.appData.resultData;
-      // 用来判断是否是VIEW
-      this.viewRows = viewRows;
       const sourceTable = tableRows.map((table) => {
-        return {"value": table.sourceTable, "text": table.sourceTable }
+        return { value: table.sourceTable, text: table.sourceTable}
       });
       const sourceView = viewRows.map((view) => {
-        return { "value": view.sourceTable, "text": view.sourceTable }
+        return { value: view.sourceTable, text: view.sourceTable}
       });
       this.constantObj.sourceTable = [ ...sourceTable, ...sourceView ];
     },

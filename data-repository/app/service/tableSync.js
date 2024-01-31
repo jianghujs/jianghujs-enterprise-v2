@@ -174,7 +174,9 @@ class UtilService extends Service {
       .update({syncDesc: '同步中', lastSyncTime});
 
     // 筛选要创建trigger的表，使用==兼容数据库读出数据类型不一致的情况
-    const tableSyncTriggerList = tableSyncConfigList.filter(x => x.enableMysqlTrigger == '开启');
+    const tableSyncTriggerList = tableSyncConfigList
+      .filter(x => x.enableMysqlTrigger == '开启')
+      .filter(x => allTableMap[`${x.sourceDatabase}.${x.sourceTable}`].tableType === 'BASE TABLE');
     await this.tableConsistentCheckAndSync({tableSyncConfigList, allTableMap, outsideKnexMap});
     await this.tableMysqlTriggerCheckAndSync({tableSyncTriggerList});
     await this.clearUselessMysqlTrigger({allTableMap, outsideKnexMap});
@@ -183,7 +185,6 @@ class UtilService extends Service {
     await jianghuKnex('_table_sync_config')
       .whereIn('id', tableSyncConfigIdList)
       .update({syncDesc: '正常', lastSyncTime});
-
   }
 
   async tableExistCheck({tableSyncConfigList, allTableMap}) {
@@ -222,6 +223,7 @@ class UtilService extends Service {
     return newTableSyncConfigList;
   }
 
+  // TODO: 这里优化下
   async getCreateTableSqlFromView({targetTable,columnsDefinition,viewDefinition}){
     // 构建sql语句
     let sql = `CREATE TABLE \`${targetTable}\` (`
