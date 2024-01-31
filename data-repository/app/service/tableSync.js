@@ -129,7 +129,7 @@ class UtilService extends Service {
     let tableSyncConfigList = await jianghuKnex('_table_sync_config')
       .where(tableSyncConfigWhere)
       .select();
-    const allTable = await jianghuKnex('information_schema.tables').select('table_schema as database', 'table_name as tableName');
+    const allTable = await jianghuKnex('information_schema.tables').select('table_schema as database', 'table_name as tableName', 'table_type as tableType');
     const allTableMap = Object.fromEntries(allTable.map(obj => [`${obj.database}.${obj.tableName}`, obj]));
 
     // 准备外部数据库 knex，并补充外部数据库表结构信息
@@ -173,8 +173,8 @@ class UtilService extends Service {
       .whereIn('id', tableSyncConfigIdList)
       .update({syncDesc: '同步中', lastSyncTime});
 
-    // 筛选要创建trigger的表
-    const tableSyncTriggerList = tableSyncConfigList.filter(x => x.isCreateTrigger === true);
+    // 筛选要创建trigger的表，使用==兼容数据库读出数据类型不一致的情况
+    const tableSyncTriggerList = tableSyncConfigList.filter(x => x.isCreateTrigger == 1);
     await this.tableConsistentCheckAndSync({tableSyncConfigList, allTableMap, outsideKnexMap});
     await this.tableMysqlTriggerCheckAndSync({tableSyncTriggerList});
     await this.clearUselessMysqlTrigger({allTableMap, outsideKnexMap});
@@ -224,10 +224,10 @@ class UtilService extends Service {
 
   async getCreateTableSqlFromView({targetTable,columnsDefinition,viewDefinition}){
     // 构建sql语句
-    let sql = `CREATE TABLE \`${targetTable}\`(`
+    let sql = `CREATE TABLE \`${targetTable}\` (`
     for(const index in columnsDefinition){
       const {COLUMN_NAME,IS_NULLABLE,COLUMN_TYPE,CHARACTER_SET_NAME,COLLATION_NAME,COLUMN_COMMENT} = columnsDefinition[index];
-      sql += `\`${COLUMN_NAME}\` ${COLUMN_TYPE} ${CHARACTER_SET_NAME ? `CHARACTER SET ${CHARACTER_SET_NAME}`:''} ${COLLATION_NAME ? `COLLATE ${COLLATION_NAME}`:''} ${IS_NULLABLE==='YES'?'DEFAULT NULL':'NOT NULL'} COMMENT '${COLUMN_COMMENT}'`
+      sql += `\`${COLUMN_NAME}\` ${COLUMN_TYPE}${CHARACTER_SET_NAME ? ` CHARACTER SET ${CHARACTER_SET_NAME}`:''}${COLLATION_NAME ? ` COLLATE ${COLLATION_NAME}`:''}${COLUMN_TYPE.includes("text") ? '' : (IS_NULLABLE==='YES'?' DEFAULT NULL':' NOT NULL')}${COLUMN_COMMENT?` COMMENT '${COLUMN_COMMENT}'`:''}`
       if(index != columnsDefinition.length - 1){
         sql += ","
       }
@@ -259,23 +259,29 @@ class UtilService extends Service {
       }
 
       const targetTableExist = allTableMap[`${targetDatabase}.${targetTable}`];
-      const sourceTableDDLResult = await sourceKnex.raw(`SHOW CREATE TABLE ${sourceDatabaseInDb}.${sourceTable};`);
-      const sourceTableDDL = sourceTableDDLResult[0][0]['Create Table'];
-      let exceptTargetTableDDL = sourceTableDDL && sourceTableDDL
-        .replace(`CREATE TABLE \`${sourceTable}\``, `CREATE TABLE \`${targetTable}\``)
-        .replace(/AUTO_INCREMENT=\d+ ?/, '');
-      // 不存在说明是VIEW
-      if(!sourceTableDDL){
+      
+      // 构建的预期目标表DDL语句
+      let exceptTargetTableDDL;
+      // 判断取到的是VIEW还是TABLE
+      const tableType = allTableMap[`${sourceDatabase}.${sourceTable}`].tableType
+      if(tableType === "VIEW"){
         // 查询information_schema中视图对应的字段定义并拼接sql
         const columnsDefinition = (await sourceKnex.raw(`SELECT COLUMN_NAME,IS_NULLABLE,COLUMN_TYPE,CHARACTER_SET_NAME,COLLATION_NAME,COLUMN_COMMENT FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '${sourceDatabaseInDb}' AND TABLE_NAME = '${sourceTable}';`))[0]
         const viewDefinition = (await sourceKnex.raw(`SELECT CHARACTER_SET_CLIENT,COLLATION_CONNECTION FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_SCHEMA = '${sourceDatabaseInDb}' AND TABLE_NAME = '${sourceTable}';`))[0][0]
         exceptTargetTableDDL = await this.getCreateTableSqlFromView({targetTable,columnsDefinition,viewDefinition});
       }
+      if(tableType === "BASE TABLE"){
+        const sourceTableDDLResult = await sourceKnex.raw(`SHOW CREATE TABLE ${sourceDatabaseInDb}.${sourceTable};`);
+        const sourceTableDDL = sourceTableDDLResult[0][0]['Create Table'];
+        exceptTargetTableDDL = sourceTableDDL && sourceTableDDL
+          .replace(`CREATE TABLE \`${sourceTable}\``, `CREATE TABLE \`${targetTable}\``)
+          .replace(/AUTO_INCREMENT=\d+ ?/, '').replace(/\n\s*/g, '');
+      }
       let targetTableDDL = null;
 
       if (targetTableExist) {
         const targetTableDDLResult = await targetKnex.raw(`SHOW CREATE TABLE ${targetDatabase}.${targetTable};`);
-        targetTableDDL = targetTableDDLResult[0][0]['Create Table'].replace(/AUTO_INCREMENT=\d+ ?/, '').replace(/\n\s+/g, '');
+        targetTableDDL = targetTableDDLResult[0][0]['Create Table'].replace(/AUTO_INCREMENT=\d+ ?/, '').replace(/\n\s*/g, '');
       }
       // 如果目标表存在则不用创建
       if (targetTableDDL !== exceptTargetTableDDL) {

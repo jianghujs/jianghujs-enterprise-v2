@@ -311,6 +311,7 @@ new Vue({
     // 同步配置
     syncItem: null,
     isCreateTriggerDisabled: false,
+    viewRows: []
   },
   watch: {
     createItem: {
@@ -320,7 +321,7 @@ new Vue({
         }
         if (!_.isEmpty(value.sourceTable)) {
           // 选中VIEW的话就取消勾选创建触发器
-          if(value.sourceTable.includes("VIEW")){
+          if(this.viewRows.some(item=>item.sourceTable === value.sourceTable)){
             this.createItem.isCreateTrigger = false;
             this.isCreateTriggerDisabled = true;
           }else{
@@ -458,11 +459,13 @@ new Vue({
         }
       });
       const { tableRows, viewRows } = result.data.appData.resultData;
+      // 用来判断是否是VIEW
+      this.viewRows = viewRows;
       const sourceTable = tableRows.map((table) => {
-        return {"value": table.sourceTable, "text": table.sourceTable}
+        return {"value": table.sourceTable, "text": table.sourceTable }
       });
       const sourceView = viewRows.map((view) => {
-        return { "value": `VIEW|${view.sourceTable}`, "text": `VIEW|${view.sourceTable}` }
+        return { "value": view.sourceTable, "text": view.sourceTable }
       });
       this.constantObj.sourceTable = [ ...sourceTable, ...sourceView ];
     },
@@ -494,10 +497,6 @@ new Vue({
 
     prepareDoCreateItem() {
       const {id, ...data} = this.createItem;
-      // 更正选择VIEW时的名称
-      if(data.sourceTable && data.sourceTable.includes("VIEW")){
-        data.sourceTable = data.sourceTable.split("|")[1];
-      }
       if (!data.targetTable){
         data.targetTable = `${data.sourceDatabase}__${data.sourceTable}`;
       }
