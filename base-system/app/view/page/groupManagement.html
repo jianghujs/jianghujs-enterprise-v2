@@ -300,18 +300,13 @@ new Vue({
      */
     async getTableData() {
       this.isTableLoading = true;
-      const backendSearchData = _.pickBy(this.serverSearchInput, ( fieldValue, fieldKey ) => {
-        if(fieldValue !== null && fieldValue !== '') {
-          return true;
-        }
-      });
       const rows = (await window.jianghuAxios({
         data: {
           appData: {
             pageId: 'groupManagement',
             actionId: 'selectItemList',
             actionData: {},
-            where: backendSearchData,
+            whereOptions: [["groupId","<>","超级管理员"]],
             orderBy: [{column: 'operationAt', order: 'desc'}]
           }
         }

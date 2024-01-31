@@ -12,24 +12,81 @@ const Knex = require('knex');
 
 class UserGroupRoleService extends Service {
 
-  async updateUserGroupRole() {
+  async insertUserGroupRole() {
     const { jianghuKnex } = this.app;
-    const {userId, roleId: roleIdList, groupId} = this.ctx.request.body.appData.actionData;
-    const insert = [];
+    const { userId, roleId: roleIdList, groupId } = this.ctx.request.body.appData.actionData;
+    const appList = await jianghuKnex('enterprise_user_group_role_page').where('group', groupId).whereIn('role',roleIdList).select();
+
+    const roleInsertList = [];
+    const appInsertList = [];
     roleIdList.forEach(roleId => {
-      insert.push({
+      roleInsertList.push({
         userId,
         roleId,
         groupId,
       })
     })
+    appList.forEach( appItem => {
+      appInsertList.push({
+        userId,
+        'appId':appItem.appId,
+        'groupId': appItem.group,
+        'roleId': appItem.role
+      })
+    })
+    await jianghuKnex.transaction(async trx => { 
+      await trx('enterprise_user_group_role',this.ctx).insert(roleInsertList);
+      await trx('enterprise_user_app',this.ctx).insert(appInsertList);
+     })
+  }
 
-    // 删除旧的
-    await jianghuKnex('enterprise_user_group_role').where({userId, groupId}).delete();
-    // 插入新的
-    await jianghuKnex('enterprise_user_group_role').insert(insert);
+  async updateUserGroupRole() {
+    const { jianghuKnex } = this.app;
+    const { userId, roleId: roleIdList, groupId } = this.ctx.request.body.appData.actionData;
+    const appList = await jianghuKnex('enterprise_user_group_role_page').where('group', groupId).whereIn('role',roleIdList).select();
 
-  } 
+    const roleInsertList = [];
+    const appInsertList = [];
+    roleIdList.forEach(roleId => {
+      roleInsertList.push({
+        userId,
+        roleId,
+        groupId,
+      })
+    })
+    appList.forEach( appItem => {
+      appInsertList.push({
+        userId,
+        'appId':appItem.appId,
+        'groupId': appItem.group,
+        'roleId': appItem.role
+      })
+    })
+
+    await jianghuKnex.transaction(async trx => { 
+
+      // 删除旧的
+      await trx('enterprise_user_group_role').where({userId, groupId}).delete();
+      // 插入新的
+      await trx('enterprise_user_group_role', this.ctx).insert(roleInsertList);
+
+      // 删除旧的
+      await trx('enterprise_user_app').where({userId, groupId}).delete();
+      // 插入新的
+      await trx('enterprise_user_app', this.ctx).insert(appInsertList);
+
+    })
+  }
+  async deleteUserGroupRole() {
+    const { jianghuKnex } = this.app;
+    const { userId, groupId } = this.ctx.request.body.appData.actionData;
+
+    await jianghuKnex.transaction(async trx => { 
+      await trx('enterprise_user_group_role').where({ userId, groupId }).delete();
+      await trx('enterprise_user_app').where({userId, groupId}).delete();
+    })
+  }
+
 
   async updateUserGroupRolePage() {
     const { jianghuKnex } = this.app;
@@ -80,15 +137,20 @@ class UserGroupRoleService extends Service {
   }
 
   /**
-   * 删除角色after hook，删除角色的同时，删除角色关系与权限
+   * 删除角色，删除角色关系与权限
    */
-  async afterDeleteGroupRole() {
+  async deleteGroupRole() {
     const { jianghuKnex } = this.app;
-    const { roleId } = this.ctx.request.body.appData.actionData;
-    // 删除原有的 enterprise_user_group_role_page
-    await jianghuKnex('enterprise_user_group_role').where({ roleId }).jhDelete();
-    await jianghuKnex('enterprise_user_group_role_page').where({ role: roleId }).jhDelete();
-    await jianghuKnex('enterprise_user_group_role_resource').where({ role: roleId }).jhDelete();
+    const { roleId, groupId } = this.ctx.request.body.appData.actionData;
+    
+    await jianghuKnex.transaction(async trx => { 
+      await trx('enterprise_role').where({ roleId  }).jhDelete();
+      await trx('enterprise_user_app').where({ roleId, groupId  }).jhDelete();
+      await trx('enterprise_user_group_role').where({ roleId, groupId }).jhDelete();
+      await trx('enterprise_user_group_role_page').where({ group: groupId, role: roleId }).jhDelete();
+      await trx('enterprise_user_group_role_resource').where({ group: groupId, role: roleId }).jhDelete();
+    })
+
   }
 
 }
