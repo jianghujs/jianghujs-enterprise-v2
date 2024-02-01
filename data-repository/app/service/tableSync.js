@@ -175,7 +175,7 @@ class UtilService extends Service {
 
     // 筛选要创建trigger的表，使用==兼容数据库读出数据类型不一致的情况
     const tableSyncTriggerList = tableSyncConfigList
-      .filter(x => x.enableMysqlTrigger == '开启')
+      .filter(x => x.enableMysqlTrigger !== '关闭')
       .filter(x => allTableMap[`${x.sourceDatabase}.${x.sourceTable}`].tableType === 'BASE TABLE');
     await this.tableConsistentCheckAndSync({tableSyncConfigList, allTableMap, outsideKnexMap});
     await this.tableMysqlTriggerCheckAndSync({tableSyncTriggerList});
@@ -433,8 +433,11 @@ class UtilService extends Service {
     const { syncTriggerPrefix } = this.getConfig();
 
     let tableSyncConfigList = await jianghuKnex('_table_sync_config').select();
-    // 过滤 knex 连接失败的外部表同步配置
-    tableSyncConfigList = tableSyncConfigList.filter(o => !o.sourceDatabase.startsWith('{') || outsideKnexMap[o.sourceDatabase])
+    tableSyncConfigList = tableSyncConfigList
+      // 过滤 knex 连接失败的外部表同步配置
+      .filter(o => !o.sourceDatabase.startsWith('{') || outsideKnexMap[o.sourceDatabase])
+      .filter(x => x.enableMysqlTrigger !== '关闭')
+      .filter(x => allTableMap[`${x.sourceDatabase}.${x.sourceTable}`].tableType === 'BASE TABLE');
     tableSyncConfigList = await this.tableExistCheck({tableSyncConfigList, allTableMap});
     tableSyncConfigList.forEach(o => o.targetTable = o.targetTable);
 
