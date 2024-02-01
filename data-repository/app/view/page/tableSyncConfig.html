@@ -292,6 +292,8 @@ new Vue({
       {text: "同步-目标表", value: "targetTable"},
       {text: "同步-源库", value: "sourceDatabaseShowName"},
       {text: "同步-目标库", value: "targetDatabase"},
+
+      {text: "同步-源表类型", value: "tableType", width: 120},
       {text: "定时检查/分钟", value: "syncTimeSlot", width: 140},
       {text: "Trigger实时同步", value: "enableMysqlTrigger", width: 120},
       {text: "同步状态", value: "syncDesc", width: 120},
@@ -389,7 +391,6 @@ new Vue({
           appData: {
             pageId: 'tableSyncConfig',
             actionId: 'selectItemList',
-            orderBy: [{column: 'sourceDatabase', order: 'asc'}, {column: 'targetTable', order: 'asc'}]
           }
         }
       });
@@ -475,7 +476,7 @@ new Vue({
     },
 
     prepareDoCreateItem() {
-      const {id, ...data} = this.createItem;
+      const {id, tableType, ...data} = this.createItem;
       if (!data.targetTable){
         data.targetTable = `${data.sourceDatabase}__${data.sourceTable}`;
       }
@@ -526,7 +527,7 @@ new Vue({
     },
 
     async prepareDoUpdateItem() {
-      const {id, ...data} = this.updateItem;
+      const {id, tableType, ...data} = this.updateItem;
       if (!data.targetTable){
         data.targetTable = `${data.sourceDatabase}__${data.sourceTable}`;
       }

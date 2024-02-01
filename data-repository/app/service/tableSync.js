@@ -40,6 +40,19 @@ async function createTableSyncLog({jianghuKnex, tableSyncConfig, syncDesc, syncA
 
 class UtilService extends Service {
 
+  async selectItemList() {
+    const {jianghuKnex} = this.app;
+      const rows = await jianghuKnex('_table_sync_config')
+        .orderBy([{column: 'sourceDatabase', order: 'asc'}, {column: 'targetTable', order: 'asc'}])
+        .select();
+      const allTable = await jianghuKnex('information_schema.tables').select('table_schema as database', 'table_name as tableName', 'table_type as tableType');
+      const allTableMap = Object.fromEntries(allTable.map(obj => [`${obj.database}.${obj.tableName}`, obj]));
+      rows.forEach(row => {
+        row.tableType = allTableMap[`${row.sourceDatabase}.${row.sourceTable}`].tableType;
+      })
+      return { rows };
+  }
+
   getConfig() {
     const config = this.app.config;
     const defaultTargetDatabase = config.knex.client.connection.database;
