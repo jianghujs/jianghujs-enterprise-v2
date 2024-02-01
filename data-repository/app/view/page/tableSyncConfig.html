@@ -315,7 +315,15 @@ new Vue({
     // 同步配置
     syncItem: null,
   },
-  watch: {
+  watch: {    
+    createItem: {
+      handler(value, oldValue) {
+        if (!_.isEmpty(value.sourceDatabase)) {
+          this.doUiAction('getSourceTable', {sourceDatabase: value.sourceDatabase});
+        }
+      },
+      deep: true
+    },
     updateItem: {
       handler(value, oldValue) {
         if (!_.isEmpty(value.sourceDatabase)) {
