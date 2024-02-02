@@ -282,7 +282,7 @@
                   };
                 }
                 if (pageLine.type == 'app') {
-                  pageLine.children = currentApp.appPageList.filter(e => currentApp.appPageDirectoryList.includes(e.pageId)).map(e => ({
+                  pageLine.children = currentApp.appPageList.filter(e => currentApp.appPageDirectoryList?.includes(e.pageId)).map(e => ({
                     name: e.pageName,
                     type: 'page',
                     appId,

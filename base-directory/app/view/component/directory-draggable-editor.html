@@ -61,7 +61,7 @@
                     <!-- <v-icon size="16" v-if="page.type == ">mdi-link-variant</v-icon> -->
                     <v-chip x-small :color="page.type == 'app' ? 'warning' : 'default'">{{page.type}}</v-chip>
                     <span class="ml-2">{{page.name}}</span>
-                    <v-chip v-if="page.link" x-small color="success">link</v-chip>
+                    <v-chip v-if="page.link" x-small color="success">链接</v-chip>
                     <v-icon class="float-right" @click="app.children.splice(childIndex, 1)" small>mdi-close</v-icon>
                   </div>
                 </draggable>
@@ -180,7 +180,7 @@ Vue.component("directory-draggable-editor", {
           name: e.appName,
           appId: e.appId,
           type: 'app',
-          children: e.appPageList.filter(a => e.appPageDirectoryList.includes(a.pageId)).map((page) => {
+          children: e.appPageList.filter(a => e.appPageDirectoryList?.includes(a.pageId)).map((page) => {
             return {
               name: page.pageName,
               type: 'page',
