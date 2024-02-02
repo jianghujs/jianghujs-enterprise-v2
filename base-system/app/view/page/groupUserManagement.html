@@ -225,7 +225,6 @@ new Vue({
         item.roleId = groupBy[key].map(e => e.roleId);
         item.operationByUser = groupBy[key][0].operationByUser;
         item.operationAt = groupBy[key][0].operationAt;
-        item.ids = groupBy[key].map(e => e.id);
         list.push(item);
       })
       this.tableDataBackUp = list;
