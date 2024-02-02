@@ -157,8 +157,8 @@
                 <v-text-field class="jh-v-input" dense single-line filled type="number" :rules="validationRules.numberRules" v-model="createItem.syncTimeSlot"></v-text-field>
               </v-col>
               <v-col cols="12" sm="12" md="4">
-                <span class="jh-input-label">&nbsp;</span>
-                <v-checkbox v-model="createItem.isCreateTrigger" label="同步创建触发器" dense :disabled="isCreateTriggerDisabled"></v-checkbox>
+                <span class="jh-input-label">Mysql Trigger 实时同步数据</span>
+                <v-checkbox v-model="createItem.enableMysqlTrigger" dense true-value="开启" false-value="关闭"></v-checkbox>
               </v-col>
             </v-row>
             <!--抽屉操作按钮-->
@@ -212,6 +212,10 @@
               <v-col cols="12" sm="12" md="4">
                 <span class="jh-input-label">定时检查/分钟</span>
                 <v-text-field class="jh-v-input" dense single-line filled type="number" :rules="validationRules.numberRules" v-model="updateItem.syncTimeSlot"></v-text-field>
+              </v-col>
+              <v-col cols="12" sm="12" md="4">
+                <span class="jh-input-label">Mysql Trigger 实时同步数据</span>
+                <v-checkbox v-model="updateItem.enableMysqlTrigger" dense true-value="开启" false-value="关闭"></v-checkbox>
               </v-col>
             </v-row>
             <!--抽屉操作按钮-->
@@ -288,7 +292,10 @@ new Vue({
       {text: "同步-目标表", value: "targetTable"},
       {text: "同步-源库", value: "sourceDatabaseShowName"},
       {text: "同步-目标库", value: "targetDatabase"},
+
+      {text: "同步-源表类型", value: "tableType", width: 120},
       {text: "定时检查/分钟", value: "syncTimeSlot", width: 140},
+      {text: "Trigger实时同步", value: "enableMysqlTrigger", width: 120},
       {text: "同步状态", value: "syncDesc", width: 120},
       {text: "同步触发时间", value: "lastSyncTime", width: 150},
       {text: '操作', value: 'action', align: 'center', sortable: false, width: window.innerWidth < 500 ? 80 : 180, class: 'fixed', cellClass: 'fixed'},
@@ -296,10 +303,7 @@ new Vue({
     defaultTargetDatabase: null,
     // 新增数据
     isCreateDrawerShown: false,
-    createItem: {
-      // 是否创建触发器
-      isCreateTrigger: true
-    },
+    createItem: {},
     createActionData: {},
     // 编辑数据
     isUpdateDrawerShown: false,
@@ -310,24 +314,12 @@ new Vue({
     deleteItemId: null,
     // 同步配置
     syncItem: null,
-    isCreateTriggerDisabled: false,
   },
-  watch: {
+  watch: {    
     createItem: {
       handler(value, oldValue) {
         if (!_.isEmpty(value.sourceDatabase)) {
           this.doUiAction('getSourceTable', {sourceDatabase: value.sourceDatabase});
-        }
-        if (!_.isEmpty(value.sourceTable)) {
-          // 选中VIEW的话就取消勾选创建触发器
-          if(value.sourceTable.includes("VIEW")){
-            this.createItem.isCreateTrigger = false;
-            this.isCreateTriggerDisabled = true;
-          }else{
-            // 确保选择其他表时勾选框可选
-            this.isCreateTriggerDisabled = false;
-            this.createItem.isCreateTrigger = true;
-          }
         }
       },
       deep: true
@@ -407,7 +399,6 @@ new Vue({
           appData: {
             pageId: 'tableSyncConfig',
             actionId: 'selectItemList',
-            orderBy: [{column: 'sourceDatabase', order: 'asc'}, {column: 'targetTable', order: 'asc'}]
           }
         }
       });
@@ -459,10 +450,10 @@ new Vue({
       });
       const { tableRows, viewRows } = result.data.appData.resultData;
       const sourceTable = tableRows.map((table) => {
-        return {"value": table.sourceTable, "text": table.sourceTable}
+        return { value: table.sourceTable, text: table.sourceTable}
       });
       const sourceView = viewRows.map((view) => {
-        return { "value": `VIEW|${view.sourceTable}`, "text": `VIEW|${view.sourceTable}` }
+        return { value: view.sourceTable, text: view.sourceTable}
       });
       this.constantObj.sourceTable = [ ...sourceTable, ...sourceView ];
     },
@@ -472,7 +463,7 @@ new Vue({
       this.createItem = {
         targetDatabase: this.defaultTargetDatabase,
         syncTimeSlot: 5,
-        isCreateTrigger: true,
+        enableMysqlTrigger: '开启',
       };
     },
 
@@ -493,11 +484,7 @@ new Vue({
     },
 
     prepareDoCreateItem() {
-      const {id, ...data} = this.createItem;
-      // 更正选择VIEW时的名称
-      if(data.sourceTable && data.sourceTable.includes("VIEW")){
-        data.sourceTable = data.sourceTable.split("|")[1];
-      }
+      const {id, tableType, ...data} = this.createItem;
       if (!data.targetTable){
         data.targetTable = `${data.sourceDatabase}__${data.sourceTable}`;
       }
@@ -548,7 +535,7 @@ new Vue({
     },
 
     async prepareDoUpdateItem() {
-      const {id, ...data} = this.updateItem;
+      const {id, tableType, ...data} = this.updateItem;
       if (!data.targetTable){
         data.targetTable = `${data.sourceDatabase}__${data.sourceTable}`;
       }
