@@ -80,7 +80,7 @@
                   </span>
                   <span
                     role="button" class="success--text font-weight-medium font-size-2 mr-2"
-                    @click="doUiAction('jump', `/${appInfo.appId}/page/appManagementOfOneUser?id=${item.userId}&title=${item.username}`)">
+                    @click="doUiAction('openAppDrawer', item.userId)">
                     <v-icon size="16" class="success--text">mdi-account-supervisor</v-icon>APP管理
                   </span> 
                   <template>
@@ -107,7 +107,7 @@
                     <v-list-item @click="doUiAction('startResetPassword', item)">
                       <v-list-item-title>修改密码</v-list-item-title>
                     </v-list-item>
-                    <v-list-item @click="doUiAction('jump', `/${appInfo.appId}/page/appManagementOfOneUser?id=${item.userId}&title=${item.username}`)">
+                    <v-list-item @click="doUiAction('openAppDrawer', item.userId)">
                       <v-list-item-title>APP管理</v-list-item-title>
                     </v-list-item>
                     <v-list-item @click="doUiAction('activeUserStatus', item)" v-if="item.userStatus !== 'active'">
@@ -270,6 +270,40 @@
           </v-btn>
         </v-navigation-drawer>
         <!-- 抽屉：<<<<<<<<<<< 修改用户信息 -->
+
+        <!-- 抽屉：打开APP管理 >>>>>>>>>>>>> -->
+        <v-navigation-drawer v-model="isAppDrawerShown"  fixed temporary right width="80%" class="elevation-24">
+          <!-- 抽屉标题 -->
+          <v-row no-gutters>
+            <span class="text-h7 font-weight-bold pa-4">查看用户的APP列表</span>
+          </v-row>
+          <v-divider class="jh-divider"></v-divider>
+          <v-row class="mt-0 px-4">
+            <v-col class="mt-0 px-4">
+              <v-data-table
+                :headers="drawerHeaders"
+                :items="constantObj.appList"
+                item-key="userId"
+                class="elevation-0"
+                >
+                <template v-slot:item.roleName="{ item }">
+                  <v-chip class="mr-2" v-if="item.roleName.includes('默认角色')" text-color="black" color="default" small label>
+                    默认角色
+                  </v-chip>
+                  <v-chip class="mr-2" v-for="(roleItem, roleIndex) in item.roleName.split(',').filter(item=>item!='默认角色')" text-color="white" color="orange" small label>
+                    {{roleItem}}
+                  </v-chip>
+                </template>
+              </v-data-table>
+            </v-col>
+          </v-row>
+          <!--抽屉关闭按钮-->
+          <v-btn elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn" @click="isAppDrawerShown = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-navigation-drawer>
+        <!-- 抽屉：<<<<<<<<<<< 打开APP管理 -->
+        
         <!-- <<<<<<<<<<<<< 页面内容 -->
       </div>
 
@@ -336,6 +370,11 @@ new Vue({
       {text: "操作时间", value: "operationAt", width: 250},
       {text: '操作', value: 'action', align: 'center', sortable: false, width: window.innerWidth < 500 ? 80 : 300, class: 'fixed', cellClass: 'fixed'},
     ],
+    drawerHeaders:[
+      {text: "应用ID", value: "appId", width: 180},
+      {text: "应用名", value: "appName", width: 180},
+      {text: "角色名", value: "roleName"},
+    ],
     // 新增用户
     isCreateDrawerShown: false,
     createItem: {},
@@ -355,7 +394,8 @@ new Vue({
     isResetUserPasswordDrawerShown: false,
     userPasswordItem: {},
     clearTextPassword: null,
-    resetPasswordUserId: null
+    resetPasswordUserId: null,
+    isAppDrawerShown: false
   },
   computed: {},
   watch: {},
@@ -424,6 +464,10 @@ new Vue({
           break;
         case 'copyPassword':
           await this.copyPassword(uiActionData);
+          break;
+        case 'openAppDrawer':
+          await this.prepareAppData(uiActionData)
+          await this.openAppDrawer();
           break;
         case 'jump':
           await this.jump(uiActionData);
@@ -667,6 +711,41 @@ new Vue({
         const item = this.tableData.find(item => item.userId === userId);
         await this.doUiAction('startUpdateItem', item)
       };
+    },
+
+    async prepareAppData(userId){
+      const rows = (await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'userManagement',
+            actionId: 'getAppList',
+            actionData: {},
+            where: {
+              userId: userId
+            },
+            orderBy: [{column: 'operationAt', order: 'desc'}]
+          }
+        }
+      })).data.appData.resultData.rows;
+      const groupBy = _.groupBy(rows, 'appId');
+      const list = []
+
+      Object.keys(groupBy).forEach(key => {
+        const item = {};
+        item.appId = groupBy[key][0].appId;
+        item.appName = groupBy[key][0].appName;
+        item.roleName = groupBy[key].map(e => (e.roleName || '默认角色')).join(',');
+
+        list.push(item);
+      })
+
+      this.constantObj.appList = list
+    },
+    async openAppDrawer(){
+      this.isAppDrawerShown = true
+    },
+    async closeAppDrawer(){
+      this.isAppDrawerShown = false
     },
   }
 })
