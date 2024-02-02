@@ -77,13 +77,13 @@ SQL END!-->
           >
 
           <template v-slot:append="{ item, open }">
-            <v-icon size="20" v-if="item.groupId!='超级管理员'" @click.stop="doUiAction('startCreateItem', item)">
+            <v-icon size="20" class="ml-2" color="success" v-if="item.groupId!='超级管理员'" @click.stop="doUiAction('startCreateItem', item)">
               mdi-plus
             </v-icon>
-            <v-icon size="20" v-if="item.groupId!='超级管理员'" @click.stop="doUiAction('startUpdateItem', item)">
+            <v-icon size="20" class="ml-2" color="orange" v-if="item.groupId!='超级管理员'" @click.stop="doUiAction('startUpdateItem', item)">
               mdi-note-edit-outline
             </v-icon>
-            <v-icon size="20" v-if="item.groupId!='超级管理员'" @click.stop="doUiAction('deleteItem', item)">
+            <v-icon size="20" class="ml-2" color="red" v-if="item.groupId!='超级管理员'" @click.stop="doUiAction('deleteItem', item)">
               mdi-trash-can-outline
             </v-icon>
           </template>

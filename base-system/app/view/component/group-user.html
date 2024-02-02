@@ -59,12 +59,12 @@
                       </template>
                       <!-- 应用类型 -->
                       <template v-slot:item.role-name="{ item }">
-                        <v-chip v-for="(roleItem, roleIndex) in (item.roleId == '*' ? '默认角色' : item.roleName).split(',').reverse()" 
-                          class="mr-2" :text-color="roleItem == '默认角色' ? 'black' : 'white'"
-                          :color="roleItem == '默认角色' ? 'default' : 'orange'" small label>
+                        <v-chip class="mr-2" v-if="item.roleName.includes('默认角色')" text-color="black" color="default" small label>
+                          默认角色
+                        </v-chip>
+                        <v-chip class="mr-2" v-for="(roleItem, roleIndex) in item.roleName.split(',').filter(item=>item!='默认角色')" text-color="white" color="orange" small label>
                           {{roleItem}}
                         </v-chip>
-                          <!-- {{ (item.roleId == '*' ? '默认角色' : item.roleName).split }} -->
                       </template>
                       <!--没有数据-->
                       <template v-slot:loading>
