@@ -127,18 +127,15 @@ class DirectoryService extends Service {
     const { userId, userGroupRoleList } = this.ctx.userInfo;
     const groupId = null;
     const allUserGroupRolePageList = await jianghuKnex('enterpirse_user_group_role_page').select();
-    const { userIdList, groupIdList, roleIdList } = this.getRuleIdList(
-      groupId,
-      userId,
-      userGroupRoleList
-    );
+    // const { userIdList, groupIdList, roleIdList } = this.getRuleIdList(
+    //   groupId,
+    //   userId,
+    //   userGroupRoleList
+    // );
     const allowPageList = this.computeAllowList(
       'page',
       allAppPageList,
-      allUserGroupRolePageList,
-      userIdList,
-      groupIdList,
-      roleIdList
+      allUserGroupRolePageList, userGroupRoleList,
     );
     return allowPageList;
   }
@@ -156,9 +153,7 @@ class DirectoryService extends Service {
     fieldKey,
     allItemList,
     allRuleList,
-    userIdList,
-    groupIdList,
-    roleIdList
+    userGroupRoleList,
   ) {
     const idFieldKey = `${fieldKey}Id`;
     const allowItemList = [];
@@ -190,13 +185,20 @@ class DirectoryService extends Service {
         }
         
         // 判断这条规则是否和当前用户匹配
-        if (
-          !this.checkRule(userIdList, rule.user) ||
-          !this.checkRule(groupIdList, rule.group) ||
-          !this.checkRule(roleIdList, rule.role)
-        ) {
+        const userGroupRoleListRule= userGroupRoleList
+          .filter((userGroupRole) => rule.user==='*' || userGroupRole.userId === rule.user)
+          .filter((userGroupRole) => rule.group==='*' || userGroupRole.groupId === rule.group)
+          .filter((userGroupRole) => rule.role==='*' || userGroupRole.roleId === rule.role)
+        if (userGroupRoleListRule.length == 0) {
           return;
         }
+        // if (
+        //   !this.checkRule(userIdList, rule.user) ||
+        //   !this.checkRule(groupIdList, rule.group) ||
+        //   !this.checkRule(roleIdList, rule.role)
+        // ) {
+        //   return;
+        // }
 
         // Tip: 过时的代码
         // if (rule.group === 'public') {
