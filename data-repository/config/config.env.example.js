@@ -9,7 +9,6 @@ module.exports = appInfo => {
     appType: 'multiApp',
     appDirectoryLink: '/directory',
     dataSyncStatus: '启用', // 是否启用同步，启用/禁用
-    appDirectoryLink: 'http://127.0.0.1:7273/directory',
     jiangHuConfig: {
       packageIdCheck: true,
       updateRequestDemoAndResponseDemo: false,

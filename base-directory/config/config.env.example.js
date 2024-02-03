@@ -8,7 +8,6 @@ module.exports = appInfo => {
   return {
     appType: 'multiApp',
     appDirectoryLink: '/directory',
-    appDirectoryLink: 'http://127.0.0.1:7273/directory',
     jiangHuConfig: {
       packageIdCheck: true,
       updateRequestDemoAndResponseDemo: false,
