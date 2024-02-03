@@ -72,7 +72,7 @@ SQL END!-->
             item-key="groupId"
             item-text="groupName"
             :search="searchInput"
-            class="jh-fixed-table-height"
+
             :active="selectedItem"
           >
 
@@ -307,7 +307,7 @@ new Vue({
             actionId: 'selectItemList',
             actionData: {},
             whereOptions: [["groupId","<>","超级管理员"]],
-            orderBy: [{column: 'operationAt', order: 'desc'}]
+            orderBy: [{column: 'groupId', order: 'asc'}]
           }
         }
       })).data.appData.resultData.rows;
@@ -316,6 +316,7 @@ new Vue({
         row.operationAt = dayjs(row.operationAt).format('YYYY-MM-DD HH:mm:ss');
       })
       this.tableData = rows;
+      
       this.tableDataTree = this.buildTableTree(rows)
       this.isTableLoading = false;
     },
