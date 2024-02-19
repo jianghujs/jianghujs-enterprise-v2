@@ -221,7 +221,7 @@ new Vue({
       Object.keys(groupBy).forEach(key => {
         const item = groupBy[key][0];
         item.username = groupBy[key][0].username;
-        item.roleName = groupBy[key].map(e => (e.roleName || '默认角色')).join(',');
+        item.roleName = groupBy[key].map(e => (e.roleName || '默认权限')).join(',');
         item.roleId = groupBy[key].map(e => e.roleId);
         item.operationByUser = groupBy[key][0].operationByUser;
         item.operationAt = groupBy[key][0].operationAt;
@@ -247,7 +247,7 @@ new Vue({
       rows.forEach(row => {
         row.operationAt = dayjs(row.operationAt).format('YYYY-MM-DD HH:mm:ss');
       })
-      this.constantObj.roleList = [{roleId: '*', roleName: '默认角色'}, ...rows];
+      this.constantObj.roleList = [{roleId: '*', roleName: '默认权限'}, ...rows];
       this.isAppLoading = false;
     },
     changeActiveGroup(item) {

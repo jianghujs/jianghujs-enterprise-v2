@@ -12,7 +12,7 @@
             </v-tab>
             <div @click="doUiAction('startCreateItem')" class="v-tab pa-0" style="justify-content:flex-end">
               <div>
-                <span style="font-weight: 600px;">新增角色</span>
+                <span style="font-weight: 600px;">新增职务</span>
                 <v-icon>mdi-plus-box-outline</v-icon>
               </div>
             </div>
@@ -116,7 +116,7 @@
       },
       roleList: {
         type: Array,
-        default: () => [{roleId: '*', roleName: '默认角色'}]
+        default: () => [{roleId: '*', roleName: '默认权限'}]
       },
       loading: {
         type: Boolean,
@@ -275,7 +275,7 @@
         this.deleteItem = _.cloneDeep(funObj);
       },
       async confirmDeleteItemDialog() {
-        if (await window.confirmDialog({title: "删除角色", content: "确定删除角色吗？"}) === false) {
+        if (await window.confirmDialog({title: "删除职务", content: "确定删除职务吗？"}) === false) {
           throw new Error("[confirmDeleteItemDialog] 否");
         }
       },
@@ -284,7 +284,7 @@
         this.deleteItemId = id;
       },
       async doDeleteItem() {
-        await window.vtoast.loading("删除角色数据");
+        await window.vtoast.loading("删除职务数据");
         await window.jianghuAxios({
           data: {
             appData: {
@@ -297,7 +297,7 @@
             }
           }
         });
-        await window.vtoast.success("删除角色数据成功");
+        await window.vtoast.success("删除职务数据成功");
       },
       async clearDeleteItem() {
         this.deleteItem = {};

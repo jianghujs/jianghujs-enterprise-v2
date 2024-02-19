@@ -59,10 +59,10 @@
                       </template>
                       <!-- 应用类型 -->
                       <template v-slot:item.role-name="{ item }">
-                        <v-chip class="mr-2" v-if="item.roleName.includes('默认角色')" text-color="black" color="default" small label>
-                          默认角色
+                        <v-chip class="mr-2" v-if="item.roleName.includes('默认权限')" text-color="black" color="default" small label>
+                          默认权限
                         </v-chip>
-                        <v-chip class="mr-2" v-for="(roleItem, roleIndex) in item.roleName.split(',').filter(item=>item!='默认角色')" text-color="white" color="orange" small label>
+                        <v-chip class="mr-2" v-for="(roleItem, roleIndex) in item.roleName.split(',').filter(item=>item!='默认权限')" text-color="white" color="orange" small label>
                           {{roleItem}}
                         </v-chip>
                       </template>
@@ -112,7 +112,7 @@
                   <v-autocomplete class="jh-v-input" dense single-line filled v-model="createItem.userId" :items="constantObj.userList" :rules="validationRules.requireRules" ></v-autocomplete>
               </v-col>
               <v-col cols="12" sm="12" md="4">
-                  <span class="jh-input-label">选择角色</span>
+                  <span class="jh-input-label">选择职务</span>
                   <v-autocomplete class="jh-v-input" dense single-line filled v-model="createItem.roleId" :items="roleList.filter(e => e.roleId != '*')" item-value="roleId" item-text="roleName" multiple></v-autocomplete>
               </v-col>
             </v-row>
@@ -148,7 +148,7 @@
             <v-autocomplete class="jh-v-input" dense single-line filled v-model="updateItem.userId" :items="constantObj.userList" :rules="validationRules.requireRules" disabled></v-autocomplete>
         </v-col>
         <v-col cols="12" sm="12" md="4">
-            <span class="jh-input-label">选择角色</span>
+            <span class="jh-input-label">选择职务</span>
             <v-autocomplete class="jh-v-input" dense single-line filled v-model="updateItem.roleId" :items="roleList.filter(e => e.roleId != '*')" item-value="roleId" item-text="roleName" multiple></v-autocomplete>
         </v-col>
         </v-row>
@@ -178,7 +178,7 @@
         },
         roleList: {
             type: Array,
-            default: () => [{roleId: '*', roleName: '默认角色'}]
+            default: () => [{roleId: '*', roleName: '默认权限'}]
         },
         loading: {
           type: Boolean,
@@ -211,7 +211,7 @@
         activeRole: '*',
         headers: [
             {text: "用户", value: "username", width:180},
-            {text: "角色", value: "role-name", width:380},
+            {text: "职务", value: "role-name", width:380},
             {text: "用户组", value: "groupName", width:100},
             {text: '操作', value: 'action', align: 'center', sortable: false, width: window.innerWidth < 500 ? 80 : 200, class: 'fixed', cellClass: 'fixed'},
         ],
@@ -348,7 +348,7 @@
 
         async doCreateItem() {
             await window.jhMask.show();
-            await window.vtoast.loading("新增用户角色");
+            await window.vtoast.loading("新增用户职务");
             const groupUserIdList = this.tableData.map(v => v.userId);
             const username = this.constantObj.userList.find(v => v.value == this.createActionData.userId)?.text;
             await window.jianghuAxios({
@@ -373,7 +373,7 @@
                 }
             })
             await window.jhMask.hide();
-            await window.vtoast.success("新增用户角色成功");
+            await window.vtoast.success("新增用户职务成功");
         },
         async closeCreateDrawer() {
             this.isCreateDrawerShown = false;
@@ -410,7 +410,7 @@
 
         async doUpdateItem() {
             await window.jhMask.show();
-            await window.vtoast.loading("修改用户角色");
+            await window.vtoast.loading("修改用户职务");
             await window.jianghuAxios({
                 data: {
                 appData: {
@@ -427,7 +427,7 @@
             })
 
             await window.jhMask.hide();
-            await window.vtoast.success("修改用户角色成功");
+            await window.vtoast.success("修改用户职务成功");
         },
 
         async closeUpdateDrawer() {
