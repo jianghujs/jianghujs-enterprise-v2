@@ -39,19 +39,22 @@
           </v-list-item-group> -->
 
           <v-treeview
-            @update:active="onTreeChange"
             hoverable
             activatable
             :open="openIdList"
             open-all
             :items="tableDataTree"
             dense
-            item-key="groupId"
+            item-key="groupFullId"
             item-text="groupName"
             :search="searchInput"
             class="jh-fixed-table-height"
+            @update:active="onTreeChange"
             :active="selectedItem"
           >
+            <template v-slot:append="{ item, open }">
+              <span>{{item.groupPath+'-'+item.groupId}}</span>
+            </template>
           </v-treeview>
         </v-list>
       </v-col>
@@ -192,13 +195,14 @@
         // 递归  子 groupPath === 父 groupId
         const buildTree = (data) => {
           data.forEach(item => {
+            item.groupFullId = item.groupPath ? item.groupPath + '-' + item.groupId : item.groupId;
             item.name = item.groupName;
             const children = rows.filter(child => {
               const parentPath = item.groupPath ? item.groupPath + '-' + item.groupId : item.groupId;
               return child.groupPath == parentPath;
             });
             if (children.length) {
-              this.openIdList.push(item.groupId);
+              this.openIdList.push(item.groupFullId);
               item.children = children;
               buildTree(children);
             }
@@ -212,7 +216,7 @@
         if (!event.length) {
           return;
         }
-        const item = this.tableData.find(item => item.groupId === event[0]);
+        const item = this.tableData.find(item => item.groupFullId === event[0]);
         this.$emit('change-active', item);
       },
     }
