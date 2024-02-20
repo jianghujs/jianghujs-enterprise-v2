@@ -67,7 +67,7 @@
         <v-form ref="createForm" lazy-validation>
           <!-- 抽屉标题 -->
           <v-row no-gutters>
-            <span class="text-h7 font-weight-bold pa-4">添加信息</span>
+            <span class="text-h7 font-weight-bold pa-4">添加职务</span>
           </v-row>
           <v-divider class="jh-divider"></v-divider>
           <!-- 抽屉表单 -->
@@ -76,7 +76,7 @@
              
             <v-col cols="12" sm="12" md="4">
               <span class="jh-input-label">roleId</span>
-              <v-text-field class="jh-v-input" dense single-line filled :prefix="group + '-'" v-model="createItem.roleId"></v-text-field>
+              <v-text-field class="jh-v-input" dense single-line filled :prefix="group + '|'" v-model="createItem.roleId"></v-text-field>
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
@@ -248,7 +248,7 @@
 
       prepareDoCreateItem() {
         const {id, ...data} = this.createItem;
-        this.createActionData = {...data, roleId: this.group + '-' + data.roleId};
+        this.createActionData = {...data, roleId: this.group + '|' + data.roleId};
       },
 
       async doCreateItem() {

@@ -257,8 +257,8 @@ new Vue({
             pageId: 'groupAuthorityManagement',
             actionId: 'selectRoleList',
             actionData: {},
-            whereLike: {roleId: `%${this.activeGroup}-%`},
-            orderBy: [{column: 'operationAt', order: 'desc'}]
+            whereLike: {roleId: `${this.activeGroup}|%`},
+            orderBy: [{column: 'operationAt', order: 'asc'}]
           }
         }
       })).data.appData.resultData.rows;
@@ -290,12 +290,10 @@ new Vue({
         })
       })
       this.activePageList = pageList;
-      console.log("pageList:",pageList);
       this.isAppLoading = false;
     },
     changeActiveGroup(item) {
-      console.log("changeActiveGroup",item);
-      this.activeGroup = item.groupId;
+      this.activeGroup = item.groupPath + '-' + item.groupId;
       this.activeGroupName = item.groupName;
       this.activeGroupPath = item.groupPath;
       this.getRoleData();

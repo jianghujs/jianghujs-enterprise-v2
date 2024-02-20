@@ -156,7 +156,8 @@ new Vue({
       return this.constantObj.tabList;
     },
     tableData() {
-      return this.tableDataBackUp.filter(e => (e.groupPath || '').startsWith(this.activeGroupPath || ''));
+      // return this.tableDataBackUp.filter(e => (e.groupPath || '').startsWith(this.activeGroupPath || ''));
+      return this.tableDataBackUp
     },
   },
   watch: {
@@ -194,7 +195,7 @@ new Vue({
       const where = {};
       const whereIn = {};
       if (this.activeGroupPath) {
-        where.groupPath = `${this.activeGroupPath}`;
+        // where.groupPath = `${this.activeGroupPath}`;
         where.groupId = `${this.activeGroup}`;
       } else {
         // whereIn.groupId = this.constantObj.groupList.map(e => e.value);
@@ -238,7 +239,7 @@ new Vue({
             pageId: 'groupUserManagement',
             actionId: 'selectRoleList',
             actionData: {},
-            whereLike: {roleId: `%${this.activeGroup}-%`},
+            whereLike: {roleId: `${this.activeGroup}|%`},
             orderBy: [{column: 'operationAt', order: 'desc'}]
           }
         }
@@ -251,7 +252,7 @@ new Vue({
       this.isAppLoading = false;
     },
     changeActiveGroup(item) {
-      this.activeGroup = item.groupId;
+      this.activeGroup = item.groupPath+'-'+item.groupId;
       this.activeGroupName = item.groupName;
       this.activeGroupPath = item.groupPath;
       this.getRoleData();
