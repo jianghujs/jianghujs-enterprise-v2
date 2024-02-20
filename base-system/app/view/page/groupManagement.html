@@ -77,7 +77,7 @@ SQL END!-->
           >
 
           <template v-slot:append="{ item, open }">
-            <span>{{item.groupPath+'-'+item.groupId}}</span>
+            <span>{{item.groupPath ? item.groupPath+'-'+item.groupId : item.groupId}}</span>
             <v-icon size="20" class="ml-2" color="success" v-if="item.groupId!='超级管理员'" @click.stop="doUiAction('startCreateItem', item)">
               mdi-plus
             </v-icon>

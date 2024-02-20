@@ -53,7 +53,7 @@
             :active="selectedItem"
           >
             <template v-slot:append="{ item, open }">
-              <span>{{item.groupPath+'-'+item.groupId}}</span>
+              <span>{{item.groupPath ? item.groupPath+'-'+item.groupId : item.groupId}}</span>
             </template>
           </v-treeview>
         </v-list>
