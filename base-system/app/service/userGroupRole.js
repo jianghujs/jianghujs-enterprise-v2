@@ -35,8 +35,10 @@ class UserGroupRoleService extends Service {
       })
     })
     await jianghuKnex.transaction(async trx => {
-      if (appInsertList.length > 0 && roleInsertList.length > 0) {
+      if (appInsertList.length > 0) {
         await trx('enterprise_user_app', this.ctx).insert(appInsertList);
+      }
+      if (roleInsertList.length > 0) {
         await trx('enterprise_user_group_role', this.ctx).insert(roleInsertList);
       }
     })
