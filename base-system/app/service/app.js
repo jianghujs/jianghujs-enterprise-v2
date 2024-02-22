@@ -129,6 +129,7 @@ class AppService extends Service {
         currentKnex.raw(`DROP VIEW IF EXISTS _enterprise_user_session;`),
         currentKnex.raw(`DROP VIEW IF EXISTS _directory_user_session;`),
         currentKnex.raw(`DROP VIEW IF EXISTS _view01_user;`),
+        currentKnex.raw(`DROP VIEW IF EXISTS _dr__member;`),
         currentKnex.raw(`DROP VIEW IF EXISTS _view02_user_app;`),
       ];
       const createViewSql = [
@@ -139,6 +140,7 @@ class AppService extends Service {
         currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role_resource AS ${getJhIdViewSql(appListByDatabase, 'enterprise_user_group_role_resource')};`),
         currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _directory_user_session AS ${getJhIdViewSql(appListByDatabase, 'directory_user_session')};`),
         currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view01_user AS ${getJhIdViewSql(appListByDatabase, 'enterprise_user')};`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _dr__member AS ${getJhIdViewSql(appListByDatabase, 'enterprise_user')};`),
         currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view02_user_app AS ${getJhIdViewSql(appListByDatabase, 'enterprise_user_app')};`),
       ];
       if (appIdList.includes('directory')) {
