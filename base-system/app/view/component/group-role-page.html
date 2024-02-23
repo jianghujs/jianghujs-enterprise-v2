@@ -75,17 +75,12 @@
             <!-- <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.xxxId" :rules="validationRules.requireRules"></v-text-field> -->
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">roleId</span>
-              <v-text-field class="jh-v-input" dense single-line filled :prefix="group + ' | '" v-model="createItem.roleId"></v-text-field>
-            </v-col>
-             
-            <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">role name</span>
+              <span class="jh-input-label">职务</span><span style="color: red;margin-left: 2px;">*</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.roleName"></v-text-field>
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">role desc</span>
+              <span class="jh-input-label">职务描述</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.roleDesc"></v-text-field>
             </v-col>
              
@@ -248,7 +243,7 @@
 
       prepareDoCreateItem() {
         const {id, ...data} = this.createItem;
-        this.createActionData = {...data, roleId: this.group + '|' + data.roleId};
+        this.createActionData = {...data, roleId: this.group + '|' + data.roleName};
       },
 
       async doCreateItem() {
