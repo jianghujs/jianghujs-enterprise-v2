@@ -132,7 +132,7 @@
         const deviceId = this.deviceId;
         const userId = (this.userId + '').replace(/\s+/g, '');
         const password = this.password + '';
-
+        vtoast.loading("登陆中");
         try {
           const resultData = (await window.jianghuAxios({
             data: {
