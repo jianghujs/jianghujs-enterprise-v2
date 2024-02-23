@@ -104,7 +104,7 @@ SQL END!-->
              
             <v-col cols="12" sm="12" md="4">
               <span class="jh-input-label">组织Id</span>
-              <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.groupId" :rules="validationRules.requireRules"></v-text-field>
+              <v-text-field class="jh-v-input" dense single-line filled :prefix="createItem.groupPath + '-'" v-model="createItem.groupId" :rules="validationRules.requireRules"></v-text-field>
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
@@ -347,6 +347,7 @@ new Vue({
       this.createItem = {};
       if (item) {
           this.createItem.groupPath = item.groupPath ? item.groupPath + '-' + item.groupId : item.groupId;
+          this.createItem.groupPathName = item.groupAllName ? item.groupAllName : "";
         }
     },
 
@@ -369,7 +370,12 @@ new Vue({
 
     prepareDoCreateItem() {
       const {id, ...data} = this.createItem;
-      this.createActionData = data;
+      this.createActionData = { 
+        groupId: data.groupId,
+        groupPath: data.groupPath,
+        groupName: data.groupName,
+        groupAllName: data.groupPathName == '' ? data.groupName : data.groupPathName + '' + data.groupName 
+      };
     },
 
     async doCreateItem() {
