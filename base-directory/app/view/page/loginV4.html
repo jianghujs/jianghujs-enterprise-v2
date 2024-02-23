@@ -38,7 +38,7 @@
                   <!-- 操作按钮 -->
                   <v-row class="my-0 px-3">
                     <v-btn block color="success" @click="doUiAction('login')" small>登录</v-btn>
-                    <v-btn :disabled="loading" v-if="enableWechatLogin == 'enabled'" class="mt-2" block large @click="toWecomOauthUrl">企微登录</v-btn>
+                    <v-btn :disabled="loading" v-if="enableWechatLogin == 'enabled' && isWorkWechat" class="mt-2" block large @click="toWecomOauthUrl">企微登录</v-btn>
                   </v-row>
                 </v-form>
               </v-card-text>
@@ -80,17 +80,25 @@
         isPasswordShown: false,
         isRememberPassword: true,
         loading: false,
-        enableWechatLogin: '<$ ctx.app.config.enableWechatLogin $>'
+        enableWechatLogin: '<$ ctx.app.config.enableWechatLogin $>',
+        isWorkWechat: true
       };
     },
     async mounted() {
+      this.isWorkWechatEnv();
+      this.loading = false;
       const urlParams = new URLSearchParams(location.search);
       this.doUiAction('getUrlObj');
+
+      if (urlParams.get('isAutoLogin') && urlParams.get('isAutoLogin') == true) {
+        this.toWecomOauthUrl();
+        return;
+      }
 
       // code登录
       if (urlParams.get('code')) {
         await this.prepareLoginData();
-        this.wecomLogin();
+        await this.wecomLogin();
       }
     },
     methods: {
@@ -211,8 +219,19 @@
           redirectTo = decodeURIComponent(this.redirectUrl);
         }
         window.location.href = redirectTo;
-      }
+      },
       // ---------- <<<<<<<<<<< login uiAction  --------
+      async isWorkWechatEnv() {
+        //获取user-agaent标识头
+        var ua = window.navigator.userAgent.toLowerCase();
+        //判断ua和微信浏览器的标识头是否匹配
+        if ((ua.match(/micromessenger/i) == 'micromessenger') && (ua.match(/wxwork/i) == 'wxwork')) {
+          this.isWorkWechat = true;
+        } else {
+          this.isWorkWechat = false;
+        }
+        console.log('this.isWorkWechat',this.isWorkWechat)
+      }
     }
   });
 </script>
