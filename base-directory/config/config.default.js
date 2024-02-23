@@ -13,6 +13,7 @@ module.exports = appInfo => {
   const appId = 'directory';
 
   return {
+    enableWechatLogin: 'enabled',
     appId,
     projectId,
     appTitle: '江湖目录',
