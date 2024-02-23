@@ -361,7 +361,7 @@ class AppService extends Service {
       _.forEach(userList, user => {
 
         //检查 enterprise_user_group_role 是否需要插入新的记录
-        if (!userGroupRole.find(item => item.groupId === 'login' && item.roleId === 'commonAuth' && item.userId === user.userId)) {
+        if (!userGroupRole.find(item => item.groupId === 'login' && item.roleId === 'commonAuth' && item.userId === user.userId) && user.userId ) {
           insertUserGroupRoleList.push({
             groupId: 'login',
             roleId: 'commonAuth',
@@ -372,7 +372,7 @@ class AppService extends Service {
         // 遍历基础应用的app列表
         _.forEach(appList, app => {
           //检查 enterprise_user_app 是否需要插入新的记录
-          if (!userApp.find(item => item.groupId === 'login' && item.roleId === 'commonAuth' && item.appId === app.appId && item.userId === user.userId)) {
+          if (!userApp.find(item => item.groupId === 'login' && item.roleId === 'commonAuth' && item.appId === app.appId && item.userId === user.userId) && user.userId) {
             insertUserAppList.push({
               appId: app.appId,
               groupId: 'login',
