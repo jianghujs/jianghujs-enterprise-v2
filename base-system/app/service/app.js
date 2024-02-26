@@ -8,6 +8,7 @@ const idGenerateUtil = require('@jianghujs/jianghu/app/common/idGenerateUtil');
 // ========================================常用 require end=============================================
 const _ = require('lodash');
 const Knex = require('knex');
+const dayjs = require('dayjs');
 
 const getJhIdViewSql = (appList, tableName) => {
 
@@ -338,6 +339,7 @@ class AppService extends Service {
         groupId: 'login',
         roleId: 'commonAuth',
         userId: createUserId,
+        deadline: -1,
       })
 
 
@@ -366,6 +368,7 @@ class AppService extends Service {
             groupId: 'login',
             roleId: 'commonAuth',
             userId: user.userId,
+            deadline: -1,
           })
         }
 
@@ -423,7 +426,29 @@ class AppService extends Service {
     })
   }
 
-
+  async removeRelationByExpire() {
+    const { jianghuKnex } = this.app;
+    let today = dayjs().format('YYYY-MM-DD')
+    const userRoleList = await jianghuKnex('enterprise_user_group_role')
+      .where('deadline', '<', today)
+      .where('deadline', '<>', '-1')
+      .select();
+    
+    // enterprise_user_group_role
+    await jianghuKnex('enterprise_user_group_role')
+      .where('deadline', '<', today)
+      .where('deadline', '<>', '-1')
+      .jhDelete();
+    
+    // enterprise_user_app
+    if (userRoleList.length > 0) {
+      for (const i of userRoleList) {
+        await jianghuKnex('enterprise_user_app')
+          .where({userId: i.userId, roleId: i.roleId, groupId: i.groupId})
+          .jhDelete();
+      }
+    }
+  }
 }
 
 module.exports = AppService;
