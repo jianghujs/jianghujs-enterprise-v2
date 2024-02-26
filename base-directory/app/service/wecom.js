@@ -28,7 +28,7 @@ class WecomService extends Service {
   async getOauthUrl() {
     const { ctx } = this;
     const { qyApiConfig } = this.app.config.wechat;
-    const redirectUri = 'https://wxsg.foisongroup.com/foison06-mega-qwLogin.html';
+    const redirectUri = qyApiConfig.loginRedirectUri;
     return QyOauthApi.getAuthorizeUrl(qyApiConfig.corpId, redirectUri, "");
     // return QyOauthApi.getAuthorizeUrl(qyApiConfig.corpId, "currentPageUrl", "");
   }

@@ -27,7 +27,8 @@ module.exports = appInfo => {
         // token: 'token',
         // encryptMessage: true,
         // encodingAesKey: 'encodingAesKey',
-        // corpId: '123'
+        // corpId: '123',
+        // loginRedirectUri:'https://xxx.com'
       },
       // 微信支付配置
       wxPayApiConfig: {
