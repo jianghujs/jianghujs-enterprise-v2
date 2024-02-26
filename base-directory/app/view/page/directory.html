@@ -16,7 +16,7 @@
         <div class="jh-page-second-bar px-8">
           <v-row class="align-center">
             <v-col cols="12" xs="12" sm="12" md="4" xl="3">
-              <div class="py-4 text-body-1 font-weight-bold d-flex align-center">全部应用
+              <div class="py-4 text-body-1 font-weight-bold d-flex align-center">欢迎进入风神内网
                 <!-- 帮助页按钮 -->
                 <span role="button" class="success--text font-weight-regular jh-font-size-13 ml-2" @click="isHelpPageDrawerShown = true">
                   <v-icon size="13" class="success--text">mdi-help-circle-outline</v-icon>帮助
@@ -34,7 +34,7 @@
               <v-row dense no-gutters v-if="isDirectoryLoading || (!isDirectoryLoading && directoryList)">
                 <!-- 目录 -->
                 <v-col cols="12" xs="12" sm="3" md="2" class="jh-fixed-table-height overflow-y-auto" style=" max-width: 240px !important;">
-                  <v-card flat class="py-6 px-8 jh-directory-card">
+                  <v-card flat class="py-1 px-8 jh-directory-card">
                     <div class="jh-card-body px-6 px-sm-0">
                       <v-skeleton-loader
                         type="list-item-three-line, list-item-three-line, list-item-three-line"
@@ -173,7 +173,7 @@
 
         return {
           '江湖应用': jianghuItems,
-          '江湖应用Pro': otherItems
+          '风神应用': otherItems
         };
       }
     },
