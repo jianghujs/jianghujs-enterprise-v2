@@ -7,16 +7,16 @@ module.exports = app => {
   return {
     schedule: {
       immediate: true,
-      cron: "0 1 * * *", // 每天 4 点执行
+      cron: "0 1 * * *", // 每天 1 点执行
       type: 'worker', // 只有一个worker执行
       disable: false,
     },
     async task(ctx) {
         const startTime = new Date().getTime();
         const { jianghuKnex, logger } = app;
-        await ctx.service.app.removeRelationByExpire()
+        await ctx.service.user.updateUserOrg();
         const endTime = new Date().getTime();
-        logger.info('[schedule/enterpriseAuthMove.js]', { useTime: `${endTime - startTime}/ms` });
+        logger.info('[schedule/enterpriseUserOrg.js]', { useTime: `${endTime - startTime}/ms` });
     }
   };
 };
