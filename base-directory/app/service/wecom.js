@@ -27,11 +27,25 @@ const actionDataScheme = Object.freeze({
 class WecomService extends Service {
   async getOauthUrl() {
     const { ctx } = this;
-    const { qyApiConfig } = this.app.config.wechat;
-    const redirectUri = qyApiConfig.loginRedirectUri;
-    return QyOauthApi.getAuthorizeUrl(qyApiConfig.corpId, redirectUri, "");
+    if (!this.isWorkWechatEnv) {
+      const { qyApiConfig } = this.app.config.wechat;
+      const redirectUri = qyApiConfig.loginRedirectUri;
+      return QyOauthApi.getAuthorizeUrl(qyApiConfig.corpId, redirectUri, "");
+    }
     // return QyOauthApi.getAuthorizeUrl(qyApiConfig.corpId, "currentPageUrl", "");
   }
+
+  async isWorkWechatEnv() {
+    //获取user-agaent标识头
+    var ua = window.navigator.userAgent.toLowerCase();
+    //判断ua和微信浏览器的标识头是否匹配
+    if ((ua.match(/micromessenger/i) == 'micromessenger') && (ua.match(/wxwork/i) == 'wxwork')) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   async autoOauth() {
     const { ctx } = this;
     const { code } = ctx.request.query;
