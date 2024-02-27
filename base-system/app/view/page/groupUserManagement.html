@@ -98,6 +98,7 @@
 
 <!-- 加载页面组件 >>>>>>>>>>>>> -->
 {% include 'common/jianghuJs/fixedTableHeightV4.html' %}
+{% include 'component/common/datetimePicker.html' %}
 {% include 'component/select-group-tree.html' %}
 {% include 'component/group-user.html' %}
 <!-- <<<<<<<<<<<<< 加载页面组件 -->
@@ -224,6 +225,13 @@ new Vue({
         item.username = groupBy[key][0].username;
         item.roleName = groupBy[key].map(e => (e.roleName || '默认权限')).join(',');
         item.roleId = groupBy[key].map(e => e.roleId);
+        item.roleConfig = groupBy[key].map(e => {
+          return {
+            roleId: e.roleId,
+            groupId: e.groupId,
+            deadline: e.deadline
+          }
+        });
         item.operationByUser = groupBy[key][0].operationByUser;
         item.operationAt = groupBy[key][0].operationAt;
         list.push(item);

@@ -8,22 +8,24 @@ const idGenerateUtil = require('@jianghujs/jianghu/app/common/idGenerateUtil');
 // ========================================常用 require end=============================================
 const _ = require('lodash');
 const Knex = require('knex');
+const dayjs = require('dayjs');
 
 
 class UserGroupRoleService extends Service {
 
   async insertUserGroupRole() {
     const { jianghuKnex } = this.app;
-    const { userId, roleId: roleIdList, groupId } = this.ctx.request.body.appData.actionData;
-    const appList = await jianghuKnex('enterprise_user_group_role_page').where('group', groupId).whereIn('role',roleIdList).select();
+    const { userId, roleId: roleIdList, groupId, roleConfig } = this.ctx.request.body.appData.actionData;
+    const appList = await jianghuKnex('enterprise_user_group_role_page').where('group', groupId).whereIn('role', roleIdList).select();
 
     const roleInsertList = [];
-    const appInsertList = [];
-    roleIdList.forEach(roleId => {
+    const appInsertList = [];//.add(item.days, 'day')
+    roleConfig.forEach(item => {
       roleInsertList.push({
         userId,
-        roleId,
+        roleId: item.roleId,
         groupId,
+        deadline: item.deadline == -1 ? item.deadline : dayjs().add(item.deadline, 'day').format('YYYY-MM-DD')
       })
     })
     appList.forEach( appItem => {
@@ -46,16 +48,17 @@ class UserGroupRoleService extends Service {
 
   async updateUserGroupRole() {
     const { jianghuKnex } = this.app;
-    const { userId, roleId: roleIdList, groupId } = this.ctx.request.body.appData.actionData;
+    const { userId, roleId: roleIdList, groupId, roleConfig } = this.ctx.request.body.appData.actionData;
     const appList = await jianghuKnex('enterprise_user_group_role_page').where('group', groupId).whereIn('role',roleIdList).select();
 
     const roleInsertList = [];
     const appInsertList = [];
-    roleIdList.forEach(roleId => {
+    roleConfig.forEach(item => {
       roleInsertList.push({
         userId,
-        roleId,
+        roleId: item.roleId,
         groupId,
+        deadline: item.roleType == "临时职务" ? item.deadline : -1
       })
     })
     appList.forEach( appItem => {

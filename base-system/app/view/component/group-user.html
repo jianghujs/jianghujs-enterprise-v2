@@ -103,18 +103,61 @@
             <v-divider class="jh-divider"></v-divider>
             <!--抽屉表单主体-->
             <v-row class="mt-0 px-4">
-              <v-col cols="12" sm="12" md="4">
+              <v-col cols="12" sm="12" md="6">
                   <span class="jh-input-label">组织<span class="red--text text--accent-2 ml-1">*必填</span></span>
                   <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.groupId" :rules="validationRules.requireRules" disabled></v-text-field>
               </v-col>
-              <v-col cols="12" sm="12" md="4">
+              <v-col cols="12" sm="12" md="6">
                   <span class="jh-input-label">选择用户<span class="red--text text--accent-2 ml-1">*必填</span></span>
                   <v-autocomplete class="jh-v-input" dense single-line filled v-model="createItem.userId" :items="constantObj.userList" :rules="validationRules.requireRules" ></v-autocomplete>
               </v-col>
-              <v-col cols="12" sm="12" md="4">
+              <v-col cols="12" sm="12" md="12">
                   <span class="jh-input-label">选择职务</span>
-                  <v-autocomplete class="jh-v-input" dense single-line filled v-model="createItem.roleId" :items="roleList.filter(e => e.roleId != '*')" item-value="roleId" item-text="roleName" multiple></v-autocomplete>
+                  <v-autocomplete class="jh-v-input" dense single-line filled v-model="createItem.roleId" :items="roleList.filter(e => e.roleId != '*')" item-value="roleId" item-text="roleName" multiple>
+                    <template v-slot:selection="data">
+                      <v-chip
+                        small
+                        class="ma-1"
+                        :color="data.item.roleType == '临时职务' ? 'orange' : 'success'"
+                        outlined
+                      >
+                        【{{data.item.roleType[0]}}】
+                        <span>
+                          {{data.item.roleName}}
+                        </span>
+                      </v-chip>
+                    </template>
+                    <template v-slot:item="data">
+                      <v-chip
+                        small
+                        class="ma-1"
+                        :color="data.item.roleType == '临时职务' ? 'orange' : 'success'"
+                        text-color="white"
+                      >
+                        {{data.item.roleType[0]}}
+                      </v-chip>
+                      <span>
+                        {{data.item.roleName}}
+                      </span>
+                    </template>
+                  </v-autocomplete>
               </v-col>
+              <template v-if="createRoleConfig.filter(item => item.roleType == '临时职务')?.length > 0">
+                <v-col cols="12" sm="12" md="12">
+                  <span class="jh-input-label">设置临时职务期限</span>
+                  <v-card outlined>
+                      <v-data-table
+                        :headers="roleCreateHeaders"
+                        :items="createRoleConfig.filter(i => i.roleType == '临时职务')"
+                      >
+                      <template v-slot:item.deadline="{ item }">
+                        <v-autocomplete class="jh-v-input" dense single-line filled v-model="item.deadline" :items="constantObj.deadlineItem" item-value="days" item-text="text">
+                        </v-autocomplete>
+                      </template>
+                    </v-data-table>
+                  </v-card>
+                </v-col>
+              </template>
             </v-row>
             <!--抽屉操作按钮-->
             <v-row class="justify-end mx-0 my-8 px-4">
@@ -139,19 +182,66 @@
         <v-divider class="jh-divider"></v-divider>
         <!--抽屉表单主体-->
         <v-row class="mt-0 px-4">
-        <v-col cols="12" sm="12" md="4">
+        <v-col cols="12" sm="12" md="6">
             <span class="jh-input-label">组织<span class="red--text text--accent-2 ml-1">*必填</span></span>
             <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.groupId" :rules="validationRules.requireRules" disabled></v-text-field>
         </v-col>
-        <v-col cols="12" sm="12" md="4">
+        <v-col cols="12" sm="12" md="6">
             <span class="jh-input-label">选择用户<span class="red--text text--accent-2 ml-1">*必填</span></span>
             <v-autocomplete class="jh-v-input" dense single-line filled v-model="updateItem.userId" :items="constantObj.userList" :rules="validationRules.requireRules" disabled></v-autocomplete>
         </v-col>
-        <v-col cols="12" sm="12" md="4">
+        <v-col cols="12" sm="12" md="12">
             <span class="jh-input-label">选择职务</span>
-            <v-autocomplete class="jh-v-input" dense single-line filled v-model="updateItem.roleId" :items="roleList.filter(e => e.roleId != '*')" item-value="roleId" item-text="roleName" multiple></v-autocomplete>
+            <v-autocomplete class="jh-v-input" dense single-line filled v-model="updateItem.roleId" :items="roleList.filter(e => e.roleId != '*')" item-value="roleId" item-text="roleName" multiple>
+              <template v-slot:selection="data">
+                <v-chip
+                  small
+                  class="ma-1"
+                  :color="data.item.roleType == '临时职务' ? 'orange' : 'success'"
+                  outlined
+                >
+                  【{{data.item.roleType[0]}}】
+                  <span>
+                    {{data.item.roleName}}
+                  </span>
+                </v-chip>
+              </template>
+              <template v-slot:item="data">
+                <v-chip
+                  small
+                  class="ma-1"
+                  :color="data.item.roleType == '临时职务' ? 'orange' : 'success'"
+                  text-color="white"
+                >
+                  {{data.item.roleType[0]}}
+                </v-chip>
+                <span>
+                  {{data.item.roleName}}
+                </span>
+              </template>
+            </v-autocomplete>
         </v-col>
-        </v-row>
+        <template v-if="updateRoleConfig.filter(item => item.roleType == '临时职务')?.length > 0">
+          <v-col cols="12" sm="12" md="12">
+            <span class="jh-input-label">设置临时职务期限</span>
+            <v-card outlined>
+                <v-data-table
+                  :headers="roleUpdateHeaders"
+                  :items="updateRoleConfig.filter(i => i.roleType == '临时职务')"
+                >
+                <template v-slot:item.deadline="{ item }">
+                  <v-menu class="jh-v-input" transition="scale-transition" offset-y min-width="auto">
+                    <template v-slot:activator="{on, attrs}">
+                      <datetime-picker color="success" elevation="20" label="收款时间"
+                        v-model="item.deadline" :rules="validationRules.requireRules"></datetime-picker>
+                    </template>
+                  </v-menu>
+                </template>
+              </v-data-table>
+            </v-card>
+          </v-col>
+        </template>
+      </v-row>
         <!--抽屉操作按钮-->
         <v-row class="justify-end mx-0 my-8 px-4">
           <v-btn color="success" @click="doUiAction('updateItem')" small>保存</v-btn>
@@ -204,6 +294,11 @@
         },
         // 下拉选项
         constantObj: {
+          deadlineItem:[
+            { text:"7天", days:7 },
+            { text:"14天", days:14 },
+            { text:"30天", days:30 },
+          ]
         },
         serverSearchInput: {
         },
@@ -213,6 +308,16 @@
             {text: "用户", value: "username", width:180},
             {text: "职务", value: "role-name", width:380},
             {text: '操作', value: 'action', align: 'center', sortable: false, width: window.innerWidth < 500 ? 80 : 200, class: 'fixed', cellClass: 'fixed'},
+        ],
+        roleCreateHeaders:[
+            {text: "职务", value: "roleName", width:180},
+            {text: "类型", value: "roleType", width:180},
+            {text: "期限", value: "deadline", width:180},
+        ],
+        roleUpdateHeaders:[
+            {text: "职务", value: "roleName", width:180},
+            {text: "类型", value: "roleType", width:180},
+            {text: "到期日期", value: "deadline", width:180}
         ],
         // 新增数据
         isCreateDrawerShown: false,
@@ -227,6 +332,51 @@
         deleteItemId: null,
       }),
       computed: {
+        createRoleConfig(){
+          let roleConfig = []
+          this.createItem.roleId?.forEach(roleId => {
+            if(roleId == "*"){
+              roleConfig.push({
+                roleId,
+                roleName:"默认权限",
+                roleType:"正式职务",
+                deadline: -1
+              })
+              return
+            }
+            let role = this.roleList.find(item =>  item.roleId == roleId)
+            roleConfig.push({
+              roleId:role.roleId,
+              roleName:role.roleName,
+              roleType:role.roleType,
+              deadline: role.roleType == '临时职务' ? 7 : -1
+            })
+          });
+          return roleConfig
+        },
+        updateRoleConfig(){
+          let newRoleConfig = []
+          this.updateItem.roleId?.forEach(roleId => {
+            let oldRole = this.updateItem.roleConfig.find(item=>item.roleId == roleId)
+            let newRole = this.roleList.find(item =>  item.roleId == roleId)
+            if(oldRole){
+              newRoleConfig.push({
+                roleId: newRole.roleId,
+                roleName: newRole.roleName,
+                roleType: newRole.roleType,
+                deadline: oldRole.deadline
+              })
+            }else{
+              newRoleConfig.push({
+                roleId: newRole.roleId,
+                roleName: newRole.roleName,
+                roleType: newRole.roleType,
+                deadline: newRole.roleType == '临时职务' ? dayjs().add(7, 'day').format('YYYY-MM-DD') : -1
+              })
+            }
+          });
+          return newRoleConfig
+        }
       },
       watch: {
         activeRole(val) {
@@ -343,6 +493,7 @@
         prepareDoCreateItem() {
             const {id, ...data} = this.createItem;
             this.createActionData = _.pick(data, ['groupId', 'userId', 'roleId']);
+            this.createActionData.roleConfig = this.createRoleConfig
         },
 
         async doCreateItem() {
@@ -382,7 +533,7 @@
         // ---------- <<<<<<<<<<< 新增数据 uiAction  --------
         // ---------- 修改数据 uiAction >>>>>>>>>>>> --------
         async prepareUpdateFormData(funObj) {
-            this.updateItem = _.pick(funObj, ['id', 'groupId', 'userId', 'roleId']);;
+            this.updateItem = _.pick(funObj, ['id', 'groupId', 'userId', 'roleId','roleConfig']);;
         },
 
         async openUpdateDrawer() {
@@ -404,7 +555,7 @@
 
         async prepareDoUpdateItem() {
             const {id, ...data} = this.updateItem;
-            this.updateActionData = {...data, roleId: data.roleId};
+            this.updateActionData = {...data,roleConfig: this.updateRoleConfig};
         },
 
         async doUpdateItem() {

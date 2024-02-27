@@ -78,6 +78,11 @@
               <span class="jh-input-label">职务</span><span style="color: red;margin-left: 2px;">*</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.roleName"></v-text-field>
             </v-col>
+
+            <v-col cols="12" sm="12" md="4">
+              <span class="jh-input-label">职务类型</span><span style="color: red;margin-left: 2px;">*</span>
+              <v-select class="jh-v-input" dense single-line filled v-model="createItem.roleType" :items="constantObj.roleType"></v-select>
+            </v-col>
              
             <v-col cols="12" sm="12" md="4">
               <span class="jh-input-label">职务描述</span>
@@ -139,6 +144,7 @@
       },
       // 下拉选项
       constantObj: {
+        roleType:["正式职务","临时职务"]
       },
       serverSearchInput: {
       },
