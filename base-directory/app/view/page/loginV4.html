@@ -84,9 +84,6 @@
         isWorkWechat: true
       };
     },
-    async beforeMounte() {
-      this.doUiAction('getOauthUrl')
-    },
     async mounted() {
       this.isWorkWechatEnv();
       this.loading = false;
@@ -109,9 +106,6 @@
         switch (uiActionId) {
           case 'getUrlObj':
             await this.getUrlObj();
-            break;
-          case 'getOauthUrl':
-            await this.getOauthUrl();
             break;
           case 'login':
             await this.prepareLoginData();
@@ -166,16 +160,6 @@
         } catch (error) {
           console.error(error);
         }
-      },
-      async getOauthUrl(){
-        await window.jianghuAxios({
-          data: {
-            appData: {
-              pageId: 'login',
-              actionId: 'getOauthUrl',
-            }
-          }
-        });
       },
       // ---------- getUrlObj uiAction >>>>>>>>>> --------
       async getUrlObj() {
