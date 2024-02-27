@@ -33,7 +33,7 @@
             <v-card class="jh-wrapper-card">
               <v-row dense no-gutters v-if="isDirectoryLoading || (!isDirectoryLoading && directoryList)">
                 <!-- 目录 -->
-                <v-col cols="12" xs="12" sm="3" md="2" class="jh-fixed-table-height overflow-y-auto" style=" max-width: 240px !important;">
+                <v-col cols="12" xs="12" sm="3" md="2" class="jh-fixed-table-height overflow-y-auto" style=" max-width: 140px !important;">
                   <v-card flat class="py-1 px-8 jh-directory-card">
                     <div class="jh-card-body px-6 px-sm-0">
                       <v-skeleton-loader
@@ -66,7 +66,7 @@
                         <div class="mb-6" v-for="(catalog, catalogIndex) in directoryList" :key="catalogIndex">
                           <div class="font-weight-medium text-h6 mb-2" :id="`${catalog.name}`">{{catalog.name}}</div>
                           <v-row style="margin: -8px">
-                            <v-col cols="12" xs="12" sm="6" md="3"
+                            <v-col cols="12" xs="12" sm="6" md="4"
                               v-for="(app, appIndex) in catalog.children"  
                               :key="catalogIndex + '-' + appIndex"
                               class="pa-3"
