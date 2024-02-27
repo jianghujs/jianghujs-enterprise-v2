@@ -28,7 +28,7 @@
         <!-- <<<<<<<<<<<<< 头部内容 -->
 
         <!-- 页面内容 >>>>>>>>>>>>> -->
-        <div class="jh-page-body-container px-8">
+        <div class="jh-page-body-container px-8" :class="isWorkWechat ? 'pt-8': ''">
           <v-container class="pa-0">
             <v-card class="jh-wrapper-card">
               <v-row dense no-gutters v-if="isDirectoryLoading || (!isDirectoryLoading && directoryList)">
