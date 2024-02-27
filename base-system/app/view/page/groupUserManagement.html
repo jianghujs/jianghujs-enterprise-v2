@@ -210,7 +210,7 @@ new Vue({
             actionData: {},
             where,
             whereIn,
-            orderBy: [{column: 'userId', order: 'asc'}]
+            orderBy: [{column: 'userId', order: 'asc'}, {column: 'deadline', order: 'asc'}]
           }
         }
       })).data.appData.resultData.rows;
@@ -223,7 +223,10 @@ new Vue({
       Object.keys(groupBy).forEach(key => {
         const item = groupBy[key][0];
         item.username = groupBy[key][0].username;
-        item.roleName = groupBy[key].map(e => (e.roleName || '默认权限')).join(',');
+        item.roleName = groupBy[key].map(e => {
+          let roleName = e.deadline == -1 ? e.roleName : e.roleName +' 【'+ e.deadline +'】'
+          return (roleName  || '默认权限')
+        }).join(',');
         item.roleId = groupBy[key].map(e => e.roleId);
         item.roleConfig = groupBy[key].map(e => {
           return {
