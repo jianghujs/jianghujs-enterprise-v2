@@ -10,10 +10,10 @@
 <script type="text/html" id="app-template">
   <div>
     <v-app mobile-breakpoint="sm">
-      <jh-menu />
-      <v-main class="mt-13">
+      <jh-menu  v-if="!isWorkWechat"/>
+      <v-main>
         <!-- 头部内容 >>>>>>>>>>>>> -->
-        <div class="jh-page-second-bar px-8">
+        <div class="jh-page-second-bar px-8 mt-13" v-if="!isWorkWechat">
           <v-row class="align-center">
             <v-col cols="12" xs="12" sm="12" md="4" xl="3">
               <div class="py-4 text-body-1 font-weight-bold d-flex align-center">欢迎进入风神内网
@@ -156,7 +156,9 @@
       isDirectoryLoading: true,
       directoryList: null,
       activeDirectory: null,
-      expandApp: []
+      expandApp: [],
+
+      isWorkWechat: false
     },
     computed: {
       groupedItems() {
@@ -180,6 +182,7 @@
     watch: { },
     async created() { },
     mounted() {
+      this.isWorkWechatEnv();
       this.doUiAction('getTableData');
     },
     methods: {
@@ -234,6 +237,17 @@
       },
       jump(url) {
         window.open(url);
+      },
+      //  判断是否企微环境
+      async isWorkWechatEnv() {
+        //获取user-agaent标识头
+        var ua = window.navigator.userAgent.toLowerCase();
+        //判断ua和微信浏览器的标识头是否匹配
+        if ((ua.match(/micromessenger/i) == 'micromessenger') && (ua.match(/wxwork/i) == 'wxwork')) {
+          this.isWorkWechat = true;
+        } else {
+          this.isWorkWechat = false;
+        }
       }
     }
   })
