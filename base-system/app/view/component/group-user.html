@@ -458,7 +458,9 @@
                     pageId: 'groupUserManagement',
                     actionId: 'getUserData',
                     actionData: {},
-                    where: {},
+                    where: {
+                      userStatus: "active"
+                    },
                     orderBy: [{column: 'userId', order: 'asc'}]
                 }
                 }
