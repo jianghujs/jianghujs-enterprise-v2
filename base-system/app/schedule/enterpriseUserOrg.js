@@ -14,7 +14,7 @@ module.exports = app => {
     async task(ctx) {
         const startTime = new Date().getTime();
         const { jianghuKnex, logger } = app;
-        await ctx.service.user.updateUserOrg();
+        await ctx.service.userGroupRole.updateUserOrg();
         const endTime = new Date().getTime();
         logger.info('[schedule/enterpriseUserOrg.js]', { useTime: `${endTime - startTime}/ms` });
     }
