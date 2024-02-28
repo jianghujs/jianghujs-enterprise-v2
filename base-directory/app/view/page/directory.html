@@ -79,7 +79,7 @@
                                       <div class="jh-app-icon">
                                         <v-avatar size="28" v-if="app.icon" tile>
                                           <img
-                                            :src="'/<$ ctx.app.config.appId $>' + app.icon"
+                                            :src="constantObj.directoryUrl + '/<$ ctx.app.config.appId $>' + app.icon"
                                           >
                                         </v-avatar>
                                         <svg v-else t="1702548638970" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="13380" width="200" height="200"><path d="M864 144.014222H559.985778a16.042667 16.042667 0 0 0-15.985778 15.985778v304.014222c0 8.789333 7.196444 15.985778 16.014222 15.985778h303.985778c8.817778 0 16.014222-7.196444 16.014222-16.014222V160.028444a16.042667 16.042667 0 0 0-16.014222-16.014222z m0 399.985778H559.985778a16.042667 16.042667 0 0 0-15.985778 16.014222v303.985778c0 8.817778 7.196444 16.014222 16.014222 16.014222h303.985778c8.817778 0 16.014222-7.224889 16.014222-16.014222V559.985778a16.042667 16.042667 0 0 0-16.014222-15.985778zM463.985778 143.985778H160.028444a16.042667 16.042667 0 0 0-16.014222 16.014222v304.014222c0 8.789333 7.224889 15.985778 16.014222 15.985778h304.014223c8.789333 0 15.985778-7.196444 15.985777-16.014222V160.028444a16.042667 16.042667 0 0 0-16.014222-16.014222z m0 400.014222H160.028444a16.042667 16.042667 0 0 0-16.014222 16.014222v303.985778c0 8.817778 7.224889 16.014222 16.014222 16.014222h304.014223c8.789333 0 15.985778-7.224889 15.985777-16.014222V559.985778a16.042667 16.042667 0 0 0-16.014222-15.985778z" fill="#333333" fill-opacity=".65" p-id="13381"></path></svg>
@@ -98,7 +98,7 @@
                                     <div v-for="(children, childIndex) in app.children"  key="childIndex" class="jh-font-size-14 grey--text text--darken-2 text-truncate mt-1 d-flex align-center"  @click="doUiAction('jump', children.link)">
                                       <v-avatar size="20" v-if="app.icon" tile>
                                         <img
-                                          :src="'/<$ ctx.app.config.appId $>' + app.icon"
+                                          :src="constantObj.directoryUrl + '/<$ ctx.app.config.appId $>' + app.icon"
                                         >
                                       </v-avatar>
                                       <v-icon v-else size="16">mdi-open-in-new</v-icon>
@@ -142,6 +142,7 @@
 </div>
 {% endblock %}
 {% block vueScript %}
+{% include 'common/constantUtil.html' %}
 {% include 'common/jianghuJs/fixedTableHeightV4.html' %}
 <script type="module">
 
@@ -158,7 +159,10 @@
       activeDirectory: null,
       expandApp: [],
 
-      isWorkWechat: false
+      isWorkWechat: false,
+      constantObj:{
+        directoryUrl:window.constantObj.directoryUrl
+      }
     },
     computed: {
       groupedItems() {
