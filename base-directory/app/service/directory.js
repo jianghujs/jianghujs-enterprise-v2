@@ -157,9 +157,6 @@ class DirectoryService extends Service {
   ) {
     const idFieldKey = `${fieldKey}Id`;
     const allowItemList = [];
-    const allItemMap = Object.fromEntries(
-      allItemList.map(obj => [ obj[idFieldKey], obj ])
-    );
 
     if (!allItemList || !allRuleList) {
       return allowItemList;
@@ -192,24 +189,12 @@ class DirectoryService extends Service {
         if (userGroupRoleListRule.length == 0) {
           return;
         }
-        // if (
-        //   !this.checkRule(userIdList, rule.user) ||
-        //   !this.checkRule(groupIdList, rule.group) ||
-        //   !this.checkRule(roleIdList, rule.role)
-        // ) {
-        //   return;
-        // }
-
-        // Tip: 过时的代码
-        // if (rule.group === 'public') {
-        //   isPublic = true;
-        // }
+        
         resultAllowOrDeny = rule.allowOrDeny;
       });
 
       if (resultAllowOrDeny === 'allow') {
-        const allItem = allItemMap[item[idFieldKey]];
-        allowItemList.push({ ...allItem, isPublic });
+        allowItemList.push({ ...item, isPublic });
       }
     });
     return allowItemList;
