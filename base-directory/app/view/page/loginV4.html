@@ -81,16 +81,18 @@
         isRememberPassword: true,
         loading: false,
         enableWechatLogin: '<$ ctx.app.config.enableWechatLogin $>',
-        isWorkWechat: true
+        isWorkWechat: true,
+        isAutoLogin: false
       };
     },
     async mounted() {
       this.isWorkWechatEnv();
       this.loading = false;
       const urlParams = new URLSearchParams(location.search);
-      this.doUiAction('getUrlObj');
 
-      if (urlParams.get('isAutoLogin') && urlParams.get('isAutoLogin') == true) {
+      this.doUiAction('getUrlObj'); 
+
+      if (this.isAutoLogin && this.isAutoLogin == "true") {
         this.toWecomOauthUrl();
         return;
       }
@@ -170,6 +172,16 @@
         }
 
         this.redirectUrl = urlObj.get('redirectUrl');
+
+        let transformRedirectUrl = decodeURIComponent(this.redirectUrl)
+        // 使用正则获取isAutoLogin的值
+        var regex = /[?&]isAutoLogin(=([^&#]*)|&|#|$)/;
+        var results = regex.exec(transformRedirectUrl);
+        if (!results || !results[2]){
+          this.isAutoLogin = null;
+        } else {
+          this.isAutoLogin = decodeURIComponent(results[2].replace(/\+/g, " "));
+        }
       },
       // ---------- <<<<<<<<<<< getUrlObj uiAction  --------
 
