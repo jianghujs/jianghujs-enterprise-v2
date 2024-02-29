@@ -73,14 +73,19 @@ class UserGroupRoleService extends Service {
     await jianghuKnex.transaction(async trx => { 
 
       // 删除旧的
-      await trx('enterprise_user_group_role').where({userId, groupId}).delete();
-      // 插入新的
-      await trx('enterprise_user_group_role', this.ctx).insert(roleInsertList);
+      await trx('enterprise_user_group_role').where({ userId, groupId }).delete();
+      if (roleInsertList.length > 0) { 
+        // 插入新的
+        await trx('enterprise_user_group_role', this.ctx).insert(roleInsertList);
+       }
+      
 
       // 删除旧的
-      await trx('enterprise_user_app').where({userId, groupId}).delete();
-      // 插入新的
-      await trx('enterprise_user_app', this.ctx).insert(appInsertList);
+      await trx('enterprise_user_app').where({ userId, groupId }).delete();
+      if (appInsertList.length > 0) {
+        // 插入新的
+        await trx('enterprise_user_app', this.ctx).insert(appInsertList);
+      }
 
     })
   }
