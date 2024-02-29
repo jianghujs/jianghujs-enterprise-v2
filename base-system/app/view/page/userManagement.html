@@ -18,6 +18,17 @@
               </span>
             </div>
           </v-col>
+          <!--pc端的搜索条件表单 >>>>>>>> -->
+          <v-col cols="12" xs="12" sm="12" md="8" xl="9">
+            <v-row class="jh-backend-form-container justify-end ma-0 py-1 pb-xs-2">
+              <v-col cols="12" xs="6" sm="6" md="4" xl="3" class="pa-xs-0 pb-2 pr-1 pr-xs-1">
+                <v-select v-model="serverSearchInput.userStatus" color="success" prefix="用户状态：" multiple class="jh-v-input bg-white" :items="constantObj.userStatus" dense filled single-line></v-select>
+              </v-col>
+              <v-btn class="jh-backend-search-btn elevation-0 ml-0 mt-3" color="success" small @click="doUiAction('getTableData')">
+                查询
+              </v-btn>
+            </v-row>
+          </v-col>
         </v-row>
       </div>
       <!-- <<<<<<<<<<<<< 头部内容 -->
@@ -29,24 +40,6 @@
           <v-row class="ma-0 pa-4 pb-0">
             <!--新增按钮-->
             <v-btn color="success" class="elevation-0 mr-2" @click="doUiAction('startCreateItem')" small>新增</v-btn>
-            <!-- <v-btn color="success" class="elevation-0 mr-2" @click="doUiAction('startCreateItem')" small>新增</v-btn> -->
-
-            <!-- <template v-slot:activator="{ on, attrs }">
-              <v-btn :disabled="!tableSelected.length" outlined color="success" class="elevation-0 mr-2" small v-bind="attrs" v-on="on">
-                  ···<v-icon size="14" class="success--text">mdi-chevron-down</v-icon>
-              </v-btn>
-            </template>
-            <v-list dense>
-              <v-list-item @click="doUiAction('createPaymentRequest')">
-                <v-list-item-title>批量创建付款申请</v-list-item-title>
-              </v-list-item>
-              <v-list-item @click="doUiAction('createPurchaseWarehouseInRequest')">
-                <v-list-item-title>批量创建入库申请</v-list-item-title>
-              </v-list-item>
-              <v-list-item @click="doUiAction('deleteItem', { isDeleteAndCopyItem: false})" v-if="_.find(window.userInfo.allowResourceList, {resourceId: 'purchaseOrderManagement.deleteItem'})">
-                <v-list-item-title class="red--text">批量删除订单</v-list-item-title>
-              </v-list-item>
-            </v-list> -->
             <v-spacer></v-spacer>
             <!--搜索过滤-->
             <v-col cols="12" xs="8" sm="4" md="3" xl="2" class="pa-0">
@@ -353,22 +346,25 @@ new Vue({
     },
     // 常量列表
     constantObj: {
-      userStatus: [{value: 'active', text: '正常'}, {value: 'banned', text: '禁用'}],
+      userStatus: [{value: 'active', text: '正常'}, {value: 'inactive', text: '禁用'}],
       userType: [{value: 'common', text: '普通用户'}],
+    },
+    serverSearchInput: {
+        userStatus: ['active'],
     },
     searchInput: null,
     isTableLoading: true,
     tableData: [],
 
     headers: [
-      {text: "用户ID[登陆]", value: "userId", width: 120},
+      {text: "用户ID[登陆]", value: "userId", width: 100},
       {text: "用户名", value: "username", width: 100},
+      {text: "用户状态", value: "userStatus", width: 90},
       {text: "所属组织", value: "orgFullName", width: 400},
       {text: "职务", value: "title", width: 150},
-      {text: "用户状态", value: "userStatus", width: 120},
       {text: "初始密码", value: "clearTextPassword", width: 120},
-      {text: "操作人", value: "operationByUser", width: 120},
-      {text: "操作时间", value: "operationAt", width: 250},
+      {text: "操作人", value: "operationByUser", width: 100},
+      {text: "操作时间", value: "operationAt", width: 180},
       {text: '操作', value: 'action', align: 'center', sortable: false, width: window.innerWidth < 500 ? 80 : 300, class: 'fixed', cellClass: 'fixed'},
     ],
     drawerHeaders:[
@@ -480,6 +476,11 @@ new Vue({
     },
     async getTableData() {
       this.isTableLoading = true;
+      const backendSearchData = _.pickBy(this.serverSearchInput, (fieldValue, fieldKey) => {
+        if (fieldValue !== null && fieldValue !== '') {
+          return true;
+        }
+      });
       const result = await window.jianghuAxios({
         data: {
           appData: {
@@ -487,6 +488,7 @@ new Vue({
             actionId: 'selectItemList',
             actionData: {},
             where: {},
+            whereIn: backendSearchData,
             orderBy: [{column: 'operationAt', order: 'desc'}]
           }
         }
