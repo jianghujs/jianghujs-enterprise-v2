@@ -174,7 +174,7 @@ class AppService extends Service {
           table.text('pageIcon').after('pageType');
         });
       }
-      await knex(`${appDatabase}._page`).where({ pageName: '通知', pageType: 'showInRightMenu' }).delete();
+      await knex(`${appDatabase}._page`).where({ pageName: '通知/待办', pageType: 'showInRightMenu' }).delete();
       await knex(`${appDatabase}._page`).insert({
         pageId: taskApp.appUrl + '/page/noticeManagement',
         pageName: '通知/待办', pageType: 'showInRightMenu',
