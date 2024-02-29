@@ -9,10 +9,9 @@
     </label>
 
 
-    <v-card class="mt-2 todo-list">
-      <div v-for="(item, index) in files" :key="index" class="todo-item d-flex align-center"
-        style="border: 1px solid #eee">
-        <p class="ma-0 todo-item-text">{{ item.filename }}</p>
+      <div v-for="(item, index) in files" :key="index" class="d-flex align-center mt-2 pa-1"
+        style="border: 1px solid #cbcbcb">
+        <p class="ma-0">{{ item.filename }}</p>
         <v-menu offset-y>
           <template v-slot:activator="{ on, attrs }">
             <v-btn v-if="!readonly" icon small v-bind="attrs" v-on="on">
@@ -29,7 +28,6 @@
           </v-list>
         </v-menu>
       </div>
-    </v-card>
   </div>
 </template>
 

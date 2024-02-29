@@ -11,20 +11,20 @@
       <v-row class="mt-0 px-4">
          
          
-        <v-col cols="12" sm="12" md="4">
+        <v-col cols="12" sm="12" md="6">
           <span class="jh-input-label"><span class="red--text">*</span>审批名称</span>
           <v-text-field :rules="validationRules.requireRules" class="jh-v-input" dense single-line filled v-model="createItem.taskTitle"></v-text-field>
         </v-col>
          
-        <v-col cols="12" sm="12" md="4">
+        <v-col cols="12" sm="12" md="6">
           <span class="jh-input-label">审批描述</span>
           <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.taskDesc"></v-text-field>
         </v-col>
-        <v-col cols="12" sm="12" md="8">
+        <v-col cols="12" sm="12" md="12">
           <span class="jh-input-label">审批内容</span>
           <v-textarea class="jh-v-input" dense single-line filled v-model="createItem.taskContent"></v-textarea>
         </v-col>
-        <v-col cols="12" sm="12" md="4"></v-col>
+        <!-- <v-col cols="12" sm="12" md="4"></v-col> -->
         <!-- <v-col cols="12" sm="12" md="4">
           <span class="jh-input-label">任务模板</span>
 
@@ -33,7 +33,7 @@
             </v-autocomplete>
         </v-col> -->
 
-        <v-col cols="12" sm="12" md="12" xl="12"
+        <!-- <v-col cols="12" sm="12" md="12" xl="12"
         v-if="createItem.taskAuditConfig.length">
         <span class="inputLabel">审批人列表</span>
         <v-row v-for="item in createItem.taskAuditConfig">
@@ -43,14 +43,49 @@
           </v-col>
           <v-col cols="4">
             <v-autocomplete hide-actions hide-controls hide-details :items="userList" item-text="username" item-value="userId" class="jh-v-input mr-2" dense
-              filled single-line :rules="validationRules.requireRules" v-model="item.userId" disabled>
+              filled single-line :rules="validationRules.requireRules" v-model="item.userId">
             </v-autocomplete>
           </v-row>
-      </v-col>  
-      <v-col cols="12" sm="12" md="12">
-        <span class="jh-input-label">附件列表
-        <task-attachment-list :files.sync="createItem.taskFileList" />
-      </v-col>
+        </v-col>   -->
+        <v-col cols="12" sm="12" md="12">
+          <span class="jh-input-label">附件列表
+          <task-attachment-list :files.sync="createItem.taskFileList" />
+        </v-col>
+        <!-- <v-divider class="jh-divider"></v-divider>  -->
+        <v-col cols="12" sm="12" md="12">
+          
+          <div style="font-weight: 600">审批流程<span class="grey--text ml-1">（已由管理员预设不可修改审批人和删除抄送人）</span></div>
+        
+          <v-stepper
+            vertical
+            flat
+            v-model="step"
+          >
+            <v-stepper-step
+              step="1"
+            >
+              <div style="font-weight: 600;">审批人<span class="red--text ml-1">*</span></div>
+            </v-stepper-step>
+
+            <v-stepper-content step="1">
+              <span style="width: 50px;height: 50px;background-color: #9bda9d80; display: inline-block;" class="d-flex align-center justify-center">
+                <v-icon size="30" color="green">mdi-plus</v-icon>
+              </span>
+            </v-stepper-content>
+
+            <v-stepper-step
+              step="2"
+            >
+              <span style="font-weight: 600;">抄送人</span>
+            </v-stepper-step>
+
+            <v-stepper-content step="2">
+              <div style="width: 50px;height: 50px;background-color: #a9c2e696;" class="d-flex align-center justify-center">
+                <v-icon size="30" color="blue">mdi-plus</v-icon>
+              </div>
+            </v-stepper-content>
+          </v-stepper>
+        </v-col>
       </v-row>
 
       <!-- 抽屉操作按钮 -->
@@ -78,8 +113,27 @@
     data: () => ({
       isCreateDrawerShown: false,
       createItem: {
-        taskAuditConfig: []
+        taskAuditConfig: [
+          {
+            position: "审批人1",
+            userId: "T001"
+          },
+          {
+            position: "审批人2"
+          },
+        ]
       },
+      userList:[
+        {
+          userId: "T001",
+          username: "测试001"
+        },
+        {
+          userId: "T002",
+          username: "测试002"
+        },
+      ],
+      step:1,
       validationRules: {
         requireRules: [
           v => !!v || '必填',
