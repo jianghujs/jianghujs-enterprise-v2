@@ -16,7 +16,7 @@ module.exports = appInfo => {
     appTitle: '系统管理',
     appLogo: `${appId}/public/img/logo.png`,
     appType: 'multiApp',
-    appDirectoryLink: 'http://127.0.0.1:7273/directory',
+    appDirectoryLink: '/directory',
     indexPage: `/${appId}/page/appManagement`,
     loginPage: `/${appId}/page/login`,
     helpPage: `/${appId}/page/help`,

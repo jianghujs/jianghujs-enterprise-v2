@@ -18,7 +18,7 @@ module.exports = appInfo => {
     appTitle: '办公应用',
     appLogo: `${appId}/public/img/logo.png`,
     appType: 'multiApp',
-    appDirectoryLink: 'http://127.0.0.1:7273/directory',
+    appDirectoryLink: '/directory',
     indexPage: `/${appId}/page/workbench`,
     loginPage: `/${appId}/page/login`,
     helpPage: `/${appId}/page/help`,

@@ -13,13 +13,12 @@ module.exports = appInfo => {
   const appId = 'directory';
 
   return {
-    enableWechatLogin: 'enabled',
     appId,
     projectId,
     appTitle: '风神内网',
     appLogo: `${appId}/public/img/logo.png`,
     appType: 'multiApp',
-    appDirectoryLink: 'http://127.0.0.1:7273/directory',
+    appDirectoryLink: '/directory',
     indexPage: `/${appId}/page/directory`,
     loginPage: `/${appId}/page/login`,
     helpPage: `/${appId}/page/help`,

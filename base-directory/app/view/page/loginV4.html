@@ -38,7 +38,7 @@
                   <!-- 操作按钮 -->
                   <v-row class="my-0 px-3">
                     <v-btn block color="success" @click="doUiAction('login')" small>登录</v-btn>
-                    <v-btn :disabled="loading" v-if="enableWechatLogin == 'enabled' && isWorkWechat" class="mt-2" block large @click="toWecomOauthUrl">企微登录</v-btn>
+                    <v-btn :disabled="loading" v-if="isWorkWechat" class="mt-2" block large @click="toWecomOauthUrl">企微登录</v-btn>
                   </v-row>
                 </v-form>
               </v-card-text>
@@ -80,7 +80,6 @@
         isPasswordShown: false,
         isRememberPassword: true,
         loading: false,
-        enableWechatLogin: '<$ ctx.app.config.enableWechatLogin $>',
         isWorkWechat: true,
         isAutoLogin: false
       };

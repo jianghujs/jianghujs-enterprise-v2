@@ -6,8 +6,10 @@ require('dotenv').config({path: path.resolve(__dirname, '../../../.env')});
 module.exports = appInfo => {
 
   return {
-    appType: 'multiApp',
-    appDirectoryLink: '/directory',
+    // appType: 'multiApp',
+    // appDirectoryLink: '/directory',
+    // authTokenKey: 'directory',
+    // loginPage: '/directory/page/login',
     jiangHuConfig: {
       packageIdCheck: false,
       updateRequestDemoAndResponseDemo: false,

@@ -6,8 +6,18 @@ require('dotenv').config({path: path.resolve(__dirname, '../../../.env')});
 module.exports = appInfo => {
 
   return {
-    appType: 'multiApp',
-    appDirectoryLink: '/directory',
+    // appType: 'multiApp',
+    // appDirectoryLink: '/directory',
+    // authTokenKey: 'directory',
+    // loginPage: '/directory/page/login',
+    wechat: {
+      qyApiConfig: {
+        // appId: '123',
+        // appScrect: '123',
+        // corpId: '123',
+        // loginRedirectUri:'https://wxsg.foisongroup.com/foison06-exabytes-qwLogin.html'
+      },
+    },
     jiangHuConfig: {
       packageIdCheck: true,
       updateRequestDemoAndResponseDemo: false,
