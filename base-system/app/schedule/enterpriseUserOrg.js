@@ -3,13 +3,14 @@ const _ = require('lodash');
 const dayjs = require('dayjs');
 const Knex = require('knex');
 
+// Tip: 功能废弃, 待删除; 0301,
 module.exports = app => {
   return {
     schedule: {
-      immediate: true,
+      immediate: false,
       cron: "0 1 * * *", // 每天 1 点执行
       type: 'worker', // 只有一个worker执行
-      disable: false,
+      disable: true,
     },
     async task(ctx) {
         const startTime = new Date().getTime();
