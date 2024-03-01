@@ -150,8 +150,8 @@
                         :headers="roleCreateHeaders"
                         :items="createRoleConfig.filter(i => i.roleType == '临时职务')"
                       >
-                      <template v-slot:item.deadline="{ item }">
-                        <v-autocomplete class="jh-v-input" dense single-line filled v-model="item.deadline" :items="constantObj.deadlineItem" item-value="days" item-text="text">
+                      <template v-slot:item.role-deadline-1="{ item }">
+                        <v-autocomplete class="jh-v-input" dense single-line filled v-model="item.roleDeadline" :items="constantObj.roleDeadlineItem" item-value="days" item-text="text">
                         </v-autocomplete>
                       </template>
                     </v-data-table>
@@ -229,11 +229,11 @@
                   :headers="roleUpdateHeaders"
                   :items="updateRoleConfig.filter(i => i.roleType == '临时职务')"
                 >
-                <template v-slot:item.deadline="{ item }">
+                <template v-slot:item.role-deadline-2="{ item }">
                   <v-menu class="jh-v-input" transition="scale-transition" offset-y min-width="auto">
                     <template v-slot:activator="{on, attrs}">
                       <datetime-picker color="success" elevation="20" label="收款时间"
-                        v-model="item.deadline" :rules="validationRules.requireRules"></datetime-picker>
+                        v-model="item.roleDeadline" :rules="validationRules.requireRules"></datetime-picker>
                     </template>
                   </v-menu>
                 </template>
@@ -294,7 +294,7 @@
         },
         // 下拉选项
         constantObj: {
-          deadlineItem:[
+          roleDeadlineItem:[
             { text:"7天", days:7 },
             { text:"14天", days:14 },
             { text:"30天", days:30 },
@@ -312,12 +312,12 @@
         roleCreateHeaders:[
             {text: "职务", value: "roleName", width:180},
             {text: "类型", value: "roleType", width:180},
-            {text: "期限", value: "deadline", width:180},
+            {text: "期限", value: "role-deadline-1", width:180},
         ],
         roleUpdateHeaders:[
             {text: "职务", value: "roleName", width:180},
             {text: "类型", value: "roleType", width:180},
-            {text: "到期日期", value: "deadline", width:180}
+            {text: "到期日期", value: "role-deadline-2", width:180}
         ],
         // 新增数据
         isCreateDrawerShown: false,
@@ -340,7 +340,7 @@
                 roleId,
                 roleName:"默认权限",
                 roleType:"正式职务",
-                deadline: -1
+                roleDeadline: -1
               })
               return
             }
@@ -349,7 +349,7 @@
               roleId:role.roleId,
               roleName:role.roleName,
               roleType:role.roleType,
-              deadline: role.roleType == '临时职务' ? 7 : -1
+              roleDeadline: role.roleType == '临时职务' ? 7 : -1
             })
           });
           return roleConfig
@@ -364,14 +364,14 @@
                 roleId: newRole.roleId,
                 roleName: newRole.roleName,
                 roleType: newRole.roleType,
-                deadline: oldRole.deadline
+                roleDeadline: oldRole.roleDeadline
               })
             }else{
               newRoleConfig.push({
                 roleId: newRole.roleId,
                 roleName: newRole.roleName,
                 roleType: newRole.roleType,
-                deadline: newRole.roleType == '临时职务' ? dayjs().add(7, 'day').format('YYYY-MM-DD') : -1
+                roleDeadline: newRole.roleType == '临时职务' ? dayjs().add(7, 'day').format('YYYY-MM-DD') : -1
               })
             }
           });

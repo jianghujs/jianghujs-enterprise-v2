@@ -25,7 +25,7 @@ class UserGroupRoleService extends Service {
         userId,
         roleId: item.roleId,
         groupId,
-        deadline: item.deadline == -1 ? item.deadline : dayjs().add(item.deadline, 'day').format('YYYY-MM-DD')
+        roleDeadline: item.roleDeadline == -1 ? item.roleDeadline : dayjs().add(item.roleDeadline, 'day').format('YYYY-MM-DD')
       })
     })
     appList.forEach( appItem => {
@@ -58,7 +58,7 @@ class UserGroupRoleService extends Service {
         userId,
         roleId: item.roleId,
         groupId,
-        deadline: item.roleType == "临时职务" ? item.deadline : -1
+        roleDeadline: item.roleType == "临时职务" ? item.roleDeadline : -1
       })
     })
     appList.forEach( appItem => {
@@ -173,7 +173,7 @@ class UserGroupRoleService extends Service {
     const userGroupRoleList = await jianghuKnex('enterprise_user_group_role')
         .where('groupId', '<>', 'login')
         .where('groupId', '<>', '超级管理员')
-        .where('deadline', '=', '-1')
+        .where('roleDeadline', '=', '-1')
         .select()
         .orderBy("id", "asc")
     const groupList = await jianghuKnex('enterprise_group')

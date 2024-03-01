@@ -339,7 +339,7 @@ class AppService extends Service {
         groupId: 'login',
         roleId: 'commonAuth',
         userId: createUserId,
-        deadline: -1,
+        roleDeadline: -1,
       })
 
 
@@ -368,7 +368,7 @@ class AppService extends Service {
             groupId: 'login',
             roleId: 'commonAuth',
             userId: user.userId,
-            deadline: -1,
+            roleDeadline: -1,
           })
         }
 
@@ -430,14 +430,14 @@ class AppService extends Service {
     const { jianghuKnex } = this.app;
     let today = dayjs().format('YYYY-MM-DD')
     const userRoleList = await jianghuKnex('enterprise_user_group_role')
-      .where('deadline', '<', today)
-      .where('deadline', '<>', '-1')
+      .where('roleDeadline', '<', today)
+      .where('roleDeadline', '<>', '-1')
       .select();
     
     // enterprise_user_group_role
     await jianghuKnex('enterprise_user_group_role')
-      .where('deadline', '<', today)
-      .where('deadline', '<>', '-1')
+      .where('roleDeadline', '<', today)
+      .where('roleDeadline', '<>', '-1')
       .jhDelete();
     
     // enterprise_user_app
