@@ -141,7 +141,7 @@ class AppService extends Service {
         currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role AS ${getJhIdViewSql(appListByDatabase, 'enterprise_user_group_role')};`),
         currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role_page AS ${getJhIdViewSql(appListByDatabase, 'enterprise_user_group_role_page')};`),
         currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role_resource AS ${getJhIdViewSql(appListByDatabase, 'enterprise_user_group_role_resource')};`),
-        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _directory_user_session AS ${getJhIdViewSql(appListByDatabase, 'directory_user_session')};`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _directory_user_session AS ${getJhIdViewSql(appListByDatabase, 'enterprise_directory_user_session')};`),
         currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view01_user AS ${getJhIdViewSql(appListByDatabase, 'enterprise_view01_user')};`),
         currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view02_user_app AS ${getJhIdViewSql(appListByDatabase, 'enterprise_view02_user_app')};`),
       ];
@@ -160,7 +160,7 @@ class AppService extends Service {
     const systemKnex = Knex(knex.client.config);
     await systemKnex.raw(`DROP VIEW IF EXISTS _enterprise_user_session;`);
     await systemKnex.raw(`DROP VIEW IF EXISTS _directory_user_session;`);
-    await systemKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _directory_user_session AS ${getJhIdViewSql(['system'], 'directory_user_session')};`);
+    await systemKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _directory_user_session AS ${getJhIdViewSql(['system'], 'enterprise_directory_user_session')};`);
     await systemKnex.destroy();
 
 
