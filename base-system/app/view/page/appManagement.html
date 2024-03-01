@@ -128,8 +128,8 @@
                 <v-text-field class="jh-v-input" dense single-line filled label="应用名" v-model="createItem.appName" :rules="validationRules.requireRules"></v-text-field>
               </v-col>
               <v-col cols="12" sm="12" md="4">
-                <span class="jh-input-label">应用类型<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-text-field class="jh-v-input" dense single-line filled label="应用类型" v-model="createItem.appType" :rules="validationRules.requireRules"></v-text-field>
+                <span class="jh-input-label">应用类型</span>
+                <v-text-field class="jh-v-input" dense single-line filled label="应用类型" v-model="createItem.appType"></v-text-field>
               </v-col>
             </v-row>
             <!--抽屉操作按钮-->
@@ -165,7 +165,7 @@
               </v-col>
               <v-col cols="12" sm="12" md="4">
                 <span class="jh-input-label">应用类型<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-text-field class="jh-v-input" dense single-line filled label="应用类型" v-model="updateItem.appType" :rules="validationRules.requireRules"></v-text-field>
+                <v-text-field class="jh-v-input" dense single-line filled label="应用类型" v-model="updateItem.appType"></v-text-field>
               </v-col>
             </v-row>
             <!--抽屉操作按钮-->
@@ -447,7 +447,7 @@ new Vue({
 
     async doCreateItem() {
       await window.jhMask.show();
-      await window.vtoast.loading("新增学生");
+      await window.vtoast.loading("新增");
       await window.jianghuAxios({
         data: {
           appData: {
@@ -458,7 +458,7 @@ new Vue({
         }
       })
       await window.jhMask.hide();
-      await window.vtoast.success("新增学生成功");
+      await window.vtoast.success("新增成功");
     },
     async closeCreateDrawer() {
       this.isCreateDrawerShown = false;
@@ -496,7 +496,7 @@ new Vue({
 
     async doUpdateItem() {
       await window.jhMask.show();
-      await window.vtoast.loading("修改学生");
+      await window.vtoast.loading("修改");
       await window.jianghuAxios({
         data: {
           appData: {
@@ -509,7 +509,7 @@ new Vue({
       })
 
       await window.jhMask.hide();
-      await window.vtoast.success("修改学生成功");
+      await window.vtoast.success("修改成功");
     },
 
     async closeUpdateDrawer() {
@@ -529,7 +529,7 @@ new Vue({
       }
     },
     async doDeleteItem() {
-      await window.vtoast.loading("删除学生");
+      await window.vtoast.loading("删除");
       await window.jianghuAxios({
         data: {
           appData: {
@@ -540,7 +540,7 @@ new Vue({
           }
         }
       });
-      await window.vtoast.success("删除学生成功");
+      await window.vtoast.success("删除成功");
       this.deleteItem = {};
       this.deleteItemId = null;
     },
