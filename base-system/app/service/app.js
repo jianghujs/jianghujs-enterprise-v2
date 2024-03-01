@@ -18,7 +18,7 @@ const getJhIdViewSql = (appList, tableName) => {
     let whereClause = ''; // 初始化 WHERE 子句
     if (['enterprise_user_group_role_page', 'enterprise_user_group_role_resource'].includes(tableName)) {
       whereClause = ` WHERE appId = '{APPID}' OR appId = '*'`;
-    } else if (tableName === 'enterprise_user_app' || tableName === 'enterprise_view02_user_app') {
+    } else if (tableName === 'enterprise_view02_user_app') {
       whereClause = ` WHERE appId = '{APPID}'`;
     }
     // 如果所有的 jhId 都是空，生成一个简单的 SELECT 查询
@@ -30,7 +30,7 @@ const getJhIdViewSql = (appList, tableName) => {
     return `SELECT '${appJhId}' as jhId`;
   }).join(' UNION ALL ');
 
-  if (['enterprise_user_group_role_page', 'enterprise_user_group_role_resource', 'enterprise_user_app', 'enterprise_view02_user_app'].includes(tableName)) {
+  if (['enterprise_user_group_role_page', 'enterprise_user_group_role_resource', 'enterprise_view02_user_app'].includes(tableName)) {
     const appIdJhidMap = _.fromPairs(appList.map(({ appId, appJhId }) => [appId, appJhId]));
     const appIdList = _.uniq(appList.map(({ appId }) => appId));
     /**
@@ -45,7 +45,7 @@ const getJhIdViewSql = (appList, tableName) => {
       ifClasus += ` WHEN '${appId}' THEN '${jhId}'`;
     });
     let userAppWhereClause = appIdList.length > 1 ? ` WHERE appId IN ('${appIdList.join("','")}')` : ` WHERE appId = '${appIdList[0]}'`;
-    if (tableName != 'enterprise_user_app' && tableName != 'enterprise_view02_user_app') {
+    if (tableName != 'enterprise_view02_user_app') {
       userAppWhereClause += ` union all 
       SELECT jhId_values.jhId, jh_enterprise_v2_data_repository.${tableName}.* 
           FROM (${jhIdValuesSql}) AS jhId_values 
@@ -122,8 +122,7 @@ class AppService extends Service {
         currentKnex.raw(`DROP TABLE IF EXISTS _user_group_role_resource;`),
         currentKnex.raw(`DROP TABLE IF EXISTS _view01_user;`),
         currentKnex.raw(`DROP TABLE IF EXISTS _view02_user_app;`),
-        currentKnex.raw(`DROP VIEW IF EXISTS _group;`),
-        currentKnex.raw(`DROP VIEW IF EXISTS _role;`),
+
         currentKnex.raw(`DROP VIEW IF EXISTS _user_group_role;`),
         currentKnex.raw(`DROP VIEW IF EXISTS _user_group_role_page;`),
         currentKnex.raw(`DROP VIEW IF EXISTS _user_group_role_resource;`),
@@ -134,10 +133,10 @@ class AppService extends Service {
 
         // 废弃的view
         currentKnex.raw(`DROP VIEW IF EXISTS _dr__member;`),
+        currentKnex.raw(`DROP VIEW IF EXISTS _group;`),
+        currentKnex.raw(`DROP VIEW IF EXISTS _role;`),
       ];
       const createViewSql = [
-        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _group AS ${getJhIdViewSql(appListByDatabase, 'enterprise_group')};`),
-        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _role AS ${getJhIdViewSql(appListByDatabase, 'enterprise_role')};`),
         currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role AS ${getJhIdViewSql(appListByDatabase, 'enterprise_user_group_role')};`),
         currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role_page AS ${getJhIdViewSql(appListByDatabase, 'enterprise_user_group_role_page')};`),
         currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role_resource AS ${getJhIdViewSql(appListByDatabase, 'enterprise_user_group_role_resource')};`),
@@ -148,7 +147,7 @@ class AppService extends Service {
       if (appIdList.includes('directory')) {
         // 替换 createViewSql 的最后一个
         createViewSql.pop();
-        createViewSql.push(currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view02_user_app AS SELECT * FROM jh_enterprise_v2_data_repository.enterprise_user_app`));
+        createViewSql.push(currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view02_user_app AS SELECT * FROM jh_enterprise_v2_data_repository.enterprise_view02_user_app`));
       }
       await Promise.all(deleteViewSql);
       await Promise.all(createViewSql);
