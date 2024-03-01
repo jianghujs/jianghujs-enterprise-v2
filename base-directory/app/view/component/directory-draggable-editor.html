@@ -20,7 +20,7 @@
                       <div class="jh-app-icon" role="button">
                         <v-avatar size="28" v-if="app.icon" tile>
                           <img
-                            :src="'/<$ ctx.app.config.appId $>' + app.icon"
+                            :src="constantObj.directoryUrl + '/<$ ctx.app.config.appId $>' + app.icon"
                             alt="点击上传icon"
                           >
                         </v-avatar>
@@ -146,6 +146,9 @@ Vue.component("directory-draggable-editor", {
   data: () => ({
     isOtherAppListShown: true,
     uploadFile: null,
+    constantObj:{
+      directoryUrl: window.constantObj.directoryUrl
+    }
   }),
   watch: {
     appList: {

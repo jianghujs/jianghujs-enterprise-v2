@@ -82,6 +82,7 @@
 <!-- <<<<<<<<<<<<< 引入额外的库文件 -->
 {% include 'component/directory-draggable-editor.html' %}
 {% include 'component/vueJsonEditor.html' %}
+{% include 'common/constantUtil.html' %}
 
 <script type="module">
 
@@ -275,7 +276,7 @@
                   }
                 }else{
                   pageLine = {
-                    name: pageId ? currentApp.appPageList.find(e => e.pageId == pageId)?.pageName : currentApp.appName,
+                    name: pageId ? name : currentApp.appPageList.find(e => e.pageId == pageId)?.pageName,
                     type: pageId ? 'page' : 'app',
                     appId,
                     pageId
