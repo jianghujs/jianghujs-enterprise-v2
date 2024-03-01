@@ -59,9 +59,9 @@
                       </template>
                       <!-- 应用类型 -->
                       <template v-slot:item.role-name="{ item }">
-                        <v-chip class="mr-2" v-if="item.roleName.includes('默认权限')" text-color="black" color="default" small label>
+                        <!-- <v-chip class="mr-2" v-if="item.roleName.includes('默认权限')" text-color="black" color="default" small label>
                           默认权限
-                        </v-chip>
+                        </v-chip> -->
                         <v-chip class="mr-2" v-for="(roleItem, roleIndex) in item.roleName.split(',').filter(item=>item!='默认权限')" text-color="white" color="orange" small label>
                           {{roleItem}}
                         </v-chip>
