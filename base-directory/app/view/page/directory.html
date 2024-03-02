@@ -10,10 +10,10 @@
 <script type="text/html" id="app-template">
   <div>
     <v-app mobile-breakpoint="sm">
-      <jh-menu  v-if="!isWorkWechat"/>
+      <jh-menu />
       <v-main>
         <!-- 头部内容 >>>>>>>>>>>>> -->
-        <div class="jh-page-second-bar px-8 mt-13" v-if="!isWorkWechat">
+        <div class="jh-page-second-bar px-8 mt-13">
           <v-row class="align-center">
             <v-col cols="12" xs="12" sm="12" md="4" xl="3">
               <div class="py-4 text-body-1 font-weight-bold d-flex align-center">欢迎进入风神内网
@@ -28,7 +28,7 @@
         <!-- <<<<<<<<<<<<< 头部内容 -->
 
         <!-- 页面内容 >>>>>>>>>>>>> -->
-        <div class="jh-page-body-container px-8" :class="isWorkWechat ? 'pt-8': ''">
+        <div class="jh-page-body-container px-8">
           <v-container class="pa-0">
             <v-card class="jh-wrapper-card">
               <v-row dense no-gutters v-if="isDirectoryLoading || (!isDirectoryLoading && directoryList)">
