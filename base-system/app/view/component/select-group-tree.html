@@ -42,10 +42,9 @@
             hoverable
             activatable
             :open="openIdList"
-            open-all
             :items="tableDataTree"
             dense
-            item-key="groupFullId"
+            item-key="groupId"
             item-text="groupName"
             :search="searchInput"
             class="jh-fixed-table-height"
@@ -192,16 +191,19 @@
         // 递归  子 groupPath === 父 groupId
         const buildTree = (data) => {
           data.forEach(item => {
-            item.groupFullId = item.groupPath ? item.groupPath + '-' + item.groupId : item.groupId;
             item.name = item.groupName;
             const children = rows.filter(child => {
-              const parentPath = item.groupPath ? item.groupPath + '-' + item.groupId : item.groupId;
+              const parentPath = item.groupId ? item.groupId : item.groupPath + '-' + item.groupLastId;
               return child.groupPath == parentPath;
             });
             if (children.length) {
-              this.openIdList.push(item.groupFullId);
+              // 展开到二级结构
+              if( item.groupId == "FS" || _.countBy(item.groupId)['-'] <= 1){
+                this.openIdList.push(item.groupId);
+              }
               item.children = children;
               buildTree(children);
+              
             }
           });
         };
@@ -213,7 +215,7 @@
         if (!event.length) {
           return;
         }
-        const item = this.tableData.find(item => item.groupFullId === event[0]);
+        const item = this.tableData.find(item => item.groupId === event[0]);
         this.$emit('change-active', item);
       },
     }
