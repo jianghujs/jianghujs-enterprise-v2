@@ -194,8 +194,7 @@
                 :headers="userHeaders"
                 :items="constantObj.userList"
                 item-key="username"
-                sort-by="groupAllName"
-                group-by="groupAllName"
+
                 class="elevation-0"
                 >
                 <template v-slot:group.header="{items, isOpen, toggle, remove}">
@@ -206,12 +205,9 @@
                     </span>
                   </th>
                 </template>
-                <template v-slot:item.roleName="{ item }">
-                  <v-chip class="mr-2" v-if="item.roleName.includes('默认角色')" text-color="black" color="default" small label>
-                    默认角色
-                  </v-chip>
-                  <v-chip class="mr-2" v-for="(roleItem, roleIndex) in item.roleName.split(',').filter(item=>item!='默认角色')" text-color="white" color="orange" small label>
-                    {{roleItem}}
+                <template v-slot:item.roleId="{ item }">
+                  <v-chip class="mr-2" v-for="roleIdItem in item.roleId.split(',')" text-color="white" color="orange" small label>
+                    {{roleIdItem}}
                   </v-chip>
                 </template>
               </v-data-table>
@@ -291,8 +287,10 @@ new Vue({
       {text: '操作', value: 'action', align: 'center', sortable: false, width: window.innerWidth < 500 ? 80 : 200, class: 'fixed', cellClass: 'fixed'},
     ],
     userHeaders:[
-      {text: "姓名", value: "username", width: 200},
-      {text: "角色", value: "roleName"},
+      {text: "账号", value: "userId", width: 90},
+      {text: "姓名", value: "username", width: 100},
+      {text: "所在部门", value: "groupAllName", width: 400},
+      {text: "职务", value: "roleId"},
     ],
     // 新增数据
     isCreateDrawerShown: false,
@@ -557,28 +555,27 @@ new Vue({
             actionId: 'getUserList',
             actionData: {},
             where: {},
+            whereOptions: [["roleId","<>","*"], ["roleId","<>","commonAuth"]],
             orderBy: [{column: 'operationAt', order: 'desc'}]
           }
         }
       })).data.appData.resultData.rows;
 
-      const groupBy = _.groupBy(rows.filter(item=>item.appId == appId && item.groupId != '超级管理员' && item.groupId != 'login'), 'groupId');
+      const groupBy = _.groupBy(rows.filter(item=>item.appId == appId && item.groupId != '超级管理员' && item.groupId != 'login'), 'userId');
       const list = []
 
       Object.keys(groupBy).forEach(key => {
         const item = {};
-        item.id = groupBy[key][0].id;
-        item.groupId = groupBy[key][0].groupId;
-        item.groupPath = groupBy[key][0].groupPath;
-        item.groupAllName = groupBy[key][0].groupAllName;
+        item.groupAllName = groupBy[key].map(e => e.groupAllName).join(',');
         item.username = groupBy[key][0].username;
+        item.roleId = groupBy[key].map(e => e.roleId).join(',');
         item.userId = groupBy[key][0].userId;
-        item.roleName = groupBy[key].map(e => (e.roleName || '默认角色')).join(',');
 
         list.push(item);
       })
 
       this.constantObj.userList = list
+      console.log("list",list);
     },
     async prepareGroupData(){
       const rows = (await window.jianghuAxios({
