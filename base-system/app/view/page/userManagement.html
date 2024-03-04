@@ -279,14 +279,10 @@
                 item-key="userId"
                 class="elevation-0"
                 >
-                <template v-slot:item.roleName="{ item }">
-                  <v-chip class="mr-2" v-if="item.roleName.includes('默认角色')" text-color="black" color="default" small label>
-                    默认角色
+                <template v-slot:item.roleId="{ item }">
+                  <v-chip class="mr-2" v-for="roleIdItem in item.roleId.split(',')" text-color="white" color="orange" small label>
+                    {{roleIdItem}}
                   </v-chip>
-                  <v-chip class="mr-2" v-for="(roleItem, roleIndex) in item.roleName.split(',').filter(item=>item!='默认角色')" text-color="white" color="orange" small label>
-                    {{roleItem}}
-                  </v-chip>
-                </template>
               </v-data-table>
             </v-col>
           </v-row>
@@ -360,17 +356,16 @@ new Vue({
       {text: "用户ID[登陆]", value: "userId", width: 100},
       {text: "用户名", value: "username", width: 100},
       {text: "用户状态", value: "userStatus", width: 90},
-      {text: "所属组织", value: "orgFullName", width: 400},
-      {text: "职务", value: "title", width: 150},
+      {text: "所属组织", value: "groupAllName", width: 400},
+      {text: "职务", value: "roleName", width: 150},
       {text: "初始密码", value: "clearTextPassword", width: 120},
-      {text: "操作人", value: "operationByUser", width: 100},
-      {text: "操作时间", value: "operationAt", width: 180},
+      // {text: "操作人", value: "operationByUser", width: 100},
+      // {text: "操作时间", value: "operationAt", width: 180},
       {text: '操作', value: 'action', align: 'center', sortable: false, width: window.innerWidth < 500 ? 80 : 300, class: 'fixed', cellClass: 'fixed'},
     ],
     drawerHeaders:[
-      {text: "应用ID", value: "appId", width: 180},
       {text: "应用名", value: "appName", width: 180},
-      {text: "角色名", value: "roleName"},
+      {text: "职务", value: "roleId"},
     ],
     // 新增用户
     isCreateDrawerShown: false,
@@ -489,7 +484,7 @@ new Vue({
             actionData: {},
             where: {},
             whereIn: backendSearchData,
-            orderBy: [{column: 'operationAt', order: 'desc'}]
+            orderBy: [{column: 'userId', order: 'asc'}]
           }
         }
       });
@@ -726,6 +721,7 @@ new Vue({
             where: {
               userId: userId
             },
+            whereOptions: [["roleId","<>","*"], ["roleId","<>","commonAuth"]],
             orderBy: [{column: 'operationAt', order: 'desc'}]
           }
         }
@@ -737,7 +733,8 @@ new Vue({
         const item = {};
         item.appId = groupBy[key][0].appId;
         item.appName = groupBy[key][0].appName;
-        item.roleName = groupBy[key].map(e => (e.roleName || '默认角色')).join(',');
+        item.groupAllName = groupBy[key].map(e => e.groupAllName).join(',');
+        item.roleId = groupBy[key].map(e => e.roleId).join(',');
 
         list.push(item);
       })
