@@ -293,7 +293,7 @@ new Vue({
       this.isAppLoading = false;
     },
     changeActiveGroup(item) {
-      this.activeGroup = item.groupPath ? item.groupPath + '-' + item.groupId : item.groupId;
+      this.activeGroup = item.groupId ? item.groupId : item.groupPath + '-' + item.groupLastId;
       this.activeGroupName = item.groupName;
       this.activeGroupPath = item.groupPath;
       this.getRoleData();
