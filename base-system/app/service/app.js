@@ -62,6 +62,22 @@ const getJhIdViewSql = (appList, tableName) => {
           CROSS JOIN jh_enterprise_v2_data_repository.${tableName}`;
 }
 
+/**
+ * @description 判断资源是否符合规则，支持逗号及后缀通配符
+ * @return {Boolean} 检查结果
+ * @param {String} checkResource 待检查资源名，如 app1.student.res1
+ * @param {String} ruleResource 规则中的资源名，如 app1.normal.*,app1.student.res1
+ */
+const checkResource = (checkResource, ruleResource) => {
+  const ruleParts = ruleResource.split(',');
+  return !!ruleParts.find(ruleValue => {
+    // 将后缀通配符转成正常正则
+    const ruleReg =
+      '^' + ruleValue.replace(/\./g, '\\.').replace('*', '.*') + '$';
+    const regExp = new RegExp(ruleReg);
+    return regExp.test(checkResource);
+  });
+}
 
 class AppService extends Service {
 
@@ -250,181 +266,278 @@ class AppService extends Service {
     }
   }
 
-
-  // createUserId若存在，表示在创建新用户，否则为定时任务
   async buildRelationByCommonAuth(createUserId) {
     const { jianghuKnex } = this.app;
+    const source = "通用权限";
 
-    const commonAuth = await jianghuKnex('_constant').where({ constantKey: 'commonAuth' }).select();
-
-    const userApp = await jianghuKnex('enterprise_user_app').where({ groupId: 'login', roleId: 'commonAuth' }).select();
-    const userGroupRole = await jianghuKnex('enterprise_user_group_role').where({ groupId: 'login', roleId: 'commonAuth' }).select();
-    const userGroupRolePage = await jianghuKnex('enterprise_user_group_role_page').where({ group: 'login', role: 'commonAuth' }).select();
-    const userGroupRoleResource = await jianghuKnex('enterprise_user_group_role_resource').where({ group: 'login', role: 'commonAuth' }).select();
-
-
-    const userList = await jianghuKnex('_user').select();
-    const appList = JSON.parse(commonAuth[0].constantValue)
-
-    const insertUserAppList = []
-    const insertUserGroupRoleList = []
-    const insertUserGroupRolePageList = []
-    const insertUserGroupRoleResourceList = []
-
-    // 待删除的app列表
-    const deleteAppList = []
-
-    // 已存在的app列表
-    const preAppList = []
-
-
-    // 通过 _constant 取出新的app列表
-    const nextAppList = appList.map(item => {
-      return {
-        appId: item.appId,
-        pageIdList: item.pageIdList.join(',')
-      }
+    const commonAuthListConfig = await jianghuKnex('_constant').where({ constantKey: 'commonAuthList' }).select().first();
+    const commonAuthList = JSON.parse(commonAuthListConfig.constantValue);
+    commonAuthList.forEach(commonAuth => {
+      commonAuth.page = commonAuth.pageIdList.join(',');
+      commonAuth.resource = commonAuth.pageIdList.join(',') === '*' ? '*' : commonAuth.pageIdList.join('.*,') + '.*';
+      commonAuth.allowOrDeny = "allow";
+      delete commonAuth.pageIdList;
     })
 
-    // 通过 enterprise_user_group_role_page 筛选出旧的app列表
-    _.forEach(userGroupRolePage, acc => {
-      if (!preAppList.find(app => app.appId === acc.appId && app.pageIdList === acc.page)) {
-        preAppList.push({
-          appId: acc.appId,
-          pageIdList: acc.page
-        })
-      }
+    const userInfoList = await jianghuKnex('_user').select();
+    const userAppAll = await jianghuKnex('enterprise_user_app').where({ source }).select();
+    const userGroupRoleAll = await jianghuKnex('enterprise_user_group_role').where({}).select();
+    let userGroupRolePageAll = await jianghuKnex('enterprise_user_group_role_page').where({ source }).select();
+    let userGroupRoleResourceAll = await jianghuKnex('enterprise_user_group_role_resource').where({ source }).select();
+    userInfoList.forEach(userInfo => {
+      userInfo.groupList = userGroupRoleAll.filter(e => e.userId === userInfo.userId);
     })
 
-
-    //筛选出需要删除的app数据
-    _.forEach(preAppList, item => {
-      if (!nextAppList.find(app => app.appId === item.appId && app.pageIdList === item.pageIdList) && !deleteAppList.find(app => app.appId === item.appId && app.pageIdList === item.pageIdList)) {
-        deleteAppList.push(item)
-      }
-    })
-
-
-    //遍历所有app，检查是否需要插入新的 page 和 resource
-    _.forEach(appList, app => {
-      const item = {
-        appId: app.appId,
-        group: 'login',
-        role: 'commonAuth',
-        user: '*',
-        allowOrDeny: 'allow',
-      }
-
-      //检查 enterprise_user_group_role_page 是否需要插入新的记录
-      if (!userGroupRolePage.find(item => item.group === 'login' && item.role === 'commonAuth' && item.appId === app.appId)) {
-        insertUserGroupRolePageList.push({
-          ...item,
-          page: app.pageIdList.join(','),
-        })
-      }
-
-      //检查 enterprise_user_group_role_resource 是否需要插入新的记录
-      if (!userGroupRoleResource.find(item => item.group === 'login' && item.role === 'commonAuth' && item.appId === app.appId)) {
-        insertUserGroupRoleResourceList.push({
-          ...item,
-          resource: app.pageIdList.join(',') === '*' ? '*' : app.pageIdList.join('.*,') + '.*'
-        })
-      }
-    })
-
-    // createUserId若存在，表示在创建新用户，否则为定时任务
-    if (createUserId) {
-      //准备插入的 enterprise_user_group_role 数据
-      insertUserGroupRoleList.push({
-        groupId: 'login',
-        roleId: 'commonAuth',
-        userId: createUserId,
-        roleDeadline: -1,
-      })
-
-
-      // 遍历基础应用的app列表
-      _.forEach(appList, app => {
-        //根据app列表，准备插入的 enterprise_user_app 数据
-        insertUserAppList.push({
-          appId: app.appId,
-          groupId: 'login',
-          roleId: 'commonAuth',
-          userId: createUserId,
-        })
-
-      })
-
-      // console.log('======创建新用户========')
-
-    } else {
-
-      // 遍历所有用户，查看是否需要插入新的记录
-      _.forEach(userList, user => {
-
-        //检查 enterprise_user_group_role 是否需要插入新的记录
-        if (!userGroupRole.find(item => item.groupId === 'login' && item.roleId === 'commonAuth' && item.userId === user.userId) && user.userId ) {
-          insertUserGroupRoleList.push({
-            groupId: 'login',
-            roleId: 'commonAuth',
-            userId: user.userId,
-            roleDeadline: -1,
-          })
-        }
-
-        // 遍历基础应用的app列表
-        _.forEach(appList, app => {
-          //检查 enterprise_user_app 是否需要插入新的记录
-          if (!userApp.find(item => item.groupId === 'login' && item.roleId === 'commonAuth' && item.appId === app.appId && item.userId === user.userId) && user.userId) {
-            insertUserAppList.push({
-              appId: app.appId,
-              groupId: 'login',
-              roleId: 'commonAuth',
-              userId: user.userId,
-            })
-          }
-        })
-
-      })
-
-      // console.log('======定时任务========')
-      // console.log('旧的app列表', preAppList)
-      // console.log('新的app列表', nextAppList)
-      // console.log('待删除数据的app列表', deleteAppList)
-      // console.log('插入UserApp的数据：insertUserAppList', insertUserAppList.length)
-      // console.log('插入UserGroupRole的数据：insertUserGroupRoleList', insertUserGroupRoleList.length)
-      // console.log('插入UserGroupRolePage的数据：insertUserGroupRolePageList', insertUserGroupRolePageList.length)
-      // console.log('插入UserGroupRoleResource的数据：insertUserGroupRoleResourceList', insertUserGroupRoleResourceList.length)
-      // console.log('======定时任务========')
+    // enterprise_user_group_role_page     通用权限 删除多余的记录
+    // enterprise_user_group_role_resource 通用权限 删除多余的记录
+    const userGroupRolePageDelete = userGroupRolePageAll
+      .filter((userGroupRolePage) => {
+        const { appId, user, group, role, page, allowOrDeny } = userGroupRolePage;
+        return commonAuthList.findIndex(commonAuth => 
+          appId == commonAuth.appId && user == commonAuth.user &&
+          group == commonAuth.group && role == commonAuth.role && 
+          page == commonAuth.page && allowOrDeny == commonAuth.allowOrDeny) == -1;
+      });
+    if (userGroupRolePageDelete.length > 0) { 
+      const userGroupRolePageDeleteIdList = userGroupRolePageDelete.map(e => e.id);
+      await jianghuKnex('enterprise_user_group_role_page').whereIn('id', userGroupRolePageDeleteIdList).delete();
+    }
+    const userGroupRoleResourceDelete = userGroupRoleResourceAll
+      .filter((userGroupRoleResource) => {
+        const { appId, user, group, role, resource, allowOrDeny } = userGroupRoleResource;
+        return commonAuthList.findIndex(commonAuth => 
+          appId == commonAuth.appId && user == commonAuth.user &&
+          group == commonAuth.group && role == commonAuth.role && 
+          resource == commonAuth.resource && allowOrDeny == commonAuth.allowOrDeny) == -1;
+      });
+    if (userGroupRoleResourceDelete.length > 0) { 
+      const userGroupRoleResourceDeleteIdList = userGroupRoleResourceDelete.map(e => e.id);
+      await jianghuKnex('enterprise_user_group_role_resource').whereIn('id', userGroupRoleResourceDeleteIdList).delete();
     }
 
-    await jianghuKnex.transaction(async trx => {
+    userGroupRolePageAll = await jianghuKnex('enterprise_user_group_role_page').where({ source }).select();
+    userGroupRoleResourceAll = await jianghuKnex('enterprise_user_group_role_resource').where({ source }).select();
 
-      if (deleteAppList.length > 0) {
-        for (const deleteApp of deleteAppList) {
-          // 删除原有的 enterprise_user_app
-          await trx('enterprise_user_app').where({ groupId: 'login', roleId: 'commonAuth', appId: deleteApp.appId }).jhDelete();
 
-          // 删除原有的 enterprise_user_group_role_page
-          await trx('enterprise_user_group_role_page').where({ group: 'login', role: 'commonAuth', appId: deleteApp.appId, page: deleteApp.pageIdList }).jhDelete();
+    // enterprise_user_group_role_page     通用权限 生成
+    // enterprise_user_group_role_resource 通用权限 生成
+    for (const commonAuth of commonAuthList) {
+      const { appId, user, group, role, page, resource, allowOrDeny } = commonAuth;
+      const userGroupRolePageOld = userGroupRolePageAll.find(item => item.appId === appId && item.user === user && item.group === group && item.role === role);
+      if (!userGroupRolePageOld) {
+        await jianghuKnex('enterprise_user_group_role_page').jhInsert({ source, appId, user, group, role, page, allowOrDeny });
+      }
+      const userGroupRoleResourceOld = userGroupRoleResourceAll.find(item => item.appId === appId && item.user === user && item.group === group && item.role === role);
+      if (!userGroupRoleResourceOld) {
+        await jianghuKnex('enterprise_user_group_role_resource').jhInsert({ source, appId, user, group, role, resource, allowOrDeny });
+      }
+    }
 
-          //删除原有的 enterprise_user_group_role_resource
-          await trx('enterprise_user_group_role_resource').where({ group: 'login', role: 'commonAuth', appId: deleteApp.appId }).jhDelete();
+    // enterprise_user_app 通用权限 生成
+    const insertUserAppList = []
+    for (const commonAuth of commonAuthList) {
+      const { appId, user, group, role } = commonAuth;
+      for (const userInfo of userInfoList) {
+        const { userId, groupList } = userInfo;
+        const userIsAccess = checkResource(userId, user);
+        const groupIsAccess = groupList.find(g => checkResource(g.groupId, group) && checkResource(g.roleId, role));
+        const userAppOld = userAppAll.find(item => item.appId === appId && item.userId === userId);
+        if (userAppOld && userIsAccess && groupIsAccess) {
+          userAppOld.access = true;
+        }
+        if (userIsAccess && groupIsAccess) {
+          if (!userAppOld) {
+            insertUserAppList.push({ appId, userId, source });
+          }
         }
       }
-      // 新增 enterprise_user_app
-      insertUserAppList.length && await trx('enterprise_user_app').jhInsert(insertUserAppList);
+    }
+    if (insertUserAppList.length > 0) {
+      await jianghuKnex('enterprise_user_app').insert(insertUserAppList);
+    }
+    // enterprise_user_app 通用权限 删除多余的记录
+    const deleteUserAppIdList = userAppAll.filter(e => !e.access).map(e => e.id);
+    if (deleteUserAppIdList.length > 0) {
+      await jianghuKnex('enterprise_user_app').whereIn('id', deleteUserAppIdList).delete();
+    }
 
-      // 新增 enterprise_user_group_role
-      insertUserGroupRoleList.length && await trx('enterprise_user_group_role').jhInsert(insertUserGroupRoleList);
-
-      // 新增 enterprise_user_group_role_page
-      insertUserGroupRolePageList.length && await trx('enterprise_user_group_role_page').jhInsert(insertUserGroupRolePageList);
-
-      // 新增 enterprise_user_group_role_resource
-      insertUserGroupRoleResourceList.length && await trx('enterprise_user_group_role_resource').jhInsert(insertUserGroupRoleResourceList);
-    })
+    return;
   }
+
+  // createUserId若存在，表示在创建新用户，否则为定时任务
+  // async buildRelationByCommonAuth_Backup(createUserId) {
+  //   const { jianghuKnex } = this.app;
+
+  //   const commonAuth = await jianghuKnex('_constant').where({ constantKey: 'commonAuth.Backup' }).select();
+
+  //   const userApp = await jianghuKnex('enterprise_user_app').where({ groupId: 'login', roleId: 'commonAuth' }).select();
+  //   const userGroupRole = await jianghuKnex('enterprise_user_group_role').where({ groupId: 'login', roleId: 'commonAuth' }).select();
+  //   const userGroupRolePage = await jianghuKnex('enterprise_user_group_role_page').where({ group: 'login', role: 'commonAuth' }).select();
+  //   const userGroupRoleResource = await jianghuKnex('enterprise_user_group_role_resource').where({ group: 'login', role: 'commonAuth' }).select();
+
+
+  //   const userList = await jianghuKnex('_user').select();
+  //   const appList = JSON.parse(commonAuth[0].constantValue)
+
+  //   const insertUserAppList = []
+  //   const insertUserGroupRoleList = []
+  //   const insertUserGroupRolePageList = []
+  //   const insertUserGroupRoleResourceList = []
+
+  //   // 待删除的app列表
+  //   const deleteAppList = []
+
+  //   // 已存在的app列表
+  //   const preAppList = []
+
+
+  //   // 通过 _constant 取出新的app列表
+  //   const nextAppList = appList.map(item => {
+  //     return {
+  //       appId: item.appId,
+  //       pageIdList: item.pageIdList.join(',')
+  //     }
+  //   })
+
+  //   // 通过 enterprise_user_group_role_page 筛选出旧的app列表
+  //   _.forEach(userGroupRolePage, acc => {
+  //     if (!preAppList.find(app => app.appId === acc.appId && app.pageIdList === acc.page)) {
+  //       preAppList.push({
+  //         appId: acc.appId,
+  //         pageIdList: acc.page
+  //       })
+  //     }
+  //   })
+
+
+  //   //筛选出需要删除的app数据
+  //   _.forEach(preAppList, item => {
+  //     if (!nextAppList.find(app => app.appId === item.appId && app.pageIdList === item.pageIdList) && !deleteAppList.find(app => app.appId === item.appId && app.pageIdList === item.pageIdList)) {
+  //       deleteAppList.push(item)
+  //     }
+  //   })
+
+
+  //   //遍历所有app，检查是否需要插入新的 page 和 resource
+  //   _.forEach(appList, app => {
+  //     const item = {
+  //       appId: app.appId,
+  //       group: 'login',
+  //       role: 'commonAuth',
+  //       user: '*',
+  //       allowOrDeny: 'allow',
+  //     }
+
+  //     //检查 enterprise_user_group_role_page 是否需要插入新的记录
+  //     if (!userGroupRolePage.find(item => item.group === 'login' && item.role === 'commonAuth' && item.appId === app.appId)) {
+  //       insertUserGroupRolePageList.push({
+  //         ...item,
+  //         page: app.pageIdList.join(','),
+  //       })
+  //     }
+
+  //     //检查 enterprise_user_group_role_resource 是否需要插入新的记录
+  //     if (!userGroupRoleResource.find(item => item.group === 'login' && item.role === 'commonAuth' && item.appId === app.appId)) {
+  //       insertUserGroupRoleResourceList.push({
+  //         ...item,
+  //         resource: app.pageIdList.join(',') === '*' ? '*' : app.pageIdList.join('.*,') + '.*'
+  //       })
+  //     }
+  //   })
+
+  //   // createUserId若存在，表示在创建新用户，否则为定时任务
+  //   if (createUserId) {
+  //     //准备插入的 enterprise_user_group_role 数据
+  //     insertUserGroupRoleList.push({
+  //       groupId: 'login',
+  //       roleId: 'commonAuth',
+  //       userId: createUserId,
+  //       roleDeadline: -1,
+  //     })
+
+
+  //     // 遍历基础应用的app列表
+  //     _.forEach(appList, app => {
+  //       //根据app列表，准备插入的 enterprise_user_app 数据
+  //       insertUserAppList.push({
+  //         appId: app.appId,
+  //         groupId: 'login',
+  //         roleId: 'commonAuth',
+  //         userId: createUserId,
+  //       })
+
+  //     })
+
+  //     // console.log('======创建新用户========')
+
+  //   } else {
+
+  //     // 遍历所有用户，查看是否需要插入新的记录
+  //     _.forEach(userList, user => {
+
+  //       //检查 enterprise_user_group_role 是否需要插入新的记录
+  //       if (!userGroupRole.find(item => item.groupId === 'login' && item.roleId === 'commonAuth' && item.userId === user.userId) && user.userId ) {
+  //         insertUserGroupRoleList.push({
+  //           groupId: 'login',
+  //           roleId: 'commonAuth',
+  //           userId: user.userId,
+  //           roleDeadline: -1,
+  //         })
+  //       }
+
+  //       // 遍历基础应用的app列表
+  //       _.forEach(appList, app => {
+  //         //检查 enterprise_user_app 是否需要插入新的记录
+  //         if (!userApp.find(item => item.groupId === 'login' && item.roleId === 'commonAuth' && item.appId === app.appId && item.userId === user.userId) && user.userId) {
+  //           insertUserAppList.push({
+  //             appId: app.appId,
+  //             groupId: 'login',
+  //             roleId: 'commonAuth',
+  //             userId: user.userId,
+  //           })
+  //         }
+  //       })
+
+  //     })
+
+  //     // console.log('======定时任务========')
+  //     // console.log('旧的app列表', preAppList)
+  //     // console.log('新的app列表', nextAppList)
+  //     // console.log('待删除数据的app列表', deleteAppList)
+  //     // console.log('插入UserApp的数据：insertUserAppList', insertUserAppList.length)
+  //     // console.log('插入UserGroupRole的数据：insertUserGroupRoleList', insertUserGroupRoleList.length)
+  //     // console.log('插入UserGroupRolePage的数据：insertUserGroupRolePageList', insertUserGroupRolePageList.length)
+  //     // console.log('插入UserGroupRoleResource的数据：insertUserGroupRoleResourceList', insertUserGroupRoleResourceList.length)
+  //     // console.log('======定时任务========')
+  //   }
+
+  //   await jianghuKnex.transaction(async trx => {
+
+  //     if (deleteAppList.length > 0) {
+  //       for (const deleteApp of deleteAppList) {
+  //         // 删除原有的 enterprise_user_app
+  //         await trx('enterprise_user_app').where({ groupId: 'login', roleId: 'commonAuth', appId: deleteApp.appId }).jhDelete();
+
+  //         // 删除原有的 enterprise_user_group_role_page
+  //         await trx('enterprise_user_group_role_page').where({ group: 'login', role: 'commonAuth', appId: deleteApp.appId, page: deleteApp.pageIdList }).jhDelete();
+
+  //         //删除原有的 enterprise_user_group_role_resource
+  //         await trx('enterprise_user_group_role_resource').where({ group: 'login', role: 'commonAuth', appId: deleteApp.appId }).jhDelete();
+  //       }
+  //     }
+  //     // 新增 enterprise_user_app
+  //     insertUserAppList.length && await trx('enterprise_user_app').jhInsert(insertUserAppList);
+
+  //     // 新增 enterprise_user_group_role
+  //     insertUserGroupRoleList.length && await trx('enterprise_user_group_role').jhInsert(insertUserGroupRoleList);
+
+  //     // 新增 enterprise_user_group_role_page
+  //     insertUserGroupRolePageList.length && await trx('enterprise_user_group_role_page').jhInsert(insertUserGroupRolePageList);
+
+  //     // 新增 enterprise_user_group_role_resource
+  //     insertUserGroupRoleResourceList.length && await trx('enterprise_user_group_role_resource').jhInsert(insertUserGroupRoleResourceList);
+  //   })
+  // }
 
   async removeRelationByExpire() {
     const { jianghuKnex } = this.app;
@@ -450,5 +563,7 @@ class AppService extends Service {
     }
   }
 }
+
+
 
 module.exports = AppService;
