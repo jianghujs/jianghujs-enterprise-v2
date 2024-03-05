@@ -39,7 +39,7 @@ class DirectoryService extends Service {
       const catalogTmp = _.cloneDeep(catalog);
       catalogTmp.children = catalogTmp.children.filter(app => {
         const appTmp = _.cloneDeep(app);
-        appTmp.children = appTmp.children.filter(page => {
+        app.children = appTmp.children.filter(page => {
           if (page.link && !app.appId && !page.pageId) {
             return true;
           }
@@ -50,7 +50,7 @@ class DirectoryService extends Service {
           }
           return false;
         });
-        if (appTmp.children.length) {
+        if (app.children.length) {
           return true;
         }
         return false;
@@ -177,16 +177,13 @@ class DirectoryService extends Service {
         }
 
         // 判断这条规则的资源是否和当前资源匹配
+        // TODO: 还是有bug purchaseOrderManagement
         if (!this.checkResource(item[idFieldKey], rule[fieldKey])) {
           return;
         }
         
         // 判断这条规则是否和当前用户匹配
-        const userGroupRoleListRule= userGroupRoleList
-          .filter((userGroupRole) => rule.user==='*' || userGroupRole.userId === rule.user)
-          .filter((userGroupRole) => rule.group==='*' || userGroupRole.groupId === rule.group)
-          .filter((userGroupRole) => rule.role==='*' || userGroupRole.roleId === rule.role)
-        if (userGroupRoleListRule.length == 0) {
+        if (!this.checkRule({ userGroupRoleList, rule })) {
           return;
         }
         
@@ -212,28 +209,32 @@ class DirectoryService extends Service {
     return !!ruleParts.find(ruleValue => {
       // 将后缀通配符转成正常正则
       const ruleReg =
-        '^' + ruleValue.replace(/\./g, '\\.').replace('*', '.*') + '$';
+        '^' + ruleValue.replace(/\./g, '\\.').replace(/\|/g, '\\\\|').replace('*', '.*') + '$';
       const regExp = new RegExp(ruleReg);
       return regExp.test(checkResource);
     });
   }
 
   /**
-   * 判断具体字段是否符合规则
-   * 如果 checkValueList 中的数据有一条在 ruleFieldValue 中，则返回 true
-   *
-   * @param checkValueList 待检查的数据列表，如 ['*', '10001']
-   * @param ruleFieldValue 规则字段值，支持逗号，如 '*,10001,10002'
+   * userGroupRoleList 是否和当前 rule匹配
+   * @param userGroupRoleList.userGroupRoleList
+   * @param userGroupRoleList  [{ userId, groupId, roleId }]
+   * @param rule  {user:'*', group: 'login', role:'*'}
+   * @param userGroupRoleList.rule
    */
-  checkRule(checkValueList, ruleFieldValue) {
-    const ruleParts = ruleFieldValue.split(',');
-    if (ruleParts.includes('*')) {
-      return true;
+    checkRule({ userGroupRoleList, rule }) {
+      const userGroupRoleListRule = userGroupRoleList
+        .filter(userGroupRole => this.checkResource(userGroupRole.userId, rule.user))
+        .filter(userGroupRole => this.checkResource(userGroupRole.groupId, rule.group))
+        .filter(userGroupRole => this.checkResource(userGroupRole.roleId, rule.role));
+      if (userGroupRoleListRule.length === 0) {
+        return false;
+      }
+      if (userGroupRoleListRule.length > 0) {
+        return true;
+      }
     }
-    return !!checkValueList.find(checkValue =>
-      ruleParts.includes(checkValue)
-    );
-  }
+
 
   async saveDirectoryConfig() {
     const { jianghuKnex } = this.app;
