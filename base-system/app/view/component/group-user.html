@@ -112,8 +112,8 @@
                   <v-autocomplete class="jh-v-input" dense single-line filled v-model="createItem.userId" :items="constantObj.userList" :rules="validationRules.requireRules" ></v-autocomplete>
               </v-col>
               <v-col cols="12" sm="12" md="12">
-                  <span class="jh-input-label">选择职务</span>
-                  <v-autocomplete class="jh-v-input" dense single-line filled v-model="createItem.roleId" :items="roleList.filter(e => e.roleId != '*')" item-value="roleId" item-text="roleName" multiple>
+                  <span class="jh-input-label">选择职务<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                  <v-autocomplete class="jh-v-input" dense single-line filled v-model="createItem.roleId" :items="roleList" item-value="roleId" item-text="roleName" multiple>
                     <template v-slot:selection="data">
                       <v-chip
                         small
@@ -191,7 +191,7 @@
             <v-autocomplete class="jh-v-input" dense single-line filled v-model="updateItem.userId" :items="constantObj.userList" :rules="validationRules.requireRules" disabled></v-autocomplete>
         </v-col>
         <v-col cols="12" sm="12" md="12">
-            <span class="jh-input-label">选择职务</span>
+            <span class="jh-input-label">选择职务<span class="red--text text--accent-2 ml-1">*必填</span></span>
             <v-autocomplete class="jh-v-input" dense single-line filled v-model="updateItem.roleId" :items="roleList.filter(e => e.roleId != '*')" item-value="roleId" item-text="roleName" multiple>
               <template v-slot:selection="data">
                 <v-chip
@@ -268,7 +268,13 @@
         },
         roleList: {
             type: Array,
-            default: () => []
+            default: () => [
+              {
+                roleId: "无职务",
+                roleName: "无职务",
+                roleType:"正式职务",
+              }
+            ]
         },
         loading: {
           type: Boolean,
@@ -335,6 +341,15 @@
         createRoleConfig(){
           let roleConfig = []
           this.createItem.roleId?.forEach(roleId => {
+            if(roleId == "无职务"){
+              roleConfig.push({
+                roleId: null,
+                roleName:"无职务",
+                roleType:"正式职务",
+                roleDeadline: -1
+              })
+              return
+            }
             let role = this.roleList.find(item =>  item.roleId == roleId)
             roleConfig.push({
               roleId:role.roleId,
@@ -463,6 +478,7 @@
         async prepareCreateFormData() {
             this.createItem = {
                 groupId: this.groupId,
+                roleId: []
             };
         },
 
@@ -470,9 +486,10 @@
             this.isCreateDrawerShown = true;
         },
         async prepareCreateValidate() {
-            if (await this.$refs.createForm.validate()) {
+            if (await this.$refs.createForm.validate() && this.createItem.roleId.length > 0) {
                 return true;
             }
+            await window.vtoast.fail("请完善表单信息");
             throw new Error("请完善表单信息")
         },
 
@@ -525,7 +542,10 @@
         // ---------- <<<<<<<<<<< 新增数据 uiAction  --------
         // ---------- 修改数据 uiAction >>>>>>>>>>>> --------
         async prepareUpdateFormData(funObj) {
-            this.updateItem = _.pick(funObj, ['id', 'groupId', 'userId', 'roleId','roleConfig']);;
+            this.updateItem = _.pick(funObj, ['id', 'groupId', 'userId', 'roleId','roleConfig']);
+            if(this.updateItem.roleId){
+              this.updateItem.roleId = this.updateItem.roleId.map(item => item || "无职务")
+            }
         },
 
         async openUpdateDrawer() {
@@ -533,9 +553,10 @@
         },
 
         async prepareUpdateValidate() {
-            if (await this.$refs.updateForm.validate()) {
+            if (await this.$refs.updateForm.validate() && this.updateItem.roleId.length > 0) {
                 return true;
             }
+            await window.vtoast.fail("请完善表单信息");
             throw new Error("请完善表单信息")
         },
 
@@ -547,7 +568,12 @@
 
         async prepareDoUpdateItem() {
             const {id, ...data} = this.updateItem;
-            this.updateActionData = {...data,roleConfig: this.updateRoleConfig};
+            this.updateActionData = {...data,roleConfig: this.updateRoleConfig.map(item => {
+              return {
+                ...item,
+                roleId: item.roleId == "无职务" ? null : item.roleId
+              }
+            })};
         },
 
         async doUpdateItem() {

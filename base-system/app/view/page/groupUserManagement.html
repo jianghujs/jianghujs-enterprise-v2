@@ -259,7 +259,11 @@ new Vue({
       rows.forEach(row => {
         row.operationAt = dayjs(row.operationAt).format('YYYY-MM-DD HH:mm:ss');
       })
-      this.constantObj.roleList = [...rows];
+      this.constantObj.roleList = [{
+              roleId: "无职务",
+              roleName: "无职务",
+              roleType:"正式职务",
+            }, ...rows];
       this.isAppLoading = false;
     },
     changeActiveGroup(item) {

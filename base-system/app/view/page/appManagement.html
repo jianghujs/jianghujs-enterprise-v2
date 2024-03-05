@@ -553,7 +553,7 @@ new Vue({
             pageId: 'appManagement',
             actionId: 'getUserList',
             actionData: {},
-            where: {},
+            whereOptions: [["userId","<>","admin"]],
             orderBy: [{column: 'userId', order: 'asc'}]
           }
         }
@@ -564,10 +564,11 @@ new Vue({
 
       Object.keys(groupBy).forEach(key => {
         const item = {};
-        // item.groupAllName = groupBy[key].map(e => e.groupAllName).join(',');
         item.username = groupBy[key][0].username;
-        // item.roleId = groupBy[key].map(e => e.roleId).join(',');
-        item.groupRoleName = groupBy[key].map(e => e.groupAllName + ' | ' + e.roleName).join(',');
+        item.groupRoleName = groupBy[key].map(e => {
+          let roleName = e.roleName ? e.roleName  : "通用权限"
+          return e.groupAllName + ' | ' + roleName
+        }).join(',');
         item.userId = groupBy[key][0].userId;
 
         list.push(item);

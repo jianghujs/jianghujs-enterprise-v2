@@ -1,0 +1,185 @@
+{% extends 'template/jhTemplateV4.html'%} {% block vueTemplate %}
+
+<script type="text/html" id="app-template">
+  <div>
+    <v-app mobile-breakpoint="sm">
+      <jh-menu />
+      <v-main class="mt-15">
+        <!-- 头部内容 >>>>>>>>>>>>> -->
+        <div class="jh-page-second-bar px-8">
+          <v-row class="d-flex align-center">
+            <v-col cols="12" xs="12" sm="12" md="4" xl="3">
+              <div class="pt-3 text-h7 font-weight-bold">
+                【{{taskTemplate.taskTemplateName}}】模板表单配置
+                <span style="font-size: 1rem;" :class="{'d-block': isMobile}"
+                  >(ID: {{ taskTemplate.taskTemplateId }})</span
+                >
+                <!-- 帮助页按钮 -->
+                <v-icon @click="isHelpPageDrawerShown = true" color="success" small>mdi-help-circle-outline </v-icon>
+              </div>
+            </v-col>
+            <v-spacer></v-spacer>
+            <div class="mr-4">
+              <v-btn @click="doUiAction('updateTaskTemplate')" small color="primary" elevation="2">保存</v-btn>
+            </div>
+          </v-row>
+        </div>
+        <!-- <<<<<<<<<<<<< 头部内容 -->
+
+        <div class="jh-page-body-container px-8 mt-4">
+          <!-- 页面内容 >>>>>>>>>>>>> -->
+          <form-item-list-generator :select-canva-id="selectCanvaId"
+          :form-item-list="taskTemplate.taskTemplateForm" @change="saveData" ref="formItemListGenerator">
+          <!-- <<<<<<<<<<<<< 页面内容 -->
+        </div>
+
+        <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
+        <v-navigation-drawer
+          v-if="isHelpPageDrawerLoaded"
+          v-model="isHelpPageDrawerShown"
+          :permanent="isHelpPageDrawerShown"
+          fixed
+          temporary
+          right
+          width="80%"
+          class="elevation-24"
+        >
+          <iframe style="border: 0" :src="`/${appInfo.appId}/pageDoc#404.md`" width="100%" height="100%"></iframe>
+          <v-btn
+            elevation="0"
+            color="success"
+            fab
+            absolute
+            top
+            left
+            small
+            tile
+            class="drawer-close-float-btn"
+            @click="isHelpPageDrawerShown = false"
+          >
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-navigation-drawer>
+        <!-- <<<<<<<<<<<<< 帮助页抽屉 -->
+      </v-main>
+    </v-app>
+
+    <jh-toast />
+    <jh-mask />
+    <jh-confirm-dialog />
+  </div>
+</script>
+
+<div id="app"></div>
+
+{% endblock %} {% block vueScript %} {% include 'common/assignmentUtil.html' %}
+{% include 'component/taskTemplate/formItemListContent.html' %} {% include
+'component/taskTemplate/formItemListGenerator.html' %}
+<script type="module">
+  window.eventBus = new Vue();
+
+  new Vue({
+    el: "#app",
+    template: "#app-template",
+    vuetify: new Vuetify(),
+    data: () => ({
+      // 面包屑
+      breadcrumbs: [
+        {
+          text: "首页",
+          disabled: true,
+        },
+        {
+          text: "模板配置",
+          disabled: true,
+        },
+      ],
+      isHelpPageDrawerShown: false,
+      isHelpPageDrawerLoaded: false,
+      isMobile: window.innerWidth < 500,
+
+      taskTemplate: {},
+      isTableLoading: false,
+
+      selectCanvaId: "",
+    }),
+    watch: {},
+    async created() {
+      eventBus.$on("updateSelectCanvaId", this.updateSelectCanvaId);
+    },
+    mounted() {
+      const searchParams = new URLSearchParams(window.location.search);
+      this.taskTemplateId = searchParams.get("taskTemplateId");
+      this.doUiAction("getTableData");
+    },
+    methods: {
+      async doUiAction(uiActionId, uiActionData) {
+        switch (uiActionId) {
+          case "getTableData":
+            await this.getTableData();
+            break;
+          case "updateTaskTemplate":
+            await this.updateTaskTemplate();
+            break;
+          default:
+            console.error("[doUiAction] uiActionId not find", { uiActionId });
+            break;
+        }
+      },
+      async getTableData() {
+        this.isTableLoading = true;
+        const rows = (
+          await window.jianghuAxios({
+            data: {
+              appData: {
+                pageId: "taskTemplateFormManagement",
+                actionId: "selectItemList",
+                actionData: {},
+                where: { taskTemplateId: this.taskTemplateId },
+                orderBy: [{ column: "operationAt", order: "desc" }],
+              },
+            },
+          })
+        ).data.appData.resultData.rows;
+        const row = rows[0] || {};
+        row.taskTemplateForm = JSON.parse(row.taskTemplateForm || "[]");
+        this.taskTemplate = row;
+        this.isTableLoading = false;
+      },
+      saveData(val) {
+        console.log("------------------------------------");
+        console.log("taskTemplateForm", val);
+        console.log("------------------------------------");
+        this.taskTemplate.taskTemplateForm = val;
+      },
+      updateSelectCanvaId(data) {
+        this.selectCanvaId = data;
+      },
+
+      async updateTaskTemplate() {
+        await window.jhMask.show();
+        await window.vtoast.loading({ message: "更新模板", timer: -1 });
+
+        await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: "taskTemplateFormManagement",
+              actionId: "updateItem",
+              actionData: {
+                taskTemplateForm: JSON.stringify(
+                  this.taskTemplate.taskTemplateForm
+                ),
+              },
+              where: { taskTemplateId: this.taskTemplateId },
+            },
+          },
+        });
+
+        await window.jhMask.hide();
+        await window.vtoast.success("更新模板成功");
+      },
+    },
+  });
+</script>
+
+<style scoped></style>{% endblock %}
