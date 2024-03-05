@@ -241,7 +241,7 @@ class AppService extends Service {
 
   async buildSupperAdminUserApp() {
     const { jianghuKnex } = this.app;
-    const supperAdminUserList = await jianghuKnex('enterprise_user_group_role').where({ groupId: '超级管理员', roleId: '*' }).select();
+    const supperAdminUserList = await jianghuKnex('enterprise_user_group_role').where({ groupId: '超级管理员' }).select();
     const userList = supperAdminUserList.map(e => e.userId);
     // 检查 enterprise_user_app 内是否有对应的关系数据
     const userAppList = await jianghuKnex('enterprise_user_app').whereIn('userId', userList).select();
@@ -254,7 +254,7 @@ class AppService extends Service {
           await jianghuKnex('enterprise_user_app').insert({
             userId: userId,
             appId: appId,
-            groupId: '超级管理员', roleId: '*',
+            source: '超级管理员',
           });
         }
       }
