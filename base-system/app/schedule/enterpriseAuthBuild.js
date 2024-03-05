@@ -14,12 +14,12 @@ module.exports = app => {
       const startTime = new Date().getTime();
       const { jianghuKnex, logger } = app;
 
+      // 删除临时角色权限信息
+      await ctx.service.app.removeRelationByExpire();
+
       await ctx.service.app.buildRelationByCommonAuth();
 
-      await ctx.service.app.buildSupperAdminUserApp();
-
-      // 删除临时角色权限信息
-      await ctx.service.app.removeRelationByExpire()
+      await ctx.service.app.buildUserApp();
 
       const endTime = new Date().getTime();
       logger.info('[schedule/enterpriseAuthBuild.js]', { useTime: `${endTime - startTime}/ms` });
