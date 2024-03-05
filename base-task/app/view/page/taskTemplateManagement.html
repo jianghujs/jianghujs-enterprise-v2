@@ -210,11 +210,22 @@
                   </v-menu>
                 </v-col>
 
-                <v-col cols="12" sm="12" md="4"></v-col>
                 <v-col cols="12" sm="12" md="4">
-                  <span class="jh-input-label">审批人列表</span>
-                  <task-approval-person-list
-                    :person-list.sync="createItem.taskTemplatePersonList"
+                  <span class="jh-input-label">模板分组</span>
+                  <v-autocomplete
+                    class="jh-v-input"
+                    :items="constantObj.taskTemplateGroup"
+                    dense
+                    single-line
+                    filled
+                    v-model="createItem.taskTemplateGroup"
+                  ></v-autocomplete>
+                </v-col>
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">审批流程</span>
+                  <task-approval-workflow
+                  :approval-person-list.sync="updateItem.taskTemplatePersonList"
+                  :notice-person-list.sync="updateItem.taskTemplateNoticePersonList"
                   />
                 </v-col>
               </v-row>
@@ -324,12 +335,23 @@
                   </v-menu>
                 </v-col>
 
-                <v-col cols="12" sm="12" md="4"></v-col>
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">模板分组</span>
+                  <v-autocomplete
+                    class="jh-v-input"
+                    :items="constantObj.taskTemplateGroup"
+                    dense
+                    single-line
+                    filled
+                    v-model="updateItem.taskTemplateGroup"
+                  ></v-autocomplete>
+                </v-col>
 
                 <v-col cols="12" sm="12" md="4">
-                  <span class="jh-input-label">审批人列表</span>
-                  <task-approval-person-list
-                    :person-list.sync="updateItem.taskTemplatePersonList"
+                  <span class="jh-input-label">审批流程</span>
+                  <task-approval-workflow
+                    :approval-person-list.sync="updateItem.taskTemplatePersonList"
+                    :notice-person-list.sync="updateItem.taskTemplateNoticePersonList"
                   />
                 </v-col>
               </v-row>
@@ -409,9 +431,10 @@
 
 <div id="app"></div>
 
-{% endblock %} {% block vueScript %} {% include
-'common/jianghuJs/fixedTableHeightV4.html' %} {% include
-'component/task-approval-person-list.html' %}
+{% endblock %} {% block vueScript %}
+{% include 'common/jianghuJs/fixedTableHeightV4.html' %}
+{% include 'common/constantUtil.html' %}
+{% include 'component/task-approval-workflow.html' %}
 
 <script src="/<$ ctx.app.config.appId $>/public/material-design-icons.js"></script>
 
@@ -441,16 +464,9 @@
         requireRules: [(v) => !!v || 'This is required'],
       },
       // 下拉选项
-      constantObj: {
-        gender: [
-          { value: null, text: '全部' },
-          { value: 'male', text: '男' },
-          { value: 'female', text: '女' },
-        ],
-      },
+      constantObj: window.constantObj,
       currentSceneId: null,
       serverSearchInput: {
-        gender: null,
       },
       searchInput: null,
       isTableLoading: true,
@@ -458,6 +474,7 @@
       headers: [
         { text: 'ID', value: 'taskTemplateId', width: 120 },
         { text: '名称', value: 'taskTemplateName', width: 120 },
+        { text: '分组', value: 'taskTemplateGroup', width: 120 },
         { text: '创建时间', value: 'taskTemplateCreateAt', width: 120 },
         { text: '操作者', value: 'operationByUser', width: 120 },
         { text: '操作时间', value: 'operationAt', width: 250 },
@@ -568,14 +585,18 @@
         ).data.appData.resultData.rows;
 
         rows.forEach((row) => {
-          row.taskTemplatePersonList = JSON.parse(row.taskTemplatePersonList);
+          row.taskTemplatePersonList = JSON.parse(row.taskTemplatePersonList || '[]');
+          row.taskTemplateNoticePersonList = JSON.parse(row.taskTemplateNoticePersonList || '[]');
+          
         });
         this.tableData = rows;
         this.isTableLoading = false;
       },
       // ---------- 新增数据 uiAction >>>>>>>>>> --------
       async prepareCreateFormData() {
-        this.createItem = {};
+        this.createItem = {
+          taskTemplateGroup: '其他'
+        };
       },
 
       async openCreateDrawer() {
@@ -604,6 +625,9 @@
         const { id, ...data } = this.createItem;
 
         data.taskTemplateCreateAt = dayjs().format('YYYY-MM-DD HH:mm:ss');
+        data.taskTemplateNoticePersonList = JSON.stringify(
+          data.taskTemplateNoticePersonList
+        );
         data.taskTemplatePersonList = JSON.stringify(
           data.taskTemplatePersonList
         );
@@ -670,6 +694,9 @@
 
         data.taskTemplatePersonList = JSON.stringify(
           data.taskTemplatePersonList
+        );
+        data.taskTemplateNoticePersonList = JSON.stringify(
+          data.taskTemplateNoticePersonList
         );
         this.updateActionData = data;
       },
