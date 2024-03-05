@@ -279,10 +279,11 @@
                 item-key="userId"
                 class="elevation-0"
                 >
-                <template v-slot:item.roleId="{ item }">
-                  <v-chip class="mr-2" v-for="roleIdItem in item.roleId.split(',')" text-color="white" color="orange" small label>
-                    {{roleIdItem}}
+                <template v-slot:item.groupRoleName="{ item }">
+                  <v-chip class="mr-2" v-for="groupRoleNameItem in item.groupRoleName.split(',')" color="success" small label outlined>
+                    {{groupRoleNameItem}}
                   </v-chip>
+                </template>
               </v-data-table>
             </v-col>
           </v-row>
@@ -365,7 +366,7 @@ new Vue({
     ],
     drawerHeaders:[
       {text: "应用名", value: "appName", width: 180},
-      {text: "职务", value: "roleId"},
+      {text: "部门职务", value: "groupRoleName"},
     ],
     // 新增用户
     isCreateDrawerShown: false,
@@ -721,7 +722,6 @@ new Vue({
             where: {
               userId: userId
             },
-            whereOptions: [["roleId","<>","*"], ["roleId","<>","commonAuth"]],
             orderBy: [{column: 'operationAt', order: 'desc'}]
           }
         }
@@ -733,8 +733,7 @@ new Vue({
         const item = {};
         item.appId = groupBy[key][0].appId;
         item.appName = groupBy[key][0].appName;
-        item.groupAllName = groupBy[key].map(e => e.groupAllName).join(',');
-        item.roleId = groupBy[key].map(e => e.roleId).join(',');
+        item.groupRoleName = groupBy[key].map(e => e.groupAllName + ' | ' + e.roleName).join(',');
 
         list.push(item);
       })
