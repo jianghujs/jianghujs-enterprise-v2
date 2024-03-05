@@ -286,6 +286,7 @@ class AppService extends Service {
     let userGroupRoleResourceAll = await jianghuKnex('enterprise_user_group_role_resource').where({ source }).select();
     userInfoList.forEach(userInfo => {
       userInfo.groupList = userGroupRoleAll.filter(e => e.userId === userInfo.userId);
+      userInfo.groupList.push({ groupId: 'login', roleId: '*' });
     })
 
     // enterprise_user_group_role_page     通用权限 删除多余的记录
@@ -361,6 +362,7 @@ class AppService extends Service {
       await jianghuKnex('enterprise_user_app').whereIn('id', deleteUserAppIdList).delete();
     }
 
+    // TODO: logger打印  deleteCount 和 insertCount ===》方便观察
     return;
   }
 
