@@ -268,7 +268,7 @@
         },
         roleList: {
             type: Array,
-            default: () => [{roleId: '*', roleName: '默认权限'}]
+            default: () => []
         },
         loading: {
           type: Boolean,
@@ -335,15 +335,6 @@
         createRoleConfig(){
           let roleConfig = []
           this.createItem.roleId?.forEach(roleId => {
-            if(roleId == "*"){
-              roleConfig.push({
-                roleId,
-                roleName:"默认权限",
-                roleType:"正式职务",
-                roleDeadline: -1
-              })
-              return
-            }
             let role = this.roleList.find(item =>  item.roleId == roleId)
             roleConfig.push({
               roleId:role.roleId,
@@ -472,7 +463,6 @@
         async prepareCreateFormData() {
             this.createItem = {
                 groupId: this.groupId,
-                roleId: ['*'],
             };
         },
 
