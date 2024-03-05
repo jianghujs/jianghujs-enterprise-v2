@@ -90,6 +90,15 @@
             </template>
               <!-- 表格操作按钮 -->
                 <template v-slot:item.action="{ item }">
+                  <span
+                  role="button"
+                  class="success--text font-weight-medium font-size-2 mr-2"
+                  @click="doUiAction('jumpTaskTemplateFormPage', item)"
+                >
+                  <v-icon size="16" class="success--text"
+                    >mdi-note-edit-outline</v-icon
+                  >表单配置
+                </span>
                 <span
                   role="button"
                   class="success--text font-weight-medium font-size-2 mr-2"
@@ -523,6 +532,9 @@
             await this.clearDeleteItem();
             await this.getTableData();
             break;
+          case 'jumpTaskTemplateFormPage':
+            await this.jumpTaskTemplateFormPage(uiActionData);
+            break;
           default:
             console.error('[doUiAction] uiActionId not find', { uiActionId });
             break;
@@ -724,6 +736,9 @@
         this.deleteItemId = null;
       },
       // ---------- <<<<<<<<<<< 删除数据 uiAction ---------
+      async jumpTaskTemplateFormPage(item) {
+        window.open(`/<$ ctx.app.config.appId $>/page/taskTemplateFormManagement?taskTemplateId=${item.taskTemplateId}`, "_blank");
+      }
     },
   });
 </script>
