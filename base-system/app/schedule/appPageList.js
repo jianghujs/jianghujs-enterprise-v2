@@ -13,6 +13,7 @@ module.exports = app => {
       const { logger } = app;
       await ctx.service.app.updatePageList();
       const endTime = new Date().getTime();
+      // TODO: 更新个数打印 & 如果是一样的不用update
       logger.info('[schedule/appPageList.js]', { useTime: `${endTime - startTime}/ms` });
     },
   };

@@ -22,6 +22,7 @@ module.exports = app => {
       await ctx.service.app.buildUserApp();
 
       const endTime = new Date().getTime();
+      // TODO: 更新个数打印
       logger.info('[schedule/enterpriseAuthBuild.js]', { useTime: `${endTime - startTime}/ms` });
     },
   };

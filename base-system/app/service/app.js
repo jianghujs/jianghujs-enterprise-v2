@@ -240,7 +240,7 @@ class AppService extends Service {
   }
 
   async buildRelationByCommonAuth(createUserId) {
-    const { jianghuKnex } = this.app;
+    const { jianghuKnex, logger } = this.app;
     const source = "通用权限";
 
     const commonAuthListConfig = await jianghuKnex('_constant').where({ constantKey: 'commonAuthList' }).select().first();
@@ -288,59 +288,31 @@ class AppService extends Service {
 
     // enterprise_user_group_role_page     通用权限 生成
     // enterprise_user_group_role_resource 通用权限 生成
+    const userGroupRolePageInsertList = [];
+    const userGroupRoleResouceInsertList = [];
     for (const commonAuth of commonAuthList) {
       const { appId, user, group, role, page, resource, allowOrDeny } = commonAuth;
       const userGroupRolePageOld = userGroupRolePageAll.find(item => item.appId === appId && item.user === user && item.group === group && item.role === role);
       if (!userGroupRolePageOld) {
-        await jianghuKnex('enterprise_user_group_role_page').jhInsert({ source, appId, user, group, role, page, allowOrDeny });
+        userGroupRolePageInsertList.push({ source, appId, user, group, role, page, allowOrDeny });
       }
       const userGroupRoleResourceOld = userGroupRoleResourceAll.find(item => item.appId === appId && item.user === user && item.group === group && item.role === role);
       if (!userGroupRoleResourceOld) {
-        await jianghuKnex('enterprise_user_group_role_resource').jhInsert({ source, appId, user, group, role, resource, allowOrDeny });
+        userGroupRoleResouceInsertList.push({ source, appId, user, group, role, resource, allowOrDeny });
       }
     }
-
-    // enterprise_user_app 通用权限 生成
-    // const userInfoList = await jianghuKnex('_user').select();
-    // const userGroupRoleAll = await jianghuKnex('enterprise_user_group_role').where({}).select();
-    // const userAppAll = await jianghuKnex('enterprise_user_app').where({ source }).select();
-    // userInfoList.forEach(userInfo => {
-    //   userInfo.groupList = userGroupRoleAll.filter(e => e.userId === userInfo.userId);
-    //   userInfo.groupList.push({ groupId: 'login', roleId: '*' });
-    // })
-    // const insertUserAppList = []
-    // for (const commonAuth of commonAuthList) {
-    //   const { appId, user, group, role } = commonAuth;
-    //   for (const userInfo of userInfoList) {
-    //     const { userId, groupList } = userInfo;
-    //     const userIsAccess = checkResource(userId, user);
-    //     const groupIsAccess = groupList.find(g => checkResource(g.groupId, group) && checkResource(g.roleId, role));
-    //     const userAppOld = userAppAll.find(item => item.appId === appId && item.userId === userId);
-    //     if (userAppOld && userIsAccess && groupIsAccess) {
-    //       userAppOld.access = true;
-    //     }
-    //     if (userIsAccess && groupIsAccess) {
-    //       if (!userAppOld) {
-    //         insertUserAppList.push({ appId, userId, source });
-    //       }
-    //     }
-    //   }
-    // }
-    // if (insertUserAppList.length > 0) {
-    //   await jianghuKnex('enterprise_user_app').insert(insertUserAppList);
-    // }
-    // // enterprise_user_app 通用权限 删除多余的记录
-    // const deleteUserAppIdList = userAppAll.filter(e => !e.access).map(e => e.id);
-    // if (deleteUserAppIdList.length > 0) {
-    //   await jianghuKnex('enterprise_user_app').whereIn('id', deleteUserAppIdList).delete();
-    // }
-
-    // TODO: logger打印  deleteCount 和 insertCount ===》方便观察
+    logger.info('[schedule/enterpriseAuthBuild.js]______', { '通用权限新增数': userGroupRolePageInsertList.length });
+    if (userGroupRolePageInsertList.length > 0) {
+      await jianghuKnex('enterprise_user_group_role_page').insert(userGroupRolePageInsertList);
+    }
+    if (userGroupRoleResouceInsertList.length > 0) {
+      await jianghuKnex('enterprise_user_group_role_resource').insert(userGroupRoleResouceInsertList);
+    }
     return;
   }
 
   async buildUserApp() {
-    const { jianghuKnex } = this.app;
+    const { jianghuKnex, logger } = this.app;
 
     const userAppAll = await jianghuKnex('enterprise_user_app').where({}).select();
     const userInfoList = await jianghuKnex('_user').select();
@@ -351,9 +323,15 @@ class AppService extends Service {
       userInfo.groupList.push({ groupId: 'login', roleId: '*' });
     })
 
+    const appList = await jianghuKnex('enterprise_app').select();
+    const appIdList = appList.map(e => e.appId);
+
     const insertUserAppList = []
     for (const userGroupRolePage of userGroupRolePageAll) {
       const { appId, user, group, role } = userGroupRolePage;
+      if (!appIdList.find(e => e === appId)) {
+        continue;
+      }
       for (const userInfo of userInfoList) {
         const { userId, groupList } = userInfo;
         const userIsAccess = checkResource(userId, user);
@@ -364,15 +342,13 @@ class AppService extends Service {
         }
         if (userIsAccess && groupIsAccess) {
           if (!userAppOld) {
-            insertUserAppList.push({ appId, userId, source: '用户APP权限构建' });
+            insertUserAppList.push({ appId, userId, source: '用户APP权限' });
           }
         }
       }
     }
 
     const supperAdminUserList = userGroupRoleAll.filter(e => e.groupId === '超级管理员');
-    const appList = await jianghuKnex('enterprise_app').select();
-    const appIdList = appList.map(e => e.appId);
     for (const appId of appIdList) {
       for (const userInfo of supperAdminUserList) {
         const { userId } = userInfo;
@@ -381,23 +357,24 @@ class AppService extends Service {
           userAppOld.dontDelete = true;
         }
         if (!userAppOld) {
-          insertUserAppList.push({ appId, userId, source: '用户APP权限构建' });
+          insertUserAppList.push({ appId, userId, source: '用户APP权限' });
         }
       }
     }
     const insertUserAppListUniq = _.uniqBy(insertUserAppList, e => `${e.userId}---${e.appId}`);
+    const deleteUserAppIdList = userAppAll.filter(e => !e.dontDelete).map(e => e.id);
+    logger.info('[schedule/enterpriseAuthBuild.js]______', { '用户APP权限新增数': insertUserAppListUniq.length });
     if (insertUserAppListUniq.length > 0) {
       await jianghuKnex('enterprise_user_app').insert(insertUserAppListUniq);
     }
-    // enterprise_user_app 删除多余的记录
-    const deleteUserAppIdList = userAppAll.filter(e => !e.dontDelete).map(e => e.id);
     if (deleteUserAppIdList.length > 0) {
       await jianghuKnex('enterprise_user_app').whereIn('id', deleteUserAppIdList).delete();
     }
+
   }
 
   async removeRelationByExpire() {
-    const { jianghuKnex } = this.app;
+    const { jianghuKnex, logger } = this.app;
     let today = dayjs().format('YYYY-MM-DD')
     const userRoleList = await jianghuKnex('enterprise_user_group_role')
       .where('roleDeadline', '<', today)
@@ -411,6 +388,7 @@ class AppService extends Service {
       .jhDelete();
     
     // enterprise_user_app
+    logger.info('[schedule/enterpriseAuthBuild.js]______', { '临时职位删除个数': userRoleList.length });
     if (userRoleList.length > 0) {
       for (const i of userRoleList) {
         await jianghuKnex('enterprise_user_app')
