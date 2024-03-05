@@ -7,7 +7,7 @@
             <v-tab v-for="(item, index) in roleList" :value="item.roleId" class="pa-0" style="justify-content:flex-end">
               <div>
                 <span style="font-weight: 600px;">{{item.roleName}}</span>
-                <v-icon :disabled="item.roleId == '*'" @click="doUiAction('deleteItem', item)">mdi-close-box-outline</v-icon>
+                <v-icon @click="doUiAction('deleteItem', item)">mdi-close-box-outline</v-icon>
               </div>
             </v-tab>
             <div @click="doUiAction('startCreateItem')" class="v-tab pa-0" style="justify-content:flex-end">
@@ -116,7 +116,7 @@
       },
       roleList: {
         type: Array,
-        default: () => [{roleId: '*', roleName: '默认权限'}]
+        default: () => []
       },
       loading: {
         type: Boolean,

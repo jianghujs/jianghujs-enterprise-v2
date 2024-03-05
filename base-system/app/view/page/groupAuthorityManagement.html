@@ -266,7 +266,7 @@ new Vue({
       rows.forEach(row => {
         row.operationAt = dayjs(row.operationAt).format('YYYY-MM-DD HH:mm:ss');
       })
-      this.constantObj.roleList = [{roleId: '*', roleName: '默认权限'}, ...rows];
+      this.constantObj.roleList = [...rows];
       this.isAppLoading = false;
     },
     async getUserGroupRolePage() {
