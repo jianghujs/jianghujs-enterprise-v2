@@ -315,7 +315,7 @@ class AppService extends Service {
         userGroupRoleResouceInsertList.push({ source, appId, user, group, role, resource, allowOrDeny });
       }
     }
-    logger.info('[schedule/enterpriseAuthBuild.js]______', { '通用权限新增数': userGroupRolePageInsertList.length });
+    logger.info('[schedule/enterpriseAuthBuild.js]______', { '通用权限新增数': userGroupRolePageInsertList.length, '通用权限删除数': userGroupRolePageDelete.length});
     if (userGroupRolePageInsertList.length > 0) {
       await jianghuKnex('enterprise_user_group_role_page').insert(userGroupRolePageInsertList);
     }
@@ -379,7 +379,7 @@ class AppService extends Service {
     }
     const insertUserAppListUniq = _.uniqBy(insertUserAppList, e => `${e.userId}---${e.appId}`);
     const deleteUserAppIdList = userAppAll.filter(e => !e.dontDelete).map(e => e.id);
-    logger.info('[schedule/enterpriseAuthBuild.js]______', { '用户APP权限新增数': insertUserAppListUniq.length });
+    logger.info('[schedule/enterpriseAuthBuild.js]______', { '用户APP权限新增数': insertUserAppListUniq.length, '用户APP权限删除数': deleteUserAppIdList.length });
     if (insertUserAppListUniq.length > 0) {
       await jianghuKnex('enterprise_user_app').insert(insertUserAppListUniq);
     }

@@ -16,10 +16,7 @@ class UserGroupRoleService extends Service {
   async insertUserGroupRole() {
     const { jianghuKnex } = this.app;
     const { userId, roleId: roleIdList, groupId, roleConfig } = this.ctx.request.body.appData.actionData;
-    const appList = await jianghuKnex('enterprise_user_group_role_page').where('group', groupId).whereIn('role', roleIdList).select();
-
     const roleInsertList = [];
-    const appInsertList = [];//.add(item.days, 'day')
     roleConfig.forEach(item => {
       roleInsertList.push({
         userId,
@@ -28,31 +25,17 @@ class UserGroupRoleService extends Service {
         roleDeadline: item.roleDeadline == -1 ? item.roleDeadline : dayjs().add(item.roleDeadline, 'day').format('YYYY-MM-DD')
       })
     })
-    appList.forEach( appItem => {
-      appInsertList.push({
-        userId,
-        'appId':appItem.appId,
-        'groupId': appItem.group,
-        'roleId': appItem.role
-      })
-    })
-    await jianghuKnex.transaction(async trx => {
-      if (appInsertList.length > 0) {
-        await trx('enterprise_user_app', this.ctx).insert(appInsertList);
-      }
-      if (roleInsertList.length > 0) {
-        await trx('enterprise_user_group_role', this.ctx).insert(roleInsertList);
-      }
-    })
+    if (roleInsertList.length > 0) {
+      await jianghuKnex('enterprise_user_group_role', this.ctx).insert(roleInsertList);
+    }
+    this.service.app.buildUserApp(userId);
   }
 
   async updateUserGroupRole() {
     const { jianghuKnex } = this.app;
     const { userId, roleId: roleIdList, groupId, roleConfig } = this.ctx.request.body.appData.actionData;
-    const appList = await jianghuKnex('enterprise_user_group_role_page').where('group', groupId).whereIn('role',roleIdList).select();
 
     const roleInsertList = [];
-    const appInsertList = [];
     roleConfig.forEach(item => {
       roleInsertList.push({
         userId,
@@ -61,42 +44,22 @@ class UserGroupRoleService extends Service {
         roleDeadline: item.roleType == "临时职务" ? item.roleDeadline : -1
       })
     })
-    appList.forEach( appItem => {
-      appInsertList.push({
-        userId,
-        'appId':appItem.appId,
-        'groupId': appItem.group,
-        'roleId': appItem.role
-      })
-    })
 
     await jianghuKnex.transaction(async trx => { 
-
       // 删除旧的
       await trx('enterprise_user_group_role').where({ userId, groupId }).delete();
       if (roleInsertList.length > 0) { 
         // 插入新的
         await trx('enterprise_user_group_role', this.ctx).insert(roleInsertList);
-       }
-      
-
-      // 删除旧的
-      await trx('enterprise_user_app').where({ userId, groupId }).delete();
-      if (appInsertList.length > 0) {
-        // 插入新的
-        await trx('enterprise_user_app', this.ctx).insert(appInsertList);
       }
-
     })
+    this.service.app.buildUserApp(userId);
   }
   async deleteUserGroupRole() {
     const { jianghuKnex } = this.app;
     const { userId, groupId } = this.ctx.request.body.appData.actionData;
-
-    await jianghuKnex.transaction(async trx => { 
-      await trx('enterprise_user_group_role').where({ userId, groupId }).delete();
-      await trx('enterprise_user_app').where({userId, groupId}).delete();
-    })
+    await jianghuKnex('enterprise_user_group_role').where({ userId, groupId }).delete();
+    this.service.app.buildUserApp(userId);
   }
 
 
@@ -124,14 +87,6 @@ class UserGroupRoleService extends Service {
         resource: value.map(e => e.pageId == '*' ? e.pageId : e.pageId + '.*').join(','),
       })
     });
-    // 查询该角色的所有user
-    const roleUserList = await jianghuKnex('enterprise_user_group_role').select('userId').where({ groupId: group, roleId: role });
-    const userIdList = roleUserList.map(e => e.userId);
-    const insertUserApp = [];
-    _.forEach(userIdList, (userId, index) => {
-      const userAppList =appIdList.map(appId => { return { groupId: group, roleId: role, userId, appId} });
-      insertUserApp.push(...userAppList);
-    });
 
     await jianghuKnex.transaction(async trx => {
       // 删除原有的 enterprise_user_group_role_page
@@ -141,11 +96,9 @@ class UserGroupRoleService extends Service {
       await trx('enterprise_user_group_role_resource').where({ group, role }).jhDelete();
       // 新增 enterprise_user_group_role_resource
       insertUserGroupRoleResourceList.length && await trx('enterprise_user_group_role_resource').jhInsert(insertUserGroupRoleResourceList);
-
-      // 删除原有的 _user_app
-      await trx('enterprise_user_app').where({ groupId: group, roleId: role }).jhDelete();
-      insertUserApp.length && await trx('enterprise_user_app').jhInsert(insertUserApp);
     })
+
+    this.service.app.buildUserApp(userId);
   }
 
   /**
@@ -157,12 +110,11 @@ class UserGroupRoleService extends Service {
     
     await jianghuKnex.transaction(async trx => { 
       await trx('enterprise_role').where({ roleId  }).jhDelete();
-      await trx('enterprise_user_app').where({ roleId, groupId  }).jhDelete();
       await trx('enterprise_user_group_role').where({ roleId, groupId }).jhDelete();
       await trx('enterprise_user_group_role_page').where({ group: groupId, role: roleId }).jhDelete();
       await trx('enterprise_user_group_role_resource').where({ group: groupId, role: roleId }).jhDelete();
     })
-
+    this.service.app.buildUserApp(userId);
   }
 
   // async updateUserOrg() {
