@@ -28,6 +28,7 @@
                       :headers="headers"
                       :items="tableData"
                       :search="searchInput"
+                      :custom-filter="customFilter"
                       :footer-props="{ itemsPerPageOptions: [50, 100, -1], itemsPerPageText: '每页', itemsPerPageAllText: '所有'}"
                       :items-per-page="50"
                       mobile-breakpoint="0"
@@ -68,10 +69,7 @@
                       </template>
                       <!-- 应用类型 -->
                       <template v-slot:item.role-name="{ item }">
-                        <!-- <v-chip class="mr-2" v-if="item.roleName.includes('默认权限')" text-color="black" color="default" small label>
-                          默认权限
-                        </v-chip> -->
-                        <v-chip class="mr-2" v-for="(roleItem, roleIndex) in item.roleName.split(',').filter(item=>item!='默认权限')" text-color="white" color="orange" small label>
+                        <v-chip class="mr-2" v-for="(roleItem, roleIndex) in item.roleName.split(',').filter(item=>item!='无职务')" text-color="white" color="orange" small label>
                           {{roleItem}}
                         </v-chip>
                       </template>
@@ -319,6 +317,7 @@
         },
         searchInput: null,
         headers: [
+            {text: "账号", value: "userId", width:100},
             {text: "用户", value: "username", width:100},
             {text: "所在组织", value: "groupAllName", width:280},
             {text: "职务", value: "role-name", width:380},
@@ -637,8 +636,25 @@
 
         async clearDeleteItem(){
           this.deleteItem = {}
-        }
+        },
         // ---------- <<<<<<<<<<< 删除数据 uiAction  --------
+        // 重写过滤方法
+        customFilter(value, search, item){
+          let newItem = _.pick(item,['userId','username','groupAllName','roleName','groupId'])
+          // newItem.purchaseProductList = newItem.purchaseProductList.map(item=>item.productName+'-'+item.productSpec)
+          const result = _.some(newItem, itemValue =>  itemValue && itemValue.toString().includes(search));
+          if(result){
+            return true
+          }else{
+            // 特殊操作
+            let {test} = item;
+            // debugger
+            return _.some(test, itemValue =>{ 
+              // console.log("test",itemValue)
+              return _.isString(itemValue.name) && itemValue['name'].includes(search)
+            });
+          }
+        },
       }
     })
   </script>
