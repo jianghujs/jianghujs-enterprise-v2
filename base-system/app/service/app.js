@@ -199,6 +199,7 @@ class AppService extends Service {
     const taskApp = appListAll.find((app) => app.appId == 'task');
     for (const app of appListForTask) {
       const { appDatabase, appId } = app;
+      if (!appDatabase) continue;
       if (!await knex.schema.hasColumn(`${appDatabase}._page`, 'pageIcon')) {
         await knex.schema.alterTable(`${appDatabase}._page`, function (table) {
           table.text('pageIcon').after('pageType');
@@ -274,24 +275,24 @@ class AppService extends Service {
     const userGroupRolePageDelete = userGroupRolePageAll
       .filter((userGroupRolePage) => {
         const { appId, user, group, role, page, allowOrDeny } = userGroupRolePage;
-        return commonAuthList.findIndex(commonAuth => 
+        return commonAuthList.findIndex(commonAuth =>
           appId == commonAuth.appId && user == commonAuth.user &&
-          group == commonAuth.group && role == commonAuth.role && 
+          group == commonAuth.group && role == commonAuth.role &&
           page == commonAuth.page && allowOrDeny == commonAuth.allowOrDeny) == -1;
       });
-    if (userGroupRolePageDelete.length > 0) { 
+    if (userGroupRolePageDelete.length > 0) {
       const userGroupRolePageDeleteIdList = userGroupRolePageDelete.map(e => e.id);
       await jianghuKnex('enterprise_user_group_role_page').whereIn('id', userGroupRolePageDeleteIdList).delete();
     }
     const userGroupRoleResourceDelete = userGroupRoleResourceAll
       .filter((userGroupRoleResource) => {
         const { appId, user, group, role, resource, allowOrDeny } = userGroupRoleResource;
-        return commonAuthList.findIndex(commonAuth => 
+        return commonAuthList.findIndex(commonAuth =>
           appId == commonAuth.appId && user == commonAuth.user &&
-          group == commonAuth.group && role == commonAuth.role && 
+          group == commonAuth.group && role == commonAuth.role &&
           resource == commonAuth.resource && allowOrDeny == commonAuth.allowOrDeny) == -1;
       });
-    if (userGroupRoleResourceDelete.length > 0) { 
+    if (userGroupRoleResourceDelete.length > 0) {
       const userGroupRoleResourceDeleteIdList = userGroupRoleResourceDelete.map(e => e.id);
       await jianghuKnex('enterprise_user_group_role_resource').whereIn('id', userGroupRoleResourceDeleteIdList).delete();
     }
@@ -315,7 +316,7 @@ class AppService extends Service {
         userGroupRoleResouceInsertList.push({ source, appId, user, group, role, resource, allowOrDeny });
       }
     }
-    logger.info('[schedule/enterpriseAuthBuild.js]______', { '通用权限新增数': userGroupRolePageInsertList.length, '通用权限删除数': userGroupRolePageDelete.length});
+    logger.info('[schedule/enterpriseAuthBuild.js]______', { '通用权限新增数': userGroupRolePageInsertList.length, '通用权限删除数': userGroupRolePageDelete.length });
     if (userGroupRolePageInsertList.length > 0) {
       await jianghuKnex('enterprise_user_group_role_page').insert(userGroupRolePageInsertList);
     }
@@ -396,19 +397,19 @@ class AppService extends Service {
       .where('roleDeadline', '<', today)
       .where('roleDeadline', '<>', '-1')
       .select();
-    
+
     // enterprise_user_group_role
     await jianghuKnex('enterprise_user_group_role')
       .where('roleDeadline', '<', today)
       .where('roleDeadline', '<>', '-1')
       .jhDelete();
-    
+
     // enterprise_user_app
     logger.info('[schedule/enterpriseAuthBuild.js]______', { '临时职位删除个数': userRoleList.length });
     if (userRoleList.length > 0) {
       for (const i of userRoleList) {
         await jianghuKnex('enterprise_user_app')
-          .where({userId: i.userId, roleId: i.roleId, groupId: i.groupId})
+          .where({ userId: i.userId, roleId: i.roleId, groupId: i.groupId })
           .jhDelete();
       }
     }
