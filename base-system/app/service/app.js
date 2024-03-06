@@ -104,16 +104,27 @@ class AppService extends Service {
     this.ctx.request.body.appData.actionData.appPageList = JSON.stringify(pageListFilter);
   }
 
+  // TODO: 更新个数打印 & 如果是一样的不用update
   async updatePageList() {
-    const { jianghuKnex } = this.app;
+    const { jianghuKnex, logger } = this.app;
     const appList = await jianghuKnex('enterprise_app').select();
+    let updateCount = 0;
     for (const app of appList) {
+      if (!app.appDatabase) {
+        continue;
+      }
       const pageList = await jianghuKnex(`${app.appDatabase}._page`).select();
-      const pageListFilter = _.map(pageList.filter(e => !['help', 'login', 'manual'].includes(e.pageId)), item => _.pick(item, ['pageId', 'pageName', 'pageType', 'sort']));
-      // TODO: 有差异再更新
-      await jianghuKnex('enterprise_app').where({ id: app.id })
-        .update({ appPageList: JSON.stringify(pageListFilter) });
+      const pageListFilter = pageList
+        .filter(e => !['help', 'login', 'manual'].includes(e.pageId))
+        .filter(e => e.pageName !== '通知/待办');
+      const pageListFilterData = _.map(pageListFilter, item => _.pick(item, ['pageId', 'pageName', 'pageType', 'sort']));
+      const pageListFilterDataString = JSON.stringify(pageListFilterData);
+      if (pageListFilterDataString !== app.appPageList) {
+        await jianghuKnex('enterprise_app').where({ id: app.id }).update({ appPageList: pageListFilterDataString });
+        updateCount++;
+      }
     }
+    logger.info('[schedule/appPageList.js]______', { 'enterprise_app.appPageList 更新个数': updateCount });
   }
 
   async updateAppUserGroupRole() {
@@ -242,7 +253,7 @@ class AppService extends Service {
     }
   }
 
-  async buildRelationByCommonAuth(createUserId) {
+  async buildUserGroupRolePageByCommonAuth() {
     const { jianghuKnex, logger } = this.app;
     const source = "通用权限";
 
@@ -314,13 +325,15 @@ class AppService extends Service {
     return;
   }
 
-  async buildUserApp() {
+  async buildUserApp(targetUserId) {
     const { jianghuKnex, logger } = this.app;
 
-    const userAppAll = await jianghuKnex('enterprise_user_app').where({}).select();
-    const userInfoList = await jianghuKnex('_user').select();
+    const searchWhere = {};
+    if (targetUserId) { searchWhere.userId = targetUserId; }
+    const userAppAll = await jianghuKnex('enterprise_user_app').where(searchWhere).select();
+    const userInfoList = await jianghuKnex('_user').where(searchWhere).select();
     const userGroupRolePageAll = await jianghuKnex('enterprise_user_group_role_page').where({}).select();
-    const userGroupRoleAll = await jianghuKnex('enterprise_user_group_role').where({}).select();
+    const userGroupRoleAll = await jianghuKnex('enterprise_user_group_role').where(searchWhere).select();
     userInfoList.forEach(userInfo => {
       userInfo.groupList = userGroupRoleAll.filter(e => e.userId === userInfo.userId);
       userInfo.groupList.push({ groupId: 'login', roleId: '*' });

@@ -58,7 +58,7 @@ class UserManagementService extends Service {
     }
     const insertParams = _.pick(actionData, [ 'username', 'userType', 'userStatus', 'userAvatar' ]);
     await jianghuKnex('_user', this.ctx).insert({ ...insertParams, idSequence, userId, password, clearTextPassword, md5Salt });
-    await this.service.app.buildRelationByCommonAuth(userId);
+    await this.service.app.buildUserApp(userId);
     return {};
   }
 
