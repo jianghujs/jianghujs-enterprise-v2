@@ -4,8 +4,17 @@
         <v-row class="ma-0"> 
           <v-col cols="12" class="pa-2">
             <v-row class="ma-0 pa-1">
-                <!-- 新增按钮 -->
-                <v-btn color="success" small @click="doUiAction('startCreateItem')">新增</v-btn>
+              <v-col cols="12" sm="4" md="4" xl="2" class="pa-0">
+                <div class="d-flex align-center py-0">
+                    <!-- 新增按钮 -->
+                    <v-btn color="success" small @click="doUiAction('startCreateItem')">新增</v-btn> 
+                    <v-checkbox
+                      v-model="isContainSub"
+                      label="包含子部门"
+                      class="ml-2"
+                    ></v-checkbox>
+                </div>
+                </v-col>
                 <v-spacer></v-spacer>
                 <!--搜索过滤-->
                 <v-col cols="12" sm="4" md="4" xl="2" class="pa-0">
@@ -19,6 +28,7 @@
                       :headers="headers"
                       :items="tableData"
                       :search="searchInput"
+                      :custom-filter="customFilter"
                       :footer-props="{ itemsPerPageOptions: [50, 100, -1], itemsPerPageText: '每页', itemsPerPageAllText: '所有'}"
                       :items-per-page="50"
                       mobile-breakpoint="0"
@@ -31,10 +41,10 @@
                         <template>
                             <!-- pc端 -->
                             <template v-if="!isMobile">
-                            <span role="button" v-if="item.groupId == groupId" class="success--text font-weight-medium font-size-2 mr-2" @click="doUiAction('startUpdateItem', item)">
+                            <span role="button" class="success--text font-weight-medium font-size-2 mr-2" @click="doUiAction('startUpdateItem', item)">
                                 <v-icon size="16" class="success--text">mdi-note-edit-outline</v-icon>修改
                             </span>
-                            <span role="button" v-if="item.groupId == groupId" class="red--text text--accent-2 font-weight-medium font-size-2" @click="doUiAction('deleteItem', item)">
+                            <span role="button" class="red--text text--accent-2 font-weight-medium font-size-2" @click="doUiAction('deleteItem', item)">
                                 <v-icon size="16" class="red--text text--accent-2">mdi-trash-can-outline</v-icon>删除
                             </span>
                             </template>
@@ -47,10 +57,10 @@
                                 </span>
                             </template>
                             <v-list dense>
-                                <v-list-item v-if="item.groupId == groupId" @click="doUiAction('startUpdateItem', item)">
+                                <v-list-item @click="doUiAction('startUpdateItem', item)">
                                 <v-list-item-title>编辑</v-list-item-title>
                                 </v-list-item>
-                                <v-list-item v-if="item.groupId == groupId" @click="doUiAction('deleteItem', item)">
+                                <v-list-item @click="doUiAction('deleteItem', item)">
                                 <v-list-item-title>删除</v-list-item-title>
                                 </v-list-item>
                             </v-list>
@@ -59,10 +69,7 @@
                       </template>
                       <!-- 应用类型 -->
                       <template v-slot:item.role-name="{ item }">
-                        <!-- <v-chip class="mr-2" v-if="item.roleName.includes('默认权限')" text-color="black" color="default" small label>
-                          默认权限
-                        </v-chip> -->
-                        <v-chip class="mr-2" v-for="(roleItem, roleIndex) in item.roleName.split(',').filter(item=>item!='默认权限')" text-color="white" color="orange" small label>
+                        <v-chip class="mr-2" v-for="(roleItem, roleIndex) in item.roleName.split(',').filter(item=>item!='无职务')" text-color="white" color="orange" small label>
                           {{roleItem}}
                         </v-chip>
                       </template>
@@ -112,8 +119,8 @@
                   <v-autocomplete class="jh-v-input" dense single-line filled v-model="createItem.userId" :items="constantObj.userList" :rules="validationRules.requireRules" ></v-autocomplete>
               </v-col>
               <v-col cols="12" sm="12" md="12">
-                  <span class="jh-input-label">选择职务</span>
-                  <v-autocomplete class="jh-v-input" dense single-line filled v-model="createItem.roleId" :items="roleList.filter(e => e.roleId != '*')" item-value="roleId" item-text="roleName" multiple>
+                  <span class="jh-input-label">选择职务<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                  <v-autocomplete class="jh-v-input" dense single-line filled v-model="createItem.roleId" :items="roleList" item-value="roleId" item-text="roleName" multiple>
                     <template v-slot:selection="data">
                       <v-chip
                         small
@@ -191,7 +198,7 @@
             <v-autocomplete class="jh-v-input" dense single-line filled v-model="updateItem.userId" :items="constantObj.userList" :rules="validationRules.requireRules" disabled></v-autocomplete>
         </v-col>
         <v-col cols="12" sm="12" md="12">
-            <span class="jh-input-label">选择职务</span>
+            <span class="jh-input-label">选择职务<span class="red--text text--accent-2 ml-1">*必填</span></span>
             <v-autocomplete class="jh-v-input" dense single-line filled v-model="updateItem.roleId" :items="roleList.filter(e => e.roleId != '*')" item-value="roleId" item-text="roleName" multiple>
               <template v-slot:selection="data">
                 <v-chip
@@ -268,7 +275,13 @@
         },
         roleList: {
             type: Array,
-            default: () => []
+            default: () => [
+              {
+                roleId: "无职务",
+                roleName: "无职务",
+                roleType:"正式职务",
+              }
+            ]
         },
         loading: {
           type: Boolean,
@@ -281,7 +294,7 @@
         groupId: {
           type: String,
           default: ''
-        }
+        },
       },
       vuetify: new Vuetify(),
       data: () => ({
@@ -303,9 +316,10 @@
         serverSearchInput: {
         },
         searchInput: null,
-        activeRole: '*',
         headers: [
-            {text: "用户", value: "username", width:120},
+            {text: "账号", value: "userId", width:100},
+            {text: "用户", value: "username", width:100},
+            {text: "所在组织", value: "groupAllName", width:280},
             {text: "职务", value: "role-name", width:380},
             {text: '操作', value: 'action', align: 'center', sortable: false, width: window.innerWidth < 500 ? 80 : 200, class: 'fixed', cellClass: 'fixed'},
         ],
@@ -330,11 +344,21 @@
         // 删除数据
         deleteItem: {},
         deleteItemId: null,
+        isContainSub: false
       }),
       computed: {
         createRoleConfig(){
           let roleConfig = []
           this.createItem.roleId?.forEach(roleId => {
+            if(roleId == "无职务"){
+              roleConfig.push({
+                roleId: null,
+                roleName:"无职务",
+                roleType:"正式职务",
+                roleDeadline: -1
+              })
+              return
+            }
             let role = this.roleList.find(item =>  item.roleId == roleId)
             roleConfig.push({
               roleId:role.roleId,
@@ -352,9 +376,9 @@
             let newRole = this.roleList.find(item =>  item.roleId == roleId)
             if(oldRole){
               newRoleConfig.push({
-                roleId: newRole.roleId,
-                roleName: newRole.roleName,
-                roleType: newRole.roleType,
+                roleId: newRole ? newRole.roleId : oldRole.roleId,
+                roleName: newRole ? newRole.roleName : oldRole.roleName,
+                roleType: newRole ? newRole.roleType : oldRole.roleType,
                 roleDeadline: oldRole.roleDeadline
               })
             }else{
@@ -370,11 +394,12 @@
         }
       },
       watch: {
-        activeRole(val) {
-          this.$emit('change-role', this.activeRole);
-        },
         value(val) {
           this.$emit('input', val);
+        },
+        isContainSub(val){
+          this.$emit('refresh-role-list', this.isContainSub);
+          this.$emit('get-role-data', this.isContainSub);
         }
       },
       async created() {
@@ -390,10 +415,6 @@
               break;
             case 'getUserData':
               await this.getUserData();
-              break;
-            case 'changeGroup':
-              await this.resetActiveRole();
-              await this.getTableData();
               break;
             case 'startCreateItem':
               await this.prepareCreateFormData();
@@ -436,10 +457,7 @@
          * 获取表格数据
          */
          async getTableData() {
-          this.$emit('refresh-role-list');
-        },
-        resetActiveRole() {
-          this.activeRole = '*';
+          this.$emit('refresh-role-list', this.isContainSub);
         },
         async getUserData() {
             this.isAppLoading = true;
@@ -463,6 +481,7 @@
         async prepareCreateFormData() {
             this.createItem = {
                 groupId: this.groupId,
+                roleId: []
             };
         },
 
@@ -470,9 +489,10 @@
             this.isCreateDrawerShown = true;
         },
         async prepareCreateValidate() {
-            if (await this.$refs.createForm.validate()) {
+            if (await this.$refs.createForm.validate() && this.createItem.roleId.length > 0) {
                 return true;
             }
+            await window.vtoast.fail("请完善表单信息");
             throw new Error("请完善表单信息")
         },
 
@@ -525,7 +545,10 @@
         // ---------- <<<<<<<<<<< 新增数据 uiAction  --------
         // ---------- 修改数据 uiAction >>>>>>>>>>>> --------
         async prepareUpdateFormData(funObj) {
-            this.updateItem = _.pick(funObj, ['id', 'groupId', 'userId', 'roleId','roleConfig']);;
+            this.updateItem = _.pick(funObj, ['id', 'groupId', 'userId', 'roleId','roleConfig']);
+            if(this.updateItem.roleId){
+              this.updateItem.roleId = this.updateItem.roleId.map(item => item || "无职务")
+            }
         },
 
         async openUpdateDrawer() {
@@ -533,9 +556,10 @@
         },
 
         async prepareUpdateValidate() {
-            if (await this.$refs.updateForm.validate()) {
+            if (await this.$refs.updateForm.validate() && this.updateItem.roleId.length > 0) {
                 return true;
             }
+            await window.vtoast.fail("请完善表单信息");
             throw new Error("请完善表单信息")
         },
 
@@ -547,7 +571,12 @@
 
         async prepareDoUpdateItem() {
             const {id, ...data} = this.updateItem;
-            this.updateActionData = {...data,roleConfig: this.updateRoleConfig};
+            this.updateActionData = {...data,roleConfig: this.updateRoleConfig.map(item => {
+              return {
+                ...item,
+                roleId: item.roleId == "无职务" ? null : item.roleId
+              }
+            })};
         },
 
         async doUpdateItem() {
@@ -607,8 +636,25 @@
 
         async clearDeleteItem(){
           this.deleteItem = {}
-        }
+        },
         // ---------- <<<<<<<<<<< 删除数据 uiAction  --------
+        // 重写过滤方法
+        customFilter(value, search, item){
+          let newItem = _.pick(item,['userId','username','groupAllName','roleName','groupId'])
+          // newItem.purchaseProductList = newItem.purchaseProductList.map(item=>item.productName+'-'+item.productSpec)
+          const result = _.some(newItem, itemValue =>  itemValue && itemValue.toString().includes(search));
+          if(result){
+            return true
+          }else{
+            // 特殊操作
+            let {test} = item;
+            // debugger
+            return _.some(test, itemValue =>{ 
+              // console.log("test",itemValue)
+              return _.isString(itemValue.name) && itemValue['name'].includes(search)
+            });
+          }
+        },
       }
     })
   </script>

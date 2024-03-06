@@ -51,7 +51,7 @@ SQL END!-->
     <div class="jh-page-body-container px-8">
       <!-- 页面内容 >>>>>>>>>>>>> -->
       <v-card class="rounded-lg">
-        <v-row class="ma-0 pa-4">
+        <v-row class="ma-0 pa-4 pb-2">
           <!-- 新增按钮 -->
           <v-btn color="success" class="elevation-0 mr-2" @click="doUiAction('startCreateItem')" small>新增
           </v-btn>
@@ -61,6 +61,8 @@ SQL END!-->
             <v-text-field color="success" v-model="searchInput" prefix="搜索：" class="jh-v-input" dense filled single-line></v-text-field>
           </v-col>
         </v-row>
+
+        <v-col cols="12" class="jh-fixed-table-height overflow-y-auto ">
         <!-- 树形结构 -->
           <v-treeview
             hoverable
@@ -71,24 +73,25 @@ SQL END!-->
             dense
             item-key="groupId"
             item-text="groupName"
+            :filter="filter"
             :search="searchInput"
-
             :active="selectedItem"
           >
 
           <template v-slot:append="{ item, open }">
             <span>{{item.groupId ? item.groupId : item.groupPath + '-' + item.groupLastId}}</span>
-            <v-icon size="20" class="ml-2" color="success" v-if="item.groupId!='超级管理员'" @click.stop="doUiAction('startCreateItem', item)">
+            <v-icon size="20" class="ml-2" color="success" @click.stop="doUiAction('startCreateItem', item)">
               mdi-plus
             </v-icon>
-            <v-icon size="20" class="ml-2" color="orange" v-if="item.groupId!='超级管理员'" @click.stop="doUiAction('startUpdateItem', item)">
+            <v-icon size="20" class="ml-2" color="orange" @click.stop="doUiAction('startUpdateItem', item)">
               mdi-note-edit-outline
             </v-icon>
-            <v-icon size="20" class="ml-2" color="red" v-if="item.groupId!='超级管理员'" @click.stop="doUiAction('deleteItem', item)">
+            <v-icon size="20" class="ml-2" color="red" @click.stop="doUiAction('deleteItem', item)">
               mdi-trash-can-outline
             </v-icon>
           </template>
         </v-treeview>
+        </v-col>
       </v-card>
       <!-- 新增抽屉 -->
       <v-navigation-drawer v-if="isCreateDrawerShown" v-model="isCreateDrawerShown" :permanent="isCreateDrawerShown" fixed temporary right width="80%" class="elevation-24">
@@ -246,6 +249,9 @@ new Vue({
         this.isHelpPageDrawerLoaded = true;
       }
     },
+  },
+  computed: {
+    
   },
   async created() {
   },
@@ -491,8 +497,22 @@ new Vue({
     async clearDeleteItem() {
       this.deleteItem = {};
       this.deleteItemId = null;
-    }
+    },
     // ---------- <<<<<<<<<<< 删除数据 uiAction ---------
+    // 重写搜索方法
+    filter (value, search) {
+      let newItem = _.pick(value,['groupId','groupAllName'])
+      const result = _.some(newItem, itemValue =>  itemValue && itemValue.toString().includes(search));
+      if(result){
+        return true
+      }else{
+        // 特殊操作
+        let {test} = value;
+        return _.some(test, itemValue =>{ 
+          return _.isString(itemValue.name) && itemValue['name'].includes(search)
+        });
+      }
+    },
   }
 })
 </script>
