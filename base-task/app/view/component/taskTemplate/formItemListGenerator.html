@@ -228,13 +228,18 @@
       },
       addFormItem(_component, targetIndex, event) {
         const component = {
-          items: [],
+          items: '',
           value: null,
           label: null,
           required: false,
           ..._component,
         };
-     
+        if (_component.type === "select") {
+          component.items = _component.items.split(",");
+        }
+        if (_component.type === "file") {
+          component.value = [];
+        }
 
         const { type } = component;
         const formItem = {
