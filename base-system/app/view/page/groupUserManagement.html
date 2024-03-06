@@ -55,7 +55,7 @@
               <v-tabs-items v-model="tabActive">
                 <v-tab-item>
                   <!-- <group-role-page :app-list="constantObj.appList" :role-list="constantObj.roleList" :loading="isAppLoading" v-model="activePageList" :group="activeGroup" @change-role="changeRole" @refresh-role-list="getRoleData"></group-role-page> -->
-                  <group-user :table-data="tableData" :role-list="constantObj.roleList" :loading="isAppLoading" v-model="activePageList" :groupId="activeGroup" @refresh-role-list="getTableData"></group-user>
+                  <group-user :table-data="tableData" :role-list="constantObj.roleList" :loading="isAppLoading" v-model="activePageList" :groupId="activeGroup" @refresh-role-list="getTableData" @get-role-data="getRoleData"></group-user>
                 </v-tab-item>
               </v-tabs-items>
             </v-card>
@@ -144,10 +144,9 @@ new Vue({
     activeGroup: null,
     activeGroupName: null,
     activeGroupPath: null,
-    activeRole: '*',
 
     activePageList: [],
-    authType: 'group'
+    authType: 'group',
   },
   computed: {
     tabList() {
@@ -182,21 +181,24 @@ new Vue({
         case 'getUserGroupRolePage':
           await this.getUserGroupRolePage();
           break;
-          break;
         default:
           console.error("[doUiAction] uiActionId not find", {uiActionId});
           break;
       }
     },
-    async getTableData() {
+    async getTableData(isContainSub) {
       this.isTableLoading = true;
       const where = {};
       const whereIn = {};
+      const whereLike = {};
+
       if (this.activeGroupPath) {
-        // where.groupPath = `${this.activeGroupPath}`;
-        where.groupId = `${this.activeGroup}`;
+        if(isContainSub){
+          whereLike.groupId = `${this.activeGroup}%`;
+        }else{
+          where.groupId = `${this.activeGroup}`;
+        }
       } else {
-        // whereIn.groupId = this.constantObj.groupList.map(e => e.value);
         whereIn.groupId = [this.activeGroup];
       }
       const rows = (await window.jianghuAxios({
@@ -207,7 +209,8 @@ new Vue({
             actionData: {},
             where,
             whereIn,
-            orderBy: [{column: 'userId', order: 'asc'}, {column: 'roleDeadline', order: 'asc'}]
+            whereLike,
+            orderBy: [{column: 'groupId', order: 'asc'}, {column: 'roleDeadline', order: 'asc'}]
           }
         }
       })).data.appData.resultData.rows;
@@ -220,6 +223,7 @@ new Vue({
       Object.keys(groupBy).forEach(key => {
         const item = groupBy[key][0];
         item.username = groupBy[key][0].username;
+        item.groupAllName = groupBy[key][0].groupAllName;
         item.roleName = groupBy[key].map(e => {
           let roleName = e.roleDeadline == -1 ? e.roleName : e.roleName +' 【'+ e.roleDeadline +'】'
           return (roleName  || '默认权限')
@@ -239,15 +243,22 @@ new Vue({
       this.tableDataBackUp = list;
       this.isTableLoading = false;
     },
-    async getRoleData() {
+    async getRoleData(isContainSub) {
       this.isAppLoading = true;
+      const whereLike = {};
+
+      if(isContainSub){
+        whereLike.roleId = `${this.activeGroup}%|%`;
+      }else{
+        whereLike.roleId = `${this.activeGroup}|%`;
+      }
       const rows = (await window.jianghuAxios({
         data: {
           appData: {
             pageId: 'groupUserManagement',
             actionId: 'selectRoleList',
             actionData: {},
-            whereLike: {roleId: `${this.activeGroup}|%`},
+            whereLike,
             orderBy: [{column: 'operationAt', order: 'desc'}]
           }
         }
@@ -266,7 +277,7 @@ new Vue({
     changeActiveGroup(item) {
       this.activeGroup = item.groupId ? item.groupId : item.groupPath + '-' + item.groupLastId;
       this.activeGroupName = item.groupName;
-      this.activeGroupPath = item.groupPath;
+      this.activeGroupPath = item.groupPath || "FS";
       this.getRoleData();
       if (this.tabActive == 1) {
         this.getUserGroupRolePage();

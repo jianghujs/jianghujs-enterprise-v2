@@ -4,8 +4,17 @@
         <v-row class="ma-0"> 
           <v-col cols="12" class="pa-2">
             <v-row class="ma-0 pa-1">
-                <!-- 新增按钮 -->
-                <v-btn color="success" small @click="doUiAction('startCreateItem')">新增</v-btn>
+              <v-col cols="12" sm="4" md="4" xl="2" class="pa-0">
+                <div class="d-flex align-center py-0">
+                    <!-- 新增按钮 -->
+                    <v-btn color="success" small @click="doUiAction('startCreateItem')">新增</v-btn> 
+                    <v-checkbox
+                      v-model="isContainSub"
+                      label="包含子部门"
+                      class="ml-2"
+                    ></v-checkbox>
+                </div>
+                </v-col>
                 <v-spacer></v-spacer>
                 <!--搜索过滤-->
                 <v-col cols="12" sm="4" md="4" xl="2" class="pa-0">
@@ -31,10 +40,10 @@
                         <template>
                             <!-- pc端 -->
                             <template v-if="!isMobile">
-                            <span role="button" v-if="item.groupId == groupId" class="success--text font-weight-medium font-size-2 mr-2" @click="doUiAction('startUpdateItem', item)">
+                            <span role="button" class="success--text font-weight-medium font-size-2 mr-2" @click="doUiAction('startUpdateItem', item)">
                                 <v-icon size="16" class="success--text">mdi-note-edit-outline</v-icon>修改
                             </span>
-                            <span role="button" v-if="item.groupId == groupId" class="red--text text--accent-2 font-weight-medium font-size-2" @click="doUiAction('deleteItem', item)">
+                            <span role="button" class="red--text text--accent-2 font-weight-medium font-size-2" @click="doUiAction('deleteItem', item)">
                                 <v-icon size="16" class="red--text text--accent-2">mdi-trash-can-outline</v-icon>删除
                             </span>
                             </template>
@@ -47,10 +56,10 @@
                                 </span>
                             </template>
                             <v-list dense>
-                                <v-list-item v-if="item.groupId == groupId" @click="doUiAction('startUpdateItem', item)">
+                                <v-list-item @click="doUiAction('startUpdateItem', item)">
                                 <v-list-item-title>编辑</v-list-item-title>
                                 </v-list-item>
-                                <v-list-item v-if="item.groupId == groupId" @click="doUiAction('deleteItem', item)">
+                                <v-list-item @click="doUiAction('deleteItem', item)">
                                 <v-list-item-title>删除</v-list-item-title>
                                 </v-list-item>
                             </v-list>
@@ -287,7 +296,7 @@
         groupId: {
           type: String,
           default: ''
-        }
+        },
       },
       vuetify: new Vuetify(),
       data: () => ({
@@ -309,9 +318,9 @@
         serverSearchInput: {
         },
         searchInput: null,
-        activeRole: '*',
         headers: [
-            {text: "用户", value: "username", width:120},
+            {text: "用户", value: "username", width:100},
+            {text: "所在组织", value: "groupAllName", width:280},
             {text: "职务", value: "role-name", width:380},
             {text: '操作', value: 'action', align: 'center', sortable: false, width: window.innerWidth < 500 ? 80 : 200, class: 'fixed', cellClass: 'fixed'},
         ],
@@ -336,6 +345,7 @@
         // 删除数据
         deleteItem: {},
         deleteItemId: null,
+        isContainSub: false
       }),
       computed: {
         createRoleConfig(){
@@ -367,9 +377,9 @@
             let newRole = this.roleList.find(item =>  item.roleId == roleId)
             if(oldRole){
               newRoleConfig.push({
-                roleId: newRole.roleId,
-                roleName: newRole.roleName,
-                roleType: newRole.roleType,
+                roleId: newRole ? newRole.roleId : oldRole.roleId,
+                roleName: newRole ? newRole.roleName : oldRole.roleName,
+                roleType: newRole ? newRole.roleType : oldRole.roleType,
                 roleDeadline: oldRole.roleDeadline
               })
             }else{
@@ -385,11 +395,12 @@
         }
       },
       watch: {
-        activeRole(val) {
-          this.$emit('change-role', this.activeRole);
-        },
         value(val) {
           this.$emit('input', val);
+        },
+        isContainSub(val){
+          this.$emit('refresh-role-list', this.isContainSub);
+          this.$emit('get-role-data', this.isContainSub);
         }
       },
       async created() {
@@ -405,10 +416,6 @@
               break;
             case 'getUserData':
               await this.getUserData();
-              break;
-            case 'changeGroup':
-              await this.resetActiveRole();
-              await this.getTableData();
               break;
             case 'startCreateItem':
               await this.prepareCreateFormData();
@@ -451,10 +458,7 @@
          * 获取表格数据
          */
          async getTableData() {
-          this.$emit('refresh-role-list');
-        },
-        resetActiveRole() {
-          this.activeRole = '*';
+          this.$emit('refresh-role-list', this.isContainSub);
         },
         async getUserData() {
             this.isAppLoading = true;
