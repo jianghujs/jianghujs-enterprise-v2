@@ -171,6 +171,7 @@ new Vue({
   },
   mounted() {
     // this.doUiAction('getTableData');
+    this.activeGroup = localStorage.getItem('activeGroup')
   },
   methods: {
     async doUiAction(uiActionId, uiActionData) {
@@ -192,6 +193,7 @@ new Vue({
       const whereIn = {};
       const whereLike = {};
 
+      console.log("--this.activeGroup",this.activeGroup);
       if (this.activeGroupPath) {
         if(isContainSub){
           whereLike.groupId = `${this.activeGroup}%`;
@@ -276,6 +278,7 @@ new Vue({
     },
     changeActiveGroup(item) {
       this.activeGroup = item.groupId ? item.groupId : item.groupPath + '-' + item.groupLastId;
+      localStorage.setItem('activeGroup',this.activeGroup)
       this.activeGroupName = item.groupName;
       this.activeGroupPath = item.groupPath || "FS";
       this.getRoleData();
