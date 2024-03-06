@@ -559,7 +559,7 @@ new Vue({
         }
       })).data.appData.resultData.rows;
 
-      const groupBy = _.groupBy(rows.filter(item=>item.appId == appId && item.groupId != '超级管理员' && item.groupId != 'login'), 'userId');
+      const groupBy = _.groupBy(rows.filter(item=>item.appId == appId), 'userId');
       const list = []
 
       Object.keys(groupBy).forEach(key => {

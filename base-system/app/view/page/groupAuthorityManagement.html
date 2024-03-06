@@ -142,9 +142,6 @@ new Vue({
   },
   computed: {
     tabList() {
-      if (this.activeGroup == '超级管理员') {
-        return [this.constantObj.tabList[0]];
-      }
       return this.constantObj.tabList;
     },
     tableData() {
