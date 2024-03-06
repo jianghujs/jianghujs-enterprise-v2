@@ -47,6 +47,7 @@
             item-key="groupId"
             item-text="groupName"
             :search="searchInput"
+            :filter="filter"
             class="jh-fixed-table-height"
             @update:active="onTreeChange"
             :active="selectedItem"
@@ -216,6 +217,20 @@
         }
         const item = this.tableData.find(item => item.groupId === event[0]);
         this.$emit('change-active', item);
+      },
+      // 重写搜索方法
+      filter (value, search) {
+        let newItem = _.pick(value,['groupId','groupAllName'])
+        const result = _.some(newItem, itemValue =>  itemValue && itemValue.toString().includes(search));
+        if(result){
+          return true
+        }else{
+          // 特殊操作
+          let {test} = value;
+          return _.some(test, itemValue =>{ 
+            return _.isString(itemValue.name) && itemValue['name'].includes(search)
+          });
+        }
       },
     }
   })

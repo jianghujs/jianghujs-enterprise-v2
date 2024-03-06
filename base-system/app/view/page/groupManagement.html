@@ -73,6 +73,7 @@ SQL END!-->
             dense
             item-key="groupId"
             item-text="groupName"
+            :filter="filter"
             :search="searchInput"
             :active="selectedItem"
           >
@@ -248,6 +249,9 @@ new Vue({
         this.isHelpPageDrawerLoaded = true;
       }
     },
+  },
+  computed: {
+    
   },
   async created() {
   },
@@ -493,8 +497,22 @@ new Vue({
     async clearDeleteItem() {
       this.deleteItem = {};
       this.deleteItemId = null;
-    }
+    },
     // ---------- <<<<<<<<<<< 删除数据 uiAction ---------
+    // 重写搜索方法
+    filter (value, search) {
+      let newItem = _.pick(value,['groupId','groupAllName'])
+      const result = _.some(newItem, itemValue =>  itemValue && itemValue.toString().includes(search));
+      if(result){
+        return true
+      }else{
+        // 特殊操作
+        let {test} = value;
+        return _.some(test, itemValue =>{ 
+          return _.isString(itemValue.name) && itemValue['name'].includes(search)
+        });
+      }
+    },
   }
 })
 </script>
