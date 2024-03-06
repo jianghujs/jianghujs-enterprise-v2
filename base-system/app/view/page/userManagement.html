@@ -191,6 +191,10 @@
                 <v-text-field class="jh-v-input" dense filled single-line v-model="createItem.username" :rules="validationRules.requireRules"></v-text-field>
               </v-col>
               <v-col cols="12" sm="12" md="4">
+                <span class="jh-input-label">企微ID<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                <v-text-field class="jh-v-input" dense filled single-line v-model="createItem.qiweiId" :rules="validationRules.requireRules"></v-text-field>
+              </v-col>
+              <v-col cols="12" sm="12" md="4">
                 <span class="jh-input-label">用户类型<span class="red--text text--accent-2 ml-1">*必填</span></span>
                 <v-select class="jh-v-input" dense filled single-line v-model="createItem.userType" :items="constantObj.userType" :rules="validationRules.requireRules"></v-select>
               </v-col>
@@ -237,16 +241,12 @@
                 <v-text-field class="jh-v-input" dense filled single-line v-model="updateItem.username" :rules="validationRules.requireRules"></v-text-field>
               </v-col>
               <v-col cols="12" sm="12" md="4">
-                <span class="jh-input-label">用户类型<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-select class="jh-v-input" dense filled single-line clearable v-model="updateItem.userType" :items="constantObj.userType" :rules="validationRules.requireRules"></v-select>
+                <span class="jh-input-label">企微ID<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                <v-text-field class="jh-v-input" dense filled single-line v-model="updateItem.qiweiId" :rules="validationRules.requireRules"></v-text-field>
               </v-col>
               <v-col cols="12" sm="12" md="4">
                 <span class="jh-input-label">用户状态<span class="red--text text--accent-2 ml-1">*必填</span></span>
                 <v-select class="jh-v-input" dense filled single-line clearable v-model="updateItem.userStatus" :items="constantObj.userStatus" :rules="validationRules.requireRules"></v-select>
-              </v-col>
-              <v-col cols="12" sm="12" md="4">
-                <span class="jh-input-label">初始密码<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-text-field class="jh-v-input" dense filled single-line disabled v-model="updateItem.clearTextPassword"></v-text-field>
               </v-col>
             </v-row>
             <!-- <<<<<<<<<<< 抽屉的主体 -->
@@ -375,7 +375,6 @@ new Vue({
     // 修改用户
     isUpdateDrawerShown: false,
     updateItem: {},
-    updateItemId: null,
     updateActionData: {},
     // 激活用户
     activeUserItem: {},
@@ -555,20 +554,25 @@ new Vue({
       }
     },
     prepareDoUpdateItem() {
+      console.log("this.updateItem",this.updateItem);
       const {id, userId, ...data} = this.updateItem;
-      this.updateItemId = id;
       this.updateUserId = userId
       this.updateActionData = data;
     },
     async doUpdateItem() {
       await window.vtoast.loading("保存中");
+      console.log(this.updateActionData);
       await window.jianghuAxios({
         data: {
           appData: {
             pageId: 'userManagement',
             actionId: 'updateItem',
-            actionData: this.updateActionData,
-            where: {id: this.updateItemId},
+            actionData: {
+              username: this.updateActionData.username,
+              userStatus: this.updateActionData.userStatus,
+              qiweiId: this.updateActionData.qiweiId,
+            },
+            where: {userId: this.updateUserId},
             taskNoticeList: [{
               taskTitle: '修改用户信息',
               taskMemberIdList: [this.updateUserId],
@@ -583,7 +587,6 @@ new Vue({
       this.isUpdateDrawerShown = false;
       this.updateItem = {};
       this.updateActionData = null;
-      this.updateItemId = null;
     },
     //   --------------- <<<<<<<<<<<< 编辑数据 uiAction  ---------------
     //   --------------- 激活用户 uiAction >>>>>>>>>>>>  ---------------
