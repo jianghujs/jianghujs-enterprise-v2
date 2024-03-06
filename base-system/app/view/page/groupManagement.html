@@ -51,7 +51,7 @@ SQL END!-->
     <div class="jh-page-body-container px-8">
       <!-- 页面内容 >>>>>>>>>>>>> -->
       <v-card class="rounded-lg">
-        <v-row class="ma-0 pa-4">
+        <v-row class="ma-0 pa-4 pb-2">
           <!-- 新增按钮 -->
           <v-btn color="success" class="elevation-0 mr-2" @click="doUiAction('startCreateItem')" small>新增
           </v-btn>
@@ -61,6 +61,8 @@ SQL END!-->
             <v-text-field color="success" v-model="searchInput" prefix="搜索：" class="jh-v-input" dense filled single-line></v-text-field>
           </v-col>
         </v-row>
+
+        <v-col cols="12" class="jh-fixed-table-height overflow-y-auto ">
         <!-- 树形结构 -->
           <v-treeview
             hoverable
@@ -72,7 +74,6 @@ SQL END!-->
             item-key="groupId"
             item-text="groupName"
             :search="searchInput"
-
             :active="selectedItem"
           >
 
@@ -89,6 +90,7 @@ SQL END!-->
             </v-icon>
           </template>
         </v-treeview>
+        </v-col>
       </v-card>
       <!-- 新增抽屉 -->
       <v-navigation-drawer v-if="isCreateDrawerShown" v-model="isCreateDrawerShown" :permanent="isCreateDrawerShown" fixed temporary right width="80%" class="elevation-24">
