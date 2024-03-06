@@ -5,13 +5,14 @@
       <v-btn color="primary" outlined small @click="startUploadFile">
         <!-- 添加icon -->
         <v-icon size="14">mdi-plus</v-icon>
-        添加附件</v-btn>
+        添加</v-btn>
     </label>
 
 
       <div v-for="(item, index) in files" :key="index" class="d-flex align-center mt-2 pa-1"
         style="border: 1px solid #cbcbcb">
         <p class="ma-0">{{ item.filename }}</p>
+        <v-spacer></v-spacer>
         <v-menu offset-y>
           <template v-slot:activator="{ on, attrs }">
             <v-btn v-if="!readonly" icon small v-bind="attrs" v-on="on">

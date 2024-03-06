@@ -114,7 +114,7 @@
 {% include 'common/excelUtil.html' %}
 {% include 'component/task-attachment-list.html' %}
 {% include 'component/ticket/create-ticket-drawer.html' %}
-
+{% include 'component/task-approval-workflow.html' %}
 <script type="module">
   new Vue({
     el: '#app',
@@ -158,7 +158,7 @@
                 pageId: 'ticketStartApply',
                 actionId: 'getTaskTemplateList',
                 actionData: {},
-                orderBy: [{ column: 'operationAt', order: 'asc' }],
+                orderBy: [{ column: 'id', order: 'asc' }],
               },
             },
           })
@@ -174,7 +174,4 @@
 </script>
 
 <style scoped>
-  .v-card {
-    height: 300px;
-  }</style
->{% endblock %}
+ </style>{% endblock %}
