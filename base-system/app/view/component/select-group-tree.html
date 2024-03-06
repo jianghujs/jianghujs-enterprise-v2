@@ -52,6 +52,16 @@
             @update:active="onTreeChange"
             :active="selectedItem"
           >
+            <template v-slot:append="{ item, open }">
+              <v-chip
+                  color="orange"
+                  small
+                  label
+                  outlined
+                >
+                <span>{{item.groupId ? item.groupId : item.groupPath + '-' + item.groupLastId}}</span>
+              </v-chip>
+            </template>
           </v-treeview>
         </v-list>
       </v-col>
