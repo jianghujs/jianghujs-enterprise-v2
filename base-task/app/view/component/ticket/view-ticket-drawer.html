@@ -1,4 +1,4 @@
-<template id="update-ticket-drawer">
+<template id="view-ticket-drawer">
   <v-navigation-drawer
     v-if="isUpdateDrawerShown"
     v-model="isUpdateDrawerShown"
@@ -9,17 +9,15 @@
     width="80%"
     class="elevation-24"
   >
-    <v-form ref="updateForm" lazy-validation>
       <!-- 抽屉标题 -->
       <v-row no-gutters>
         <span class="text-h7 font-weight-bold pa-4"
-          >修改【{{updateItem.taskTitle}}】</span
+          >查看【{{updateItem.taskTitle}}】</span
         >
       </v-row>
       <v-divider class="jh-divider"></v-divider>
       <!-- 抽屉表单 -->
       <!-- <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.xxxId" :rules="validationRules.requireRules"></v-text-field> -->
-      <v-form ref="form" lazy-validation>
         <v-row class="mt-0 px-4">
           <v-col
             cols="12"
@@ -48,6 +46,7 @@
                   filled
                   v-bind="attrs"
                   v-on="on"
+                  disabled
                   :required="item.component.required"
                 ></v-text-field>
               </template>
@@ -60,6 +59,7 @@
 
             <task-attachment-list
               :files="item.component.value"
+              readonly
               v-else-if="item.component.type === 'file'"
             ></task-attachment-list>
             <component
@@ -69,42 +69,54 @@
               dense
               single-line
               filled
+              disabled
               :key="index"
               :required="item.component.required"
               :is="item.component.tag"
               :placeholder="`请输入${item.component.label}`"
             ></component>
           </v-col>
-          <v-col
-            cols="12"
-            sm="12"
-            md="12"
-          >
-            <span class="jh-input-label">
-              审批流程<span class="red--text">*</span>
-            </span>
+          <v-col cols="12"
+          sm="12"
+          md="12">
+            <p class="font-weight-bold text-body-1 ma-0 px-4 mt-4">审批流信息</p>
+            <v-row class="ma-0 pa-0">
+              <v-col cols="12" :md="isAudited ? 12 : 8">
+                <span class="jh-input-label grey--text">审批列表</span>
 
-            <task-approval-workflow
-              :approval-person-list.sync="updateItem.taskAuditConfig"
-              :notice-person-list.sync="updateItem.taskNoticeConfig"
-            />
-          </v-col>
-        </v-row>
-      </v-form>
+                <v-data-table hide-default-footer :headers="auditHeaders" :items="updateItem.taskAuditConfig">
+                  <template v-slot:item.status="{ item }">
+                    <v-chip x-small :color="constantObj.statusColor[item.status]" v-if="item.status">{{item.status}}</v-chip>
+                    <v-chip x-small color="warning" v-else>待审批</v-chip>
+                  </template>
+                  <template v-slot:item.remark="{ item }">
+                    <div style="white-space: normal;">
+                      {{ item.remark }}
+                      </idv>
+                  </template>
+                </v-data-table>
+              </v-col>
 
-      <!-- 抽屉操作按钮 -->
-      <v-row class="justify-end mx-0 mt-8 px-6">
-        <v-btn color="success" @click="doUiAction('updateItem')" small
-          >保存</v-btn
-        >
-        <v-btn
-          class="elevation-0 ml-2"
-          @click="isUpdateDrawerShown = false"
-          small
-          >取消</v-btn
-        >
+              <v-col cols="12" md="4" v-if="!isAudited && updateItem.taskStatus=='进行中'">
+                <span class="jh-input-label grey--text"><span class="red--text">*</span>审批理由</span>
+                <v-form ref="taskForm">
+                  <v-textarea dense filled single-line placeholder="请输入审批理由" hide-details :rules="validationRules.requireRules" v-model="remark" :maxlength="250"
+                    color="success" :rows="4" ></v-textarea>
+
+                  <div class="ma-4 text-center">
+                    <v-btn color="success" small class="mx-4" @click="doUiAction('handleTaskApply', '同意')">
+                      同意
+                    </v-btn>
+                    <v-btn color="error"small  class="mx-4" @click="doUiAction('handleTaskApply', '拒绝')">
+                      拒绝
+                    </v-btn>
+                  </div>
+                </v-form>
+              </v-col>
+              </v-row>
+        </v-col>
       </v-row>
-    </v-form>
+      
     <!-- 抽屉关闭按钮 -->
     <v-btn
       elevation="0"
@@ -124,18 +136,28 @@
 </template>
 
 <script type="module">
-  Vue.component("update-ticket-drawer", {
-    template: "#update-ticket-drawer",
+  Vue.component("view-ticket-drawer", {
+    template: "#view-ticket-drawer",
 
     data: () => ({
       isUpdateDrawerShown: false,
 
       updateItem: {},
 
-      step: 1,
+      isAudited: false,
       validationRules: {
         requireRules: [(v) => !!v || "必填"],
       },
+
+      auditHeaders: [
+        { text: "审批人ID", value: "userId", sortable: false, width: 90 },
+        { text: "审批人", value: "username", sortable: false, width: 100 },
+        { text: "审批节点", value: "position", sortable: false, width: 80 },
+        { text: "状态", value: "status", sortable: false, width: 80 },
+        { text: "审批理由", value: "remark", sortable: false, width: 350 },
+        { text: "处理时间", value: "operationAt", sortable: false, width: 90 },
+      ],
+      remark: '',
     }),
     methods: {
       async doUiAction(uiActionId, uiActionData) {
@@ -162,6 +184,8 @@
         newItem.taskAuditConfig = JSON.parse(newItem.taskAuditConfig);
         newItem.taskNoticeConfig = JSON.parse(newItem.taskNoticeConfig);
         newItem.taskContent = JSON.parse(newItem.taskContent);
+
+        this.isAudited = (newItem.taskAuditedUserIdList || '').includes(window.userInfo.userId)
 
         this.updateItem = newItem;
       },

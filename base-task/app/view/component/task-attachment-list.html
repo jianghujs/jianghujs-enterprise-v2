@@ -2,7 +2,7 @@
   <div>
     <input type="file" id="file-upload" ref="fileInput" style="display: none;" @change="handleFileUpload" />
     <label for="file-upload">
-      <v-btn color="primary" outlined small @click="startUploadFile">
+      <v-btn v-if="!readonly" color="primary" outlined small @click="startUploadFile">
         <!-- 添加icon -->
         <v-icon size="14">mdi-plus</v-icon>
         添加</v-btn>
@@ -15,7 +15,7 @@
         <v-spacer></v-spacer>
         <v-menu offset-y>
           <template v-slot:activator="{ on, attrs }">
-            <v-btn v-if="!readonly" icon small v-bind="attrs" v-on="on">
+            <v-btn icon small v-bind="attrs" v-on="on">
               <v-icon size="14">mdi-dots-vertical</v-icon>
             </v-btn>
           </template>
@@ -23,7 +23,7 @@
             <v-list-item @click="downloadFile(item)">
               <v-list-item-title>下载</v-list-item-title>
             </v-list-item>
-            <v-list-item @click="deleteFile(index)">
+            <v-list-item v-if="!readonly" @click="deleteFile(index)">
               <v-list-item-title>删除</v-list-item-title>
             </v-list-item>
           </v-list>
