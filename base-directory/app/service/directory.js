@@ -125,17 +125,14 @@ class DirectoryService extends Service {
     allAppPageList,
   }) {
     const { userId, userGroupRoleList } = this.ctx.userInfo;
-    const groupId = null;
+    const userGroupRoleListTmp = _.cloneDeep(userGroupRoleList);
+    userGroupRoleListTmp.push({ userId, groupId: 'public', roleId: '--' });
+    userGroupRoleListTmp.push({ userId, groupId: 'login', roleId: '--' });
     const allUserGroupRolePageList = await jianghuKnex('enterpirse_user_group_role_page').select();
-    // const { userIdList, groupIdList, roleIdList } = this.getRuleIdList(
-    //   groupId,
-    //   userId,
-    //   userGroupRoleList
-    // );
     const allowPageList = this.computeAllowList(
       'page',
       allAppPageList,
-      allUserGroupRolePageList, userGroupRoleList,
+      allUserGroupRolePageList, userGroupRoleListTmp,
     );
     return allowPageList;
   }
