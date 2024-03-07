@@ -235,7 +235,7 @@
           ..._component,
         };
         if (_component.type === "select") {
-          component.items = (_component.items || '').split(",");
+          component.items = (_component.items || '');
         }
         if (_component.type === "file") {
           component.value = [];

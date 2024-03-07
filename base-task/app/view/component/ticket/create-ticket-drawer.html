@@ -66,7 +66,7 @@
               v-else
               class="jh-v-input"
               v-model="item.component.value"
-              :items="item.component.items"
+              :items="item.component.items.split(',')"
               dense
               single-line
               filled

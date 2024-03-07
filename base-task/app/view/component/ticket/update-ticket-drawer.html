@@ -68,6 +68,8 @@
               v-model="item.component.value"
               dense
               single-line
+              :items="item.component.items.split(',')"
+
               filled
               :key="index"
               :required="item.component.required"
