@@ -378,7 +378,8 @@ new Vue({
     prepareDoCreateItem() {
       const {id, ...data} = this.createItem;
       this.createActionData = { 
-        groupId: data.groupId,
+        groupId: data.groupPath + data.groupId,
+        groupLastId: data.groupLastId,
         groupPath: data.groupPath,
         groupName: data.groupName,
         groupAllName: data.groupPathName == '' ? data.groupName : data.groupPathName + '-' + data.groupName 
