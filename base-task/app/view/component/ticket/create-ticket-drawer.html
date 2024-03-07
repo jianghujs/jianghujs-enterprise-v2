@@ -236,10 +236,10 @@
           },
         });
 
-        // await this.addNotice({
-        //   ...this.createActionData,
-        //   rowId: result.data.appData.resultData.rows[0],
-        // });
+        await this.addNotice({
+          ...this.createActionData,
+          rowId: result.data.appData.resultData.rows[0],
+        });
 
         await window.jhMask.hide();
         await window.vtoast.success("新增数据成功");

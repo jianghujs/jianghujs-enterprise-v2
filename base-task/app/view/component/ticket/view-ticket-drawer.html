@@ -79,7 +79,10 @@
           <v-col cols="12"
           sm="12"
           md="12">
-            <p class="font-weight-bold text-body-1 ma-0 px-4 mt-4">审批流信息</p>
+            <p class="font-weight-bold text-body-1 ma-0 px-4 mt-4">审批流信息
+              <span class="grey--text text-caption">(审批操作按人员顺序执行)</span>
+              
+            </p>
             <v-row class="ma-0 pa-0">
               <v-col cols="12" :md="isAudited ? 12 : 8">
                 <span class="jh-input-label grey--text">审批列表</span>
@@ -173,19 +176,15 @@
         const { taskAuditUserIdList, taskAuditedUserIdList } = this.updateItem
         const currentUser = window.userInfo.userId
 
-        // 将taskAuditUserIdList和taskAuditedUserIdList转换为数组
         const taskAuditUserIdArray = taskAuditUserIdList.split(',');
         const taskAuditedUserIdArray = taskAuditedUserIdList ? taskAuditedUserIdList.split(',') : [];
 
-        // 获取当前用户在taskAuditUserIdArray中的索引
         const currentUserIndex = taskAuditUserIdArray.indexOf(currentUser);
 
-        // 如果当前用户不在taskAuditUserIdArray中，则返回false
         if (currentUserIndex === -1) {
             return false;
         }
 
-        // 如果当前用户在taskAuditUserIdArray的第一个位置，则返回true
         if (currentUserIndex === 0) {
             return true;
         }
@@ -219,17 +218,37 @@
             break;
         }
       },
-      async open({ item = {} } = {}) {
+      async open({ item = {}, taskId } = {}) {
         this.isUpdateDrawerShown = true;
-        const newItem = {...item}
-
+        let updateItem = item
+        if (taskId) {
+          this.taskId = taskId
+          updateItem = await this.getTaskDetail(taskId);
+        }
+        const newItem = {...updateItem}
         newItem.taskAuditConfig = JSON.parse(newItem.taskAuditConfig);
         newItem.taskNoticeConfig = JSON.parse(newItem.taskNoticeConfig);
         newItem.taskContent = JSON.parse(newItem.taskContent);
         this.isAudited = (newItem.taskAuditedUserIdList || '').includes(window.userInfo.userId)
-
         this.updateItem = newItem;
       },
+      async getTaskDetail() {
+        const rows = (await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'ticketManagement',
+              actionId: 'selectItemList',
+              actionData: {},
+              where: { taskId: this.taskId },
+              orderBy: [{ column: 'operationAt', order: 'desc' }]
+            }
+          }
+        })).data.appData.resultData.rows;
+
+        const row = rows[0] || {}
+        return row
+      },
+
       // ---------- 处理申请 >>>>>>>>>>>>> ----------
       async prepareCreateValidate() {
         if (await this.$refs.taskForm.validate()) {

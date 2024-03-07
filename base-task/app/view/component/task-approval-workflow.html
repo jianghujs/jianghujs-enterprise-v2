@@ -206,15 +206,16 @@
         const data = this.userList;
         const treeData = [];
 
-        data.forEach((item) => {
+        data.forEach((item, index) => {
           const parts = item.orgFullName.split("-");
           let currentLevel = treeData;
 
-          parts.forEach((part) => {
+          parts.forEach((part, partIndex) => {
             let existingNode = currentLevel.find((node) => node.name === part);
             if (!existingNode) {
+
               const newNode = {
-                id: this.randomString(6),
+                id: `${index}-${partIndex}`,
                 name: part,
                 children: [],
               };
@@ -225,7 +226,6 @@
             }
           });
 
-          // Add the username as a leaf node
           currentLevel.push({
             id: item.userId,
             userId: item.userId,
