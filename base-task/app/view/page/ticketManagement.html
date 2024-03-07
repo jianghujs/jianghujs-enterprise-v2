@@ -157,18 +157,29 @@
               <!-- 表格操作按钮 -->
               <template v-slot:item.action="{ item }">
                 <template
-                  v-if="!['已撤销', '已完成'].includes(item.taskStatus) && item.taskManagerId==userId"
                 >
                   <span
                     role="button"
                     class="success--text font-weight-medium font-size-2 mr-2"
                     @click="doUiAction('startUpdateItem', {item})"
+                    v-if="!item.taskAuditedUserIdList?.includes(userId)"
                   >
                     <v-icon size="16" class="success--text"
                       >mdi-note-edit-outline</v-icon
                     >审批
                   </span>
+                  <span
+                    role="button"
+                    class="success--text font-weight-medium font-size-2 mr-2"
+                    @click="doUiAction('startUpdateItem', {item})"
+                    v-if="item.taskAuditedUserIdList?.includes(userId) && item.taskAuditUserIdList?.includes(userId)"
+                  >
+                    <v-icon size="16" class="success--text"
+                      >mdi-note-edit-outline</v-icon
+                    >查看详情
+                  </span>
                 </template>
+                
               </template>
               <!-- 没有数据 -->
               <template v-slot:loading>

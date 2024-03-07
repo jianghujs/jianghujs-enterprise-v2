@@ -12,7 +12,7 @@
       <!-- 抽屉标题 -->
       <v-row no-gutters>
         <span class="text-h7 font-weight-bold pa-4"
-          >查看【{{updateItem.taskTitle}}】</span
+          >查看【{{updateItem.taskTitle}}】 - {{updateItem.taskStatus}}</span
         >
       </v-row>
       <v-divider class="jh-divider"></v-divider>
@@ -97,7 +97,7 @@
                 </v-data-table>
               </v-col>
 
-              <v-col cols="12" md="4" v-if="!isAudited && updateItem.taskStatus=='进行中'">
+              <v-col cols="12" md="4" v-if="!isAudited && updateItem.taskStatus=='进行中' && canApprove">
                 <span class="jh-input-label grey--text"><span class="red--text">*</span>审批理由</span>
                 <v-form ref="taskForm">
                   <v-textarea dense filled single-line placeholder="请输入审批理由" hide-details :rules="validationRules.requireRules" v-model="remark" :maxlength="250"
@@ -148,6 +148,13 @@
       validationRules: {
         requireRules: [(v) => !!v || "必填"],
       },
+      constantObj: {
+        statusColor: {
+          '同意': 'success',
+          '拒绝': 'error',
+          '未审批': 'info',
+        }
+      },
 
       auditHeaders: [
         { text: "审批人ID", value: "userId", sortable: false, width: 90 },
@@ -159,18 +166,53 @@
       ],
       remark: '',
     }),
+    computed: {
+      // 上一个人是否审批过，对比taskAuditUserIdList和taskAuditedUserIdList
+      // 上一个人审批了，才能审批
+      canApprove() {
+        const { taskAuditUserIdList, taskAuditedUserIdList } = this.updateItem
+        const currentUser = window.userInfo.userId
+
+        // 将taskAuditUserIdList和taskAuditedUserIdList转换为数组
+        const taskAuditUserIdArray = taskAuditUserIdList.split(',');
+        const taskAuditedUserIdArray = taskAuditedUserIdList ? taskAuditedUserIdList.split(',') : [];
+
+        // 获取当前用户在taskAuditUserIdArray中的索引
+        const currentUserIndex = taskAuditUserIdArray.indexOf(currentUser);
+
+        // 如果当前用户不在taskAuditUserIdArray中，则返回false
+        if (currentUserIndex === -1) {
+            return false;
+        }
+
+        // 如果当前用户在taskAuditUserIdArray的第一个位置，则返回true
+        if (currentUserIndex === 0) {
+            return true;
+        }
+
+        // 遍历当前用户之前的所有用户
+        for (let i = 0; i < currentUserIndex; i++) {
+            // 如果当前用户之前的某个用户不在taskAuditedUserIdArray中，则返回false
+            if (taskAuditedUserIdArray.indexOf(taskAuditUserIdArray[i]) === -1) {
+                return false;
+            }
+        }
+
+        // 如果所有条件都满足，则返回true
+        return true;
+      }
+    },
     methods: {
       async doUiAction(uiActionId, uiActionData) {
         switch (uiActionId) {
           case "open":
             await this.open(uiActionData);
             break;
-          case "updateItem":
-            await this.prepareUpdateValidate();
-            await this.confirmUpdateItemDialog();
-            await this.prepareDoUpdateItem();
-            await this.doUpdateItem();
-            await this.closeUpdateDrawer();
+          case 'handleTaskApply':
+            await this.prepareCreateValidate();
+            await this.confirmHandleTaskApply(uiActionData);
+            await this.handleTaskApply(uiActionData);
+            await this.close();
             break;
           default:
             console.error("[doUiAction] uiActionId not find", { uiActionId });
@@ -184,93 +226,47 @@
         newItem.taskAuditConfig = JSON.parse(newItem.taskAuditConfig);
         newItem.taskNoticeConfig = JSON.parse(newItem.taskNoticeConfig);
         newItem.taskContent = JSON.parse(newItem.taskContent);
-
         this.isAudited = (newItem.taskAuditedUserIdList || '').includes(window.userInfo.userId)
 
         this.updateItem = newItem;
       },
-      // ---------- 修改数据 uiAction >>>>>>>>>> --------
-      async prepareUpdateFormData() {
-      
-      },
-
-      async openUpdateDrawer() {
-        this.isUpdateDrawerShown = true;
-      },
-
-      async prepareUpdateValidate() {
-        if (await this.$refs.updateForm.validate()) {
+      // ---------- 处理申请 >>>>>>>>>>>>> ----------
+      async prepareCreateValidate() {
+        if (await this.$refs.taskForm.validate()) {
           return true;
         }
-        throw new Error("请完善表单信息");
+        throw new Error("请完善表单信息")
       },
-
-      async confirmUpdateItemDialog() {
-        if (
-          (await window.confirmDialog({
-            title: "修改",
-            content: "确定修改吗？",
-          })) === false
-        ) {
-          throw new Error("[confirmupdateFormDialog] 否");
+      async confirmHandleTaskApply(ticketAuditStatus) {
+        if (await window.confirmDialog({ title: ticketAuditStatus, content: `确定${ticketAuditStatus}吗？` }) === false) {
+          throw new Error("[confirmHandleTaskApply] 否");
         }
       },
+      async handleTaskApply(status) {
+        const { taskId } = this.updateItem
 
-      prepareDoUpdateItem() {
-        const { id, ...data } = this.updateItem;
-
-        data.taskAuditUserIdList = data.taskAuditConfig
-          .map((item) => item.userId)
-          .join(",");
-        data.taskMemberIdList = data.taskAuditUserIdList;
-
-        data.taskAuditConfig = JSON.stringify(data.taskAuditConfig);
-        data.taskNoticeConfig = JSON.stringify(data.taskNoticeConfig);
-        data.taskContent = JSON.stringify(data.taskContent);
-
-        this.updateId = id;
-        this.updateActionData = data;
-      },
-
-      async doUpdateItem() {
-        await window.jhMask.show();
-        await window.vtoast.loading("修改数据");
-        const result = await window.jianghuAxios({
-          data: {
-            appData: {
-              pageId: "ticketSubmitManagement",
-              actionId: "updateItem",
-              actionData: this.updateActionData,
-              where: { id: this.updateId}
-            },
-          },
-        });
-
-        // await this.addNotice({
-        //   ...this.updateActionData,
-        //   rowId: result.data.appData.resultData.rows[0],
-        // });
-        this.$emit('success')
-        await window.jhMask.hide();
-        await window.vtoast.success("修改数据成功");
-      },
-      async closeUpdateDrawer() {
-        this.isUpdateDrawerShown = false;
-        this.updateItem = {};
-        this.updateActionData = null;
-      },
-      // ---------- <<<<<<<<<<< 修改数据 uiAction ---------
-      async addNotice(item) {
+        await window.vtoast.loading(`${status}中...`)
         await window.jianghuAxios({
           data: {
             appData: {
-              pageId: "noticeManagement",
-              actionId: "addNotice",
-              actionData: item,
-            },
-          },
-        });
+              pageId: 'ticketManagement',
+              actionId: 'handleTicketApply',
+              actionData: {
+                taskId,
+                remark: this.remark,
+                status: status
+              }
+            }
+          }
+        })
+        await window.vtoast.success('处理成功')
+        this.$emit('success')
       },
+      // ---------- <<<<<<<<<<<<< 处理申请 ----------
+      async close() {
+        this.isUpdateDrawerShown = false;
+      },
+      
     },
   });
 </script>
