@@ -18,8 +18,8 @@ typings/
 config/config.local.js
 config/config.prod.js
 config/config.unittest.js
-upload/**
-multipartTmp/**
+upload
+multipartTmp
 .vscode
 .travis.yml
 appveyor.yml
