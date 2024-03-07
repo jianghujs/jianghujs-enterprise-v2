@@ -19,7 +19,11 @@
                   >mdi-help-circle-outline
                 </v-icon>
               </div>
-          
+              <v-breadcrumbs
+              class="pb-3 pt-0 pl-0"
+              :items="breadcrumbs"
+              divider="-"
+            ></v-breadcrumbs>
             </v-col>
           </v-row>
         </div>
@@ -27,7 +31,7 @@
 
         <div class="jh-page-body-container px-8">
           <!-- 页面内容 >>>>>>>>>>>>> -->
-          <div class="rounded-lg mt-4">
+          <div class="rounded-lg">
             <v-sheet
               :color="`white`"
               class="pa-3"
@@ -121,6 +125,17 @@
     template: '#app-template',
     vuetify: new Vuetify(),
     data: () => ({
+      breadcrumbs: [
+        {
+          text: '首页',
+          disabled: true,
+        },
+        {
+          text: '发起申请',
+          disabled: true,
+        },
+      ],
+
       isHelpPageDrawerShown: false,
       isHelpPageDrawerLoaded: false,
       isMobile: window.innerWidth < 500,

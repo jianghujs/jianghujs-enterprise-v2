@@ -44,20 +44,17 @@ class UserManagementService extends Service {
     const { clearTextPassword } = actionData;
     const md5Salt = idGenerateUtil.randomString(12);
     const password = md5(`${clearTextPassword}_${md5Salt}`);
-    const idSequence = await idGenerateUtil.idPlus({
-      knex: this.app.jianghuKnex,
-      tableName: '_user',
-      columnName: 'idSequence',
-      startValue: 10001,
-    });
-    const userId = "F"+ idSequence;
+    const maxUserId = await jianghuKnex('_user').where("userId", "<>", "F10001").max('userId as maxUserId').first()
+    // 避开F10001
+    const nextId = (parseInt(maxUserId.maxUserId.toString().substring(1)) + 1)
+    const userId = "F" + (nextId == 10001 ? 10002 : nextId).toString().padStart(5,"0")
     const userExistCountResult = await jianghuKnex('_user', this.ctx).where({ userId }).count('*', {as: 'count'});
     const userExistCount = userExistCountResult[0].count;
     if (userExistCount > 0) {
       throw new BizError(errorInfoEnum.user_id_exist);
     }
-    const insertParams = _.pick(actionData, [ 'username', 'userType', 'userStatus', 'userAvatar' ]);
-    await jianghuKnex('_user', this.ctx).insert({ ...insertParams, idSequence, userId, password, clearTextPassword, md5Salt });
+    const insertParams = _.pick(actionData, [ 'username', 'userStatus', 'qiweiId' ]);
+    await jianghuKnex('_user', this.ctx).insert({ ...insertParams, userId, password, clearTextPassword, md5Salt });
     await this.service.app.buildUserApp(userId);
     return {};
   }

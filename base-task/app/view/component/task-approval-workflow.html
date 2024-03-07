@@ -21,6 +21,7 @@
           </div>
           <div
             class="small-card add-block"
+            v-if="!readonly"
             @click="doUiAction('startAddPerson', {key: 'approvalPersonList'})"
           >
             <v-icon color="primary" size="24">mdi-plus</v-icon>
@@ -42,6 +43,7 @@
           <div
             class="small-card add-block"
             @click="doUiAction('startAddPerson', {key: 'noticePersonList'})"
+            v-if="!readonly"
           >
             <v-icon color="primary" size="24">mdi-plus</v-icon>
           </div>
@@ -128,6 +130,10 @@
         type: Array,
         default: () => [],
       },
+      readonly: {
+        type: Boolean,
+        default: false,
+      }
     },
     data: () => ({
       isDialogShown: false,
