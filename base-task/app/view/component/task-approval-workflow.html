@@ -17,6 +17,16 @@
                 <span class="white--text">{{ item.username[0] }}</span>
               </v-avatar>
               <span class="ml-1 primary--text">{{item.username}}</span>
+              <v-btn
+                icon
+                x-small
+                v-if="!item.readonly"
+                class="ml-2"
+                @click="doUiAction('removePerson', {key: 'approvalPersonList', userId: item.userId})"
+              >
+                <v-icon>mdi-close</v-icon>
+              </v-btn>
+
             </div>
           </div>
           <div
@@ -38,6 +48,15 @@
                 <span class="white--text">{{ item.username[0] }}</span>
               </v-avatar>
               <span class="ml-1 primary--text">{{item.username}}</span>
+              <v-btn
+                icon
+                x-small
+                v-if="!item.readonly"
+                class="ml-2"
+                @click="doUiAction('removePerson', {key: 'noticePersonList', userId: item.userId})"
+              >
+                <v-icon>mdi-close</v-icon>
+              </v-btn>
             </div>
           </div>
           <div
@@ -156,7 +175,7 @@
     watch: {
       selectedIds(val) {
         console.log("------------------------------------");
-        console.log("selectedIds", val);
+        console.log("selectedIds", val, this.approvalPersonList);
         this.setSelectedItems();
         console.log("------------------------------------");
       },
@@ -171,9 +190,16 @@
             break;
           case "startAddPerson":
             await this.startAddPerson(uiActionData);
+            await this.buildTreeData();
             break;
           case "addPerson":
             await this.addPerson(uiActionData);
+            break;
+          case "removePerson":
+            this[uiActionData.key] = this[uiActionData.key].filter(
+              (item) => item.userId !== uiActionData.userId
+            );
+            this.$emit(`update:${[uiActionData.key]}`, this[uiActionData.key]);
             break;
           default:
             console.error("[doUiAction] uiActionId not find", { uiActionId });
@@ -203,18 +229,31 @@
         return _.sample(charSet, len).toString().replace(/,/g, "");
       },
       async buildTreeData() {
-        const data = this.userList;
+        let data = [...this.userList];
+        if (this.updateKey) {
+          data = data.map(item=> {
+            item.disabled = false
+            this[this.updateKey].map((user) => {
+              if (item.userId === user.userId) {
+                item.disabled = user.readonly;
+              }
+            })
+            return item
+          });
+        }
+        
         const treeData = [];
 
-        data.forEach((item) => {
+        data.forEach((item, index) => {
           const parts = item.orgFullName.split("-");
           let currentLevel = treeData;
 
-          parts.forEach((part) => {
+          parts.forEach((part, partIndex) => {
             let existingNode = currentLevel.find((node) => node.name === part);
             if (!existingNode) {
+
               const newNode = {
-                id: this.randomString(6),
+                id: `${index}-${partIndex}`,
                 name: part,
                 children: [],
               };
@@ -225,11 +264,12 @@
             }
           });
 
-          // Add the username as a leaf node
+    
           currentLevel.push({
             id: item.userId,
             userId: item.userId,
             name: item.username,
+            disabled: item.disabled,
           });
         });
         console.log("------------------------------------");
@@ -244,6 +284,7 @@
 
         this.selectedItems = this[key];
         this.selectedIds = this[key].map((item) => item.userId);
+
       },
 
       async addPerson() {
@@ -252,6 +293,7 @@
           username: item.username,
           userId: item.userId,
           position: item.position,
+          readonly: item.readonly,
         }));
         this.$emit(`update:${this.updateKey}`, selectedItems);
         this.isDialogShown = false;
@@ -261,6 +303,11 @@
         const data = [];
         this.selectedIds.map((id) => {
           const currentUser = this.userList.find((item) => item.userId === id);
+          // 取this.updateKey 只读状态
+          const selectedUser = this[this.updateKey].find(
+            (item) => item.userId === id
+          ) || {};
+          currentUser.readonly = selectedUser.readonly;
           if (currentUser) {
             data.push(currentUser);
           }
@@ -278,10 +325,10 @@
     display: flex;
     align-items: center;
     cursor: pointer;
-    height: 50px;
+    height: 40px;
   }
   .add-block {
-    width: 50px;
+    width: 40px;
     justify-content: center;
   }
   .v-timeline {

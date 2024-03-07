@@ -156,13 +156,12 @@
             >
               <!-- 表格操作按钮 -->
               <template v-slot:item.action="{ item }">
-                <template
-                >
+                <template>
                   <span
                     role="button"
                     class="success--text font-weight-medium font-size-2 mr-2"
                     @click="doUiAction('startUpdateItem', {item})"
-                    v-if="!item.taskAuditedUserIdList?.includes(userId)"
+                    v-if="!item.taskAuditedUserIdList?.includes(userId) && item.taskStatus === '进行中'"
                   >
                     <v-icon size="16" class="success--text"
                       >mdi-note-edit-outline</v-icon
@@ -172,7 +171,7 @@
                     role="button"
                     class="success--text font-weight-medium font-size-2 mr-2"
                     @click="doUiAction('startUpdateItem', {item})"
-                    v-if="item.taskAuditedUserIdList?.includes(userId) && item.taskAuditUserIdList?.includes(userId)"
+                    v-if="(item.taskAuditedUserIdList?.includes(userId) && item.taskAuditUserIdList?.includes(userId)) || ['已撤销', '已拒绝'].includes(item.taskStatus)"
                   >
                     <v-icon size="16" class="success--text"
                       >mdi-note-edit-outline</v-icon
@@ -292,7 +291,7 @@ include 'common/constant.html' %} {% include
       tableData: [],
       headers: [
         { text: "审批ID", value: "taskId", width: 120 },
-        { text: "审批名称", value: "taskTitle", width: 120 },
+        { text: "审批名称", value: "taskTitle", width: 250 },
         { text: "审批状态", value: "taskStatus", width: 120 },
         { text: "审批人", value: "taskAuditUserIdList", width: 120 },
         { text: "已审批人", value: "taskAuditedUserIdList", width: 120 },

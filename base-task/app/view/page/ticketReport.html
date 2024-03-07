@@ -115,7 +115,6 @@
           </div>
           <!-- <<<<<<<<<<<<< 页面内容 -->
 
-          <view-ticket-detail-drawer ref="ticketDetail" />
           <select-ticket-type-dialog ref="selectTicketTypeDialog" @handleClick="doUiAction('startCreateTicket', $event)" />
           <create-ticket-drawer ref="createTicketDrawer" />
         </div>
@@ -167,8 +166,7 @@
 {% endblock %} {% block vueScript %}
 {% include 'common/jianghuJs/fixedTableHeightV4.html' %}
 {% include 'component/task-filter-btn.html' %}
-{% include 'common/excelUtil.html' %} {%
-include 'component/view-ticket-detail-drawer.html' %}
+{% include 'common/excelUtil.html' %}
 {% include 'component/task-attachment-list.html' %}
 {% include 'component/ticket/select-ticket-type-dialog.html' %}
 {% include 'component/ticket/create-ticket-drawer.html' %}

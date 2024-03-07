@@ -155,7 +155,7 @@
               <!-- 表格操作按钮 -->
               <template v-slot:item.action="{ item }">
                 <template
-                  v-if="!['已撤销', '已完成'].includes(item.taskStatus) && item.taskManagerId==userId"
+                  v-if="item.taskStatus === '进行中'"
                 >
                   <span
                     role="button"
@@ -174,6 +174,17 @@
                     <v-icon size="16" class="success--text"
                       >mdi-trash-can-outline</v-icon
                     >撤销
+                  </span>
+                </template>
+                <template v-else>
+                  <span
+                    role="button"
+                    class="success--text font-weight-medium font-size-2 mr-2"
+                    @click="doUiAction('viewTicketDetail', {item})"
+                  >
+                    <v-icon size="16" class="success--text"
+                      >mdi-note-edit-outline</v-icon
+                    >查看详情
                   </span>
                 </template>
               </template>
@@ -196,6 +207,8 @@
           </v-card>
 
           <update-ticket-drawer ref="updateTicketDrawer" @success="doUiAction('getTableData')"/>
+          <view-ticket-drawer ref="viewTicketDrawer"/>
+        
         </div>
 
         <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
@@ -249,6 +262,7 @@ include 'common/constant.html' %} {% include
 'component/task-attachment-list.html' %}
 {% include 'component/task-approval-workflow.html' %}
 {% include 'component/ticket/update-ticket-drawer.html' %}
+{% include 'component/ticket/view-ticket-drawer.html' %}
 
 <script type="module">
   new Vue({
@@ -290,7 +304,7 @@ include 'common/constant.html' %} {% include
       tableData: [],
       headers: [
         { text: "审批ID", value: "taskId", width: 120 },
-        { text: "审批名称", value: "taskTitle", width: 120 },
+        { text: "审批名称", value: "taskTitle", width: 250 },
         { text: "审批状态", value: "taskStatus", width: 120 },
         { text: "审批人", value: "taskAuditUserIdList", width: 120 },
         { text: "已审批人", value: "taskAuditedUserIdList", width: 120 },
@@ -344,6 +358,9 @@ include 'common/constant.html' %} {% include
           case "getTableData":
             await this.getTableData();
             break;
+          case "viewTicketDetail":
+            this.$refs.viewTicketDrawer.doUiAction("open", uiActionData);
+            break;
           case "startUpdateItem":
             this.$refs.updateTicketDrawer.doUiAction("open", uiActionData);
             break;
@@ -355,6 +372,7 @@ include 'common/constant.html' %} {% include
             await this.clearDeleteItem();
             await this.getTableData();
             break;
+            
           default:
             console.error("[doUiAction] uiActionId not find", { uiActionId });
             break;
