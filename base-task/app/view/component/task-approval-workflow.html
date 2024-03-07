@@ -17,6 +17,16 @@
                 <span class="white--text">{{ item.username[0] }}</span>
               </v-avatar>
               <span class="ml-1 primary--text">{{item.username}}</span>
+              <v-btn
+                icon
+                x-small
+                v-if="!readonly"
+                class="ml-2"
+                @click="doUiAction('removePerson', {key: 'approvalPersonList', userId: item.userId})"
+              >
+                <v-icon>mdi-close</v-icon>
+              </v-btn>
+
             </div>
           </div>
           <div
@@ -175,6 +185,12 @@
           case "addPerson":
             await this.addPerson(uiActionData);
             break;
+          case "removePerson":
+            this[uiActionData.key] = this[uiActionData.key].filter(
+              (item) => item.userId !== uiActionData.userId
+            );
+            this.$emit(`update:${[uiActionData.key]}`, this[uiActionData.key]);
+            break;
           default:
             console.error("[doUiAction] uiActionId not find", { uiActionId });
             break;
@@ -278,10 +294,10 @@
     display: flex;
     align-items: center;
     cursor: pointer;
-    height: 50px;
+    height: 40px;
   }
   .add-block {
-    width: 50px;
+    width: 40px;
     justify-content: center;
   }
   .v-timeline {
