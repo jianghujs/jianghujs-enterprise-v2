@@ -17,7 +17,7 @@ class GroupService extends Service {
             await trx('enterprise_user_group_role_resource', this.ctx).where('group',groupId).jhDelete();
             await trx('enterprise_group', this.ctx).where('groupId',groupId).jhDelete();
         });
-        this.service.app.buildUserApp(userId);
+        this.service.app.buildUserApp();
     }
 }
 

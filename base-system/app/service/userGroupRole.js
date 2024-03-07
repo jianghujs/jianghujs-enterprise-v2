@@ -98,7 +98,7 @@ class UserGroupRoleService extends Service {
       insertUserGroupRoleResourceList.length && await trx('enterprise_user_group_role_resource').jhInsert(insertUserGroupRoleResourceList);
     })
 
-    this.service.app.buildUserApp(userId);
+    this.service.app.buildUserApp();
   }
 
   /**
@@ -114,7 +114,7 @@ class UserGroupRoleService extends Service {
       await trx('enterprise_user_group_role_page').where({ group: groupId, role: roleId }).jhDelete();
       await trx('enterprise_user_group_role_resource').where({ group: groupId, role: roleId }).jhDelete();
     })
-    this.service.app.buildUserApp(userId);
+    this.service.app.buildUserApp();
   }
 
   // async updateUserOrg() {
