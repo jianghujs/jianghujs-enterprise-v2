@@ -245,7 +245,8 @@
         const treeData = [];
 
         data.forEach((item, index) => {
-          const parts = item.orgFullName.split("-");
+          const items = item.orgFullName || item.groupAllName || ''
+          const parts = items.split("-");
           let currentLevel = treeData;
 
           parts.forEach((part, partIndex) => {
