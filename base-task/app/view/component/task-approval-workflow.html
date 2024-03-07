@@ -20,7 +20,7 @@
               <v-btn
                 icon
                 x-small
-                v-if="!readonly"
+                v-if="!item.readonly"
                 class="ml-2"
                 @click="doUiAction('removePerson', {key: 'approvalPersonList', userId: item.userId})"
               >
@@ -48,6 +48,15 @@
                 <span class="white--text">{{ item.username[0] }}</span>
               </v-avatar>
               <span class="ml-1 primary--text">{{item.username}}</span>
+              <v-btn
+                icon
+                x-small
+                v-if="!item.readonly"
+                class="ml-2"
+                @click="doUiAction('removePerson', {key: 'noticePersonList', userId: item.userId})"
+              >
+                <v-icon>mdi-close</v-icon>
+              </v-btn>
             </div>
           </div>
           <div
@@ -166,7 +175,7 @@
     watch: {
       selectedIds(val) {
         console.log("------------------------------------");
-        console.log("selectedIds", val);
+        console.log("selectedIds", val, this.approvalPersonList);
         this.setSelectedItems();
         console.log("------------------------------------");
       },
@@ -181,6 +190,7 @@
             break;
           case "startAddPerson":
             await this.startAddPerson(uiActionData);
+            await this.buildTreeData();
             break;
           case "addPerson":
             await this.addPerson(uiActionData);
@@ -219,7 +229,19 @@
         return _.sample(charSet, len).toString().replace(/,/g, "");
       },
       async buildTreeData() {
-        const data = this.userList;
+        let data = [...this.userList];
+        if (this.updateKey) {
+          data = data.map(item=> {
+            item.disabled = false
+            this[this.updateKey].map((user) => {
+              if (item.userId === user.userId) {
+                item.disabled = user.readonly;
+              }
+            })
+            return item
+          });
+        }
+        
         const treeData = [];
 
         data.forEach((item, index) => {
@@ -242,10 +264,12 @@
             }
           });
 
+    
           currentLevel.push({
             id: item.userId,
             userId: item.userId,
             name: item.username,
+            disabled: item.disabled,
           });
         });
         console.log("------------------------------------");
@@ -260,6 +284,7 @@
 
         this.selectedItems = this[key];
         this.selectedIds = this[key].map((item) => item.userId);
+
       },
 
       async addPerson() {
@@ -268,6 +293,7 @@
           username: item.username,
           userId: item.userId,
           position: item.position,
+          readonly: item.readonly,
         }));
         this.$emit(`update:${this.updateKey}`, selectedItems);
         this.isDialogShown = false;
@@ -277,6 +303,11 @@
         const data = [];
         this.selectedIds.map((id) => {
           const currentUser = this.userList.find((item) => item.userId === id);
+          // 取this.updateKey 只读状态
+          const selectedUser = this[this.updateKey].find(
+            (item) => item.userId === id
+          ) || {};
+          currentUser.readonly = selectedUser.readonly;
           if (currentUser) {
             data.push(currentUser);
           }
