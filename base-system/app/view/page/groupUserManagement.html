@@ -193,7 +193,6 @@ new Vue({
       const whereIn = {};
       const whereLike = {};
 
-      console.log("--this.activeGroup",this.activeGroup);
       if (this.activeGroupPath) {
         if(isContainSub){
           whereLike.groupId = `${this.activeGroup}%`;
