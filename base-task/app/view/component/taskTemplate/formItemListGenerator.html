@@ -77,7 +77,7 @@
             <span class="jh-input-label">是否必填</span>
             <v-switch class="jh-v-input mt-0 pt-0" dense single-line filled v-model="selectedFormItem.component.required"></v-switch>
         </v-col>
-        <v-col cols="12" md="12" class="mt-2" v-if="selectedFormItem.component.type == 'v-autocomplete'">
+        <v-col cols="12" md="12" class="mt-2" v-if="selectedFormItem.component.type == 'select'">
           <span class="jh-input-label">选项(英文逗号分隔)</span>
           <v-textarea class="jh-v-input" dense single-line filled v-model="selectedFormItem.component.items"></v-textarea>
       </v-col>
@@ -235,7 +235,7 @@
           ..._component,
         };
         if (_component.type === "select") {
-          component.items = _component.items.split(",");
+          component.items = (_component.items || '').split(",");
         }
         if (_component.type === "file") {
           component.value = [];

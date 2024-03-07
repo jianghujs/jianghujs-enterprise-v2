@@ -163,6 +163,14 @@
         newItem.taskNoticeConfig = JSON.parse(newItem.taskNoticeConfig);
         newItem.taskContent = JSON.parse(newItem.taskContent);
 
+        newItem.taskContent.forEach((form) => {
+          if (form.component.type === "file") {
+            if (!form.component.value) {
+              form.component.value = [];
+            }
+          }
+        })
+
         this.updateItem = newItem;
       },
       // ---------- 修改数据 uiAction >>>>>>>>>> --------

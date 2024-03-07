@@ -58,6 +58,7 @@
                 filled
                 :key="index"
                 :is="formItem.component.tag"
+                :items="formItem.component.items"
                 :placeholder="`请输入${formItem.component.label}`"
               ></component>
             </v-list-item-content>
