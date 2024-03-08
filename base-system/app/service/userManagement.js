@@ -74,6 +74,20 @@ class UserManagementService extends Service {
     await jianghuKnex('_user', this.ctx).where({userId}).update({ password, clearTextPassword, md5Salt });
     return {};
   }
+
+  async filterUserData() {
+    const { jianghuKnex } = this.app;
+    const { rows } = this.ctx.response.body.appData.resultData;
+    const { userId, userGroupRoleList } = this.ctx.userInfo;
+    // 获取用户管理的组织
+    const groupIdData = await jianghuKnex('enterprise_group').where('principalId', 'like', '%' + userId + '%').select();
+    const groupIdList = groupIdData.map(item => item.groupId)
+
+    // 如果是管理员就看到全部数据
+    if (!((userGroupRoleList.length > 0 && ['超级管理员'].indexOf(userGroupRoleList[userGroupRoleList.length - 1].groupId)) > -1)) {
+      this.ctx.response.body.appData.resultData.rows = rows.filter(item => _.some(groupIdList, e => item.groupId && item.groupId.includes(e)))
+    }
+  }
 }
 
 module.exports = UserManagementService;

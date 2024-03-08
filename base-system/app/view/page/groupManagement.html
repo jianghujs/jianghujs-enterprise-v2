@@ -79,16 +79,24 @@ SQL END!-->
           >
 
           <template v-slot:append="{ item, open }">
-            <span>{{item.groupId ? item.groupId : item.groupPath + '-' + item.groupLastId}}</span>
-            <v-icon size="20" class="ml-2" color="success" @click.stop="doUiAction('startCreateItem', item)">
-              mdi-plus
-            </v-icon>
-            <v-icon size="20" class="ml-2" color="orange" @click.stop="doUiAction('startUpdateItem', item)">
-              mdi-note-edit-outline
-            </v-icon>
-            <v-icon size="20" class="ml-2" color="red" @click.stop="doUiAction('deleteItem', item)">
-              mdi-trash-can-outline
-            </v-icon>
+            <template v-if="constantObj.userGroupRoleList.includes('超级管理员')">
+              <span>{{item.groupId ? item.groupId : item.groupPath + '-' + item.groupLastId}}</span>
+
+              <v-icon size="20" class="ml-2" color="blue" @click.stop="doUiAction('startSetPrincipal', item)">
+                mdi-account-details-outline
+              </v-icon>
+            </template>
+            <template v-if="constantObj.userGroupRoleList.includes('超级管理员') || (item.principalId?.split(',') || []).includes(userInfo.userId)">
+              <v-icon size="20" class="ml-2" color="success" @click.stop="doUiAction('startCreateItem', item)">
+                mdi-plus
+              </v-icon>
+              <v-icon size="20" class="ml-2" color="orange" @click.stop="doUiAction('startUpdateItem', item)">
+                mdi-note-edit-outline
+              </v-icon>
+              <v-icon size="20" class="ml-2" color="red" @click.stop="doUiAction('deleteItem', item)">
+                mdi-trash-can-outline
+              </v-icon>
+            </template>
           </template>
         </v-treeview>
         </v-col>
@@ -172,6 +180,34 @@ SQL END!-->
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </v-navigation-drawer>
+      <!-- 设置组织负责人 -->
+      <v-dialog
+        v-model="isSetPrincipalDialog"
+        width="500"
+        height="800"
+      >
+        <v-card>
+          <v-card-title class="font-weight-bold" style="font-size:medium">
+            请选择【{{setPrincipalItem.groupAllName}}（{{setPrincipalItem.groupId}}）】的组织负责人       
+          </v-card-title>
+
+          <div class="ma-4">
+            <v-autocomplete class="jh-v-input" dense filled single-line v-model="setPrincipalItem.principalId" :items="constantObj.userList" item-text="username" item-value="userId" multiple></v-autocomplete>
+          </div>
+          <v-divider></v-divider>
+
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn
+              color="primary"
+              text
+              @click="doUiAction('setPrincipal')"
+            >
+              确定
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
       <!-- <<<<<<<<<<<<< 页面内容 -->
     </div>
 
@@ -220,6 +256,7 @@ new Vue({
     // 下拉选项
     constantObj: {
       gender: [{"value": null, "text": "全部"}, {"value": "male", "text": "男"}, {"value": "female", "text": "女"}],
+      userGroupRoleList: []
     },
     serverSearchInput: {
       gender: null
@@ -236,12 +273,13 @@ new Vue({
     updateActionData: {},
     deleteItem: {},
     deleteItemId: null,
-
+    setPrincipalItem:{},
+    setPrincipalData:{},
     // 树形视图
     selectedItem: null,
     openIdList: [],
     tableDataTree: [],
-
+    isSetPrincipalDialog: false,
   }),
   watch: {
     isHelpPageDrawerShown(val) {
@@ -257,12 +295,17 @@ new Vue({
   },
   mounted() {
     this.doUiAction('getTableData');
+    this.doUiAction('getUserData');
+    this.constantObj.userGroupRoleList = window.userInfo.userGroupRoleList.map(item=>item.groupId)
   },
   methods: {
     async doUiAction(uiActionId, uiActionData) {
       switch (uiActionId) {
         case 'getTableData':
           await this.getTableData();
+          break;
+        case 'getUserData':
+          await this.getUserData();
           break;
         case 'startCreateItem':
           await this.prepareCreateFormData(uiActionData);
@@ -297,6 +340,16 @@ new Vue({
           await this.clearDeleteItem();
           await this.getTableData();
           break;
+        case 'startSetPrincipal':
+          await this.prepareSetPrincipalData(uiActionData);
+          await this.openSetPrincipalDialog();
+          break;
+        case 'setPrincipal':
+          await this.prepareSetPrincipalItem();
+          await this.doSetPrincipal();
+          await this.closeSetPrincipalDialog();
+          await this.getTableData();
+          break;
         default:
           console.error("[doUiAction] uiActionId not find", {uiActionId});
           break;
@@ -325,6 +378,23 @@ new Vue({
       
       this.tableDataTree = this.buildTableTree(rows)
       this.isTableLoading = false;
+    },
+    async getUserData() {
+      this.isTableLoading = true;
+      const rows = (await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'groupManagement',
+            actionId: 'getUserList',
+            actionData: {},
+            where: {
+              userStatus: 'active'
+            },
+            orderBy: [{column: 'userId', order: 'asc'}]
+          }
+        }
+      })).data.appData.resultData.rows;
+      this.constantObj.userList = rows
     },
     buildTableTree(rows) {
       const data = rows.filter(item => !item.groupPath);
@@ -500,6 +570,42 @@ new Vue({
       this.deleteItemId = null;
     },
     // ---------- <<<<<<<<<<< 删除数据 uiAction ---------
+    // ---------- 设置负责人 uiAction >>>>>>>>>>>> --------
+    prepareSetPrincipalData(item){
+      this.setPrincipalItem = {
+        groupAllName: item.groupAllName,
+        groupId: item.groupId,
+        principalId: item.principalId?.split(',')
+      }
+    },
+    openSetPrincipalDialog(){
+      this.isSetPrincipalDialog = true
+    },
+    prepareSetPrincipalItem(){
+      const {groupAllName, ...data} = this.setPrincipalItem;
+      this.setPrincipalData = {
+        groupId: data.groupId,
+        principalId: data.principalId.join(',')
+      }
+      
+    },
+    async doSetPrincipal(){
+      await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'groupManagement',
+            actionId: 'setPrincipal',
+            actionData: {
+              principalId: this.setPrincipalData.principalId
+            },
+            where: {groupId: this.setPrincipalData.groupId}
+          }
+        }
+      })
+    },
+    closeSetPrincipalDialog(){
+      this.isSetPrincipalDialog = false
+    },
     // 重写搜索方法
     filter (value, search) {
       let newItem = _.pick(value,['groupId','groupAllName'])
