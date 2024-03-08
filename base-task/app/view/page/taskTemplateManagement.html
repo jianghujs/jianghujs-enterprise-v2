@@ -27,15 +27,39 @@
             </v-col>
             <!-- 搜索条件表单 >>>>>>>> -->
             <v-col cols="12" xs="12" sm="12" md="8" xl="9">
-          <v-row class="jh-backend-form-container justify-end ma-0 py-1 pb-xs-2">
-            <v-col cols="12" xs="6" sm="6" md="4" xl="3" class="pa-xs-0 pb-2 pl-1 pl-xs-1">
-              <v-select clearable v-model="serverSearchInput.taskTemplateGroup" color="success" prefix="分组：" class="jh-v-input bg-white" :items="constantObj.taskTemplateGroup" dense filled single-line></v-select>
+              <v-row
+                class="jh-backend-form-container justify-end ma-0 py-1 pb-xs-2"
+              >
+                <v-col
+                  cols="12"
+                  xs="6"
+                  sm="6"
+                  md="4"
+                  xl="3"
+                  class="pa-xs-0 pb-2 pl-1 pl-xs-1"
+                >
+                  <v-select
+                    clearable
+                    v-model="serverSearchInput.taskTemplateGroup"
+                    color="success"
+                    prefix="分组："
+                    class="jh-v-input bg-white"
+                    :items="constantObj.taskTemplateGroup"
+                    dense
+                    filled
+                    single-line
+                  ></v-select>
+                </v-col>
+                <v-btn
+                  class="jh-backend-search-btn elevation-0 ml-0 mt-3"
+                  color="success"
+                  small
+                  @click="doUiAction('getTableData')"
+                >
+                  查询
+                </v-btn>
+              </v-row>
             </v-col>
-            <v-btn class="jh-backend-search-btn elevation-0 ml-0 mt-3" color="success" small @click="doUiAction('getTableData')">
-              查询
-            </v-btn>
-          </v-row>
-        </v-col>
             <!-- <<<<<<<< 搜索条件表单 -->
           </v-row>
         </div>
@@ -81,16 +105,25 @@
               fixed-header
               class="jh-fixed-table-height elevation-0 mt-0 mb-xs-4"
             >
-            <template v-slot:item.taskTemplateName="{ item }">
-              <span v-if="item.taskTemplateIcon" class="primary rounded pa-1 mr-1 row-icon">
-                <v-icon color="white" size="14">mdi-{{item.taskTemplateIcon}}</v-icon>
-              </span>
-
-              {{item.taskTemplateName}}
-            </template>
-              <!-- 表格操作按钮 -->
-                <template v-slot:item.action="{ item }">
+              <template v-slot:item.taskTemplateName="{ item }">
+                <div class="d-flex align-center">
                   <span
+                  v-if="item.taskTemplateIcon"
+                  class="pa-1 mr-1 row-icon"
+                >
+                  <v-img
+                    max-height="30"
+                    max-width="30"
+                    :src="`/<$ ctx.app.config.appId $>/public/${item.taskTemplateIcon}`"
+                  ></v-img>
+                </span>
+
+                {{item.taskTemplateName}}
+                </div>
+              </template>
+              <!-- 表格操作按钮 -->
+              <template v-slot:item.action="{ item }">
+                <span
                   role="button"
                   class="success--text font-weight-medium font-size-2 mr-2"
                   @click="doUiAction('jumpTaskTemplateFormPage', item)"
@@ -187,7 +220,12 @@
                         v-on="on"
                       >
                         <template #prepend-inner>
-                          <v-icon>mdi-{{createItem.taskTemplateIcon}}</v-icon>
+                          <v-img
+                            max-height="30"
+                            max-width="30"
+                            :src="`/<$ ctx.app.config.appId $>/public/${createItem.taskTemplateIcon}`"
+                          ></v-img>
+
                         </template>
                         <template v-slot:append>
                           <v-icon>mdi-menu-down</v-icon>
@@ -198,12 +236,14 @@
                       <div class="d-flex flex-wrap">
                         <div
                           v-for="icon in materialDesignIcons"
-                          :class="`item-icon pa-2 ${createItem.taskTemplateIcon == icon && 'green'}`"
+                          :class="`item-icon pa-1 ${createItem.taskTemplateIcon == icon && 'green'}`"
                           @click="createItem.taskTemplateIcon=icon"
                         >
-                          <v-btn x-small icon>
-                            <v-icon>mdi-{{icon}}</v-icon></v-btn
-                          >
+                          <v-img
+                            max-height="30"
+                            max-width="30"
+                            :src="`/<$ ctx.app.config.appId $>/public/${icon}`"
+                          ></v-img>
                         </div>
                       </div>
                     </v-card>
@@ -224,8 +264,8 @@
                 <v-col cols="12" sm="12" md="4">
                   <span class="jh-input-label">审批流程</span>
                   <task-approval-workflow
-                  :approval-person-list.sync="updateItem.taskTemplatePersonList"
-                  :notice-person-list.sync="updateItem.taskTemplateNoticePersonList"
+                    :approval-person-list.sync="updateItem.taskTemplatePersonList"
+                    :notice-person-list.sync="updateItem.taskTemplateNoticePersonList"
                   />
                 </v-col>
               </v-row>
@@ -312,7 +352,12 @@
                         v-on="on"
                       >
                         <template #prepend-inner>
-                          <v-icon>mdi-{{updateItem.taskTemplateIcon}}</v-icon>
+                          <v-img
+                            max-height="30"
+                            max-width="30"
+                            :src="`/<$ ctx.app.config.appId $>/public/${updateItem.taskTemplateIcon}`"
+                          ></v-img>
+
                         </template>
                         <template v-slot:append>
                           <v-icon>mdi-menu-down</v-icon>
@@ -323,12 +368,14 @@
                       <div class="d-flex flex-wrap">
                         <div
                           v-for="icon in materialDesignIcons"
-                          :class="`item-icon pa-2 ${updateItem.taskTemplateIcon == icon && 'green'}`"
+                          :class="`item-icon pa-1 ${updateItem.taskTemplateIcon == icon && 'green'}`"
                           @click="updateItem.taskTemplateIcon=icon"
                         >
-                          <v-btn x-small icon>
-                            <v-icon>mdi-{{icon}}</v-icon></v-btn
-                          >
+                          <v-img
+                            max-height="30"
+                            max-width="30"
+                            :src="`/<$ ctx.app.config.appId $>/public/${icon}`"
+                          ></v-img>
                         </div>
                       </div>
                     </v-card>
@@ -431,28 +478,27 @@
 
 <div id="app"></div>
 
-{% endblock %} {% block vueScript %}
-{% include 'common/jianghuJs/fixedTableHeightV4.html' %}
-{% include 'common/constantUtil.html' %}
-{% include 'component/task-approval-workflow.html' %}
-{% include 'component/select-org-user-dialog.html' %}
+{% endblock %} {% block vueScript %} {% include
+'common/jianghuJs/fixedTableHeightV4.html' %} {% include
+'common/constantUtil.html' %} {% include 'component/task-approval-workflow.html'
+%} {% include 'component/select-org-user-dialog.html' %}
 
-<script src="/<$ ctx.app.config.appId $>/public/material-design-icons.js"></script>
+<script src="/<$ ctx.app.config.appId $>/public/task-template-icons.js"></script>
 
 <script type="module">
   new Vue({
-    el: '#app',
-    template: '#app-template',
+    el: "#app",
+    template: "#app-template",
     vuetify: new Vuetify(),
     data: () => ({
       // 面包屑
       breadcrumbs: [
         {
-          text: '首页',
+          text: "首页",
           disabled: true,
         },
         {
-          text: '模板配置',
+          text: "模板配置",
           disabled: true,
         },
       ],
@@ -462,31 +508,30 @@
       // 表格相关数据
       isTableZebraLineShown: true,
       validationRules: {
-        requireRules: [(v) => !!v || 'This is required'],
+        requireRules: [(v) => !!v || "This is required"],
       },
       // 下拉选项
       constantObj: window.constantObj,
       currentSceneId: null,
-      serverSearchInput: {
-      },
+      serverSearchInput: {},
       searchInput: null,
       isTableLoading: true,
       tableData: [],
       headers: [
-        { text: 'ID', value: 'taskTemplateId', width: 120 },
-        { text: '名称', value: 'taskTemplateName', width: 120 },
-        { text: '分组', value: 'taskTemplateGroup', width: 120 },
-        { text: '创建时间', value: 'taskTemplateCreateAt', width: 120 },
-        { text: '操作者', value: 'operationByUser', width: 120 },
-        { text: '操作时间', value: 'operationAt', width: 250 },
+        { text: "ID", value: "taskTemplateId", width: 120 },
+        { text: "名称", value: "taskTemplateName", width: 120 },
+        { text: "分组", value: "taskTemplateGroup", width: 120 },
+        { text: "创建时间", value: "taskTemplateCreateAt", width: 120 },
+        { text: "操作者", value: "operationByUser", width: 120 },
+        { text: "操作时间", value: "operationAt", width: 250 },
         {
-          text: '操作',
-          value: 'action',
-          align: 'center',
+          text: "操作",
+          value: "action",
+          align: "center",
           sortable: false,
           width: 120,
-          class: 'fixed',
-          cellClass: 'fixed',
+          class: "fixed",
+          cellClass: "fixed",
         },
       ],
 
@@ -499,7 +544,7 @@
       updateActionData: {},
       deleteItem: {},
       deleteItemId: null,
-      materialDesignIcons
+      materialDesignIcons,
     }),
     watch: {
       isHelpPageDrawerShown(val) {
@@ -510,19 +555,19 @@
     },
     async created() {},
     mounted() {
-      this.doUiAction('getTableData');
+      this.doUiAction("getTableData");
     },
     methods: {
       async doUiAction(uiActionId, uiActionData) {
         switch (uiActionId) {
-          case 'getTableData':
+          case "getTableData":
             await this.getTableData();
             break;
-          case 'startCreateItem':
+          case "startCreateItem":
             await this.prepareCreateFormData();
             await this.openCreateDrawer();
             break;
-          case 'createItem':
+          case "createItem":
             await this.prepareCreateValidate();
             await this.confirmCreateItemDialog();
             await this.prepareDoCreateItem();
@@ -530,11 +575,11 @@
             await this.closeCreateDrawer();
             await this.getTableData();
             break;
-          case 'startUpdateItem':
+          case "startUpdateItem":
             await this.prepareUpdateFormData(uiActionData);
             await this.openUpdateDrawer();
             break;
-          case 'updateItem':
+          case "updateItem":
             await this.prepareUpdateValidate();
             await this.confirmUpdateItemDialog();
             await this.prepareDoUpdateItem();
@@ -542,7 +587,7 @@
             await this.closeUpdateDrawer();
             await this.getTableData();
             break;
-          case 'deleteItem':
+          case "deleteItem":
             await this.prepareDeleteFormData(uiActionData);
             await this.confirmDeleteItemDialog();
             await this.prepareDoDeleteItem();
@@ -550,11 +595,11 @@
             await this.clearDeleteItem();
             await this.getTableData();
             break;
-          case 'jumpTaskTemplateFormPage':
+          case "jumpTaskTemplateFormPage":
             await this.jumpTaskTemplateFormPage(uiActionData);
             break;
           default:
-            console.error('[doUiAction] uiActionId not find', { uiActionId });
+            console.error("[doUiAction] uiActionId not find", { uiActionId });
             break;
         }
       },
@@ -566,7 +611,7 @@
         const backendSearchData = _.pickBy(
           this.serverSearchInput,
           (fieldValue, fieldKey) => {
-            if (fieldValue !== null && fieldValue !== '') {
+            if (fieldValue !== null && fieldValue !== "") {
               return true;
             }
           }
@@ -575,20 +620,23 @@
           await window.jianghuAxios({
             data: {
               appData: {
-                pageId: 'taskTemplateManagement',
-                actionId: 'selectItemList',
+                pageId: "taskTemplateManagement",
+                actionId: "selectItemList",
                 actionData: {},
                 where: backendSearchData,
-                orderBy: [{ column: 'operationAt', order: 'desc' }],
+                orderBy: [{ column: "operationAt", order: "desc" }],
               },
             },
           })
         ).data.appData.resultData.rows;
 
         rows.forEach((row) => {
-          row.taskTemplatePersonList = JSON.parse(row.taskTemplatePersonList || '[]');
-          row.taskTemplateNoticePersonList = JSON.parse(row.taskTemplateNoticePersonList || '[]');
-          
+          row.taskTemplatePersonList = JSON.parse(
+            row.taskTemplatePersonList || "[]"
+          );
+          row.taskTemplateNoticePersonList = JSON.parse(
+            row.taskTemplateNoticePersonList || "[]"
+          );
         });
         this.tableData = rows;
         this.isTableLoading = false;
@@ -596,7 +644,7 @@
       // ---------- 新增数据 uiAction >>>>>>>>>> --------
       async prepareCreateFormData() {
         this.createItem = {
-          taskTemplateGroup: '其他'
+          taskTemplateGroup: "其他",
         };
       },
 
@@ -608,24 +656,24 @@
         if (await this.$refs.createForm.validate()) {
           return true;
         }
-        throw new Error('请完善表单信息');
+        throw new Error("请完善表单信息");
       },
 
       async confirmCreateItemDialog() {
         if (
           (await window.confirmDialog({
-            title: '新增',
-            content: '确定新增吗？',
+            title: "新增",
+            content: "确定新增吗？",
           })) === false
         ) {
-          throw new Error('[confirmCreateFormDialog] 否');
+          throw new Error("[confirmCreateFormDialog] 否");
         }
       },
 
       prepareDoCreateItem() {
         const { id, ...data } = this.createItem;
 
-        data.taskTemplateCreateAt = dayjs().format('YYYY-MM-DD HH:mm:ss');
+        data.taskTemplateCreateAt = dayjs().format("YYYY-MM-DD HH:mm:ss");
         data.taskTemplateNoticePersonList = JSON.stringify(
           data.taskTemplateNoticePersonList
         );
@@ -637,24 +685,24 @@
 
       async doCreateItem() {
         await window.jhMask.show();
-        await window.vtoast.loading('新增数据');
+        await window.vtoast.loading("新增数据");
         await window.jianghuAxios({
           data: {
             appData: {
-              pageId: 'taskTemplateManagement',
-              actionId: 'insertItem',
+              pageId: "taskTemplateManagement",
+              actionId: "insertItem",
               actionData: this.createActionData,
               bizIdGenerate: {
-                tableName: 'task_template',
-                prefix: 'MB',
-                type: 'idSequence',
-                bizId: 'taskTemplateId',
+                tableName: "task_template",
+                prefix: "MB",
+                type: "idSequence",
+                bizId: "taskTemplateId",
               },
             },
           },
         });
         await window.jhMask.hide();
-        await window.vtoast.success('新增数据成功');
+        await window.vtoast.success("新增数据成功");
       },
       async closeCreateDrawer() {
         this.isCreateDrawerShown = false;
@@ -675,17 +723,17 @@
         if (await this.$refs.updateForm.validate()) {
           return true;
         }
-        throw new Error('请完善表单信息');
+        throw new Error("请完善表单信息");
       },
 
       async confirmUpdateItemDialog() {
         if (
           (await window.confirmDialog({
-            title: '修改',
-            content: '确定修改吗？',
+            title: "修改",
+            content: "确定修改吗？",
           })) === false
         ) {
-          throw new Error('[confirmUpdateItemDialog] 否');
+          throw new Error("[confirmUpdateItemDialog] 否");
         }
       },
 
@@ -704,12 +752,12 @@
 
       async doUpdateItem() {
         await window.jhMask.show();
-        await window.vtoast.loading('修改数据');
+        await window.vtoast.loading("修改数据");
         await window.jianghuAxios({
           data: {
             appData: {
-              pageId: 'taskTemplateManagement',
-              actionId: 'updateItem',
+              pageId: "taskTemplateManagement",
+              actionId: "updateItem",
               actionData: this.updateActionData,
               where: { id: this.updateItemId },
             },
@@ -717,7 +765,7 @@
         });
 
         await window.jhMask.hide();
-        await window.vtoast.success('修改数据成功');
+        await window.vtoast.success("修改数据成功");
       },
 
       async closeUpdateDrawer() {
@@ -734,11 +782,11 @@
       async confirmDeleteItemDialog() {
         if (
           (await window.confirmDialog({
-            title: '删除',
-            content: '确定删除吗？',
+            title: "删除",
+            content: "确定删除吗？",
           })) === false
         ) {
-          throw new Error('[confirmDeleteItemDialog] 否');
+          throw new Error("[confirmDeleteItemDialog] 否");
         }
       },
       async prepareDoDeleteItem() {
@@ -746,18 +794,18 @@
         this.deleteItemId = id;
       },
       async doDeleteItem() {
-        await window.vtoast.loading('删除数据');
+        await window.vtoast.loading("删除数据");
         await window.jianghuAxios({
           data: {
             appData: {
-              pageId: 'taskTemplateManagement',
-              actionId: 'deleteItem',
+              pageId: "taskTemplateManagement",
+              actionId: "deleteItem",
               actionData: {},
               where: { id: this.deleteItemId },
             },
           },
         });
-        await window.vtoast.success('删除数据成功');
+        await window.vtoast.success("删除数据成功");
       },
       async clearDeleteItem() {
         this.deleteItem = {};
@@ -765,8 +813,11 @@
       },
       // ---------- <<<<<<<<<<< 删除数据 uiAction ---------
       async jumpTaskTemplateFormPage(item) {
-        window.open(`/<$ ctx.app.config.appId $>/page/taskTemplateFormManagement?taskTemplateId=${item.taskTemplateId}`, "_blank");
-      }
+        window.open(
+          `/<$ ctx.app.config.appId $>/page/taskTemplateFormManagement?taskTemplateId=${item.taskTemplateId}`,
+          "_blank"
+        );
+      },
     },
   });
 </script>

@@ -51,9 +51,12 @@
                     <v-col cols="3" v-for="item in items">
                       <div @click="doUiAction('startCreateTicket', { item })" class="grey lighten-4 pa-2">
                         <a class="d-flex align-center black--text rounded">
-                          <div :class="`primary pa-2 rounded`">
-                            <v-icon size="20" color="white">mdi-{{item.taskTemplateIcon}}</v-icon>
-                          </div>
+                            <v-img
+                              max-height="50"
+                              max-width="50"
+                              :src="`/<$ ctx.app.config.appId $>/public/${item.taskTemplateIcon}`"
+                            ></v-img>
+                            
                           <div class="ml-2">{{item.taskTemplateName}}</div>
                         </a>
                       </div>
