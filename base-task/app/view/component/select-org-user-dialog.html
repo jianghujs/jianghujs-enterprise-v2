@@ -5,6 +5,11 @@
         <span class="text-h7 font-weight-bold pa-4">请选择</span>
       </v-row>
       <v-divider class="jh-divider"></v-divider>
+      <v-progress-linear
+        indeterminate
+        v-if="isLoading"
+        color="primary"
+      ></v-progress-linear>
       <v-card-text>
         <v-row>
           <v-col cols="6" style="height: 400px; overflow: auto">
@@ -86,6 +91,8 @@
 
       search: null,
       open: [],
+
+      isLoading: false,
     }),
     created() {
       this.doUiAction("getUserList");
@@ -132,6 +139,7 @@
         switch (uiActionId) {
           case "getUserList":
             await this.getUserList(uiActionData);
+            await this.buildTreeData();
             break;
           case "open":
             await this.open(uiActionData);
@@ -146,6 +154,7 @@
         }
       },
       async getUserList() {
+        this.isLoading = true;
         const rows = (
           await window.jianghuAxios({
             data: {
@@ -157,6 +166,8 @@
             },
           })
         ).data.appData.resultData.rows;
+        this.isLoading = false;
+
         this.userList = rows;
       },
       async buildTreeData() {
