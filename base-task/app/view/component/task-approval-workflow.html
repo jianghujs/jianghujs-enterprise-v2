@@ -70,70 +70,12 @@
 
       </v-timeline-item>
     </v-timeline>
-
-    <v-dialog v-model="isDialogShown" width="80%">
-      <v-card>
-        <v-row no-gutters>
-          <span class="text-h7 font-weight-bold pa-4">请选择</span>
-        </v-row>
-        <v-divider class="jh-divider"></v-divider>
-        <v-card-text>
-          <v-row>
-            <v-col cols="6" style="height: 400px; overflow: auto">
-              <v-text-field
-                v-model="search"
-                label="搜索"
-                class="jh-v-input mt-4"
-                dense
-                single-line
-                filled
-                clear-icon="mdi-close-circle-outline"
-              ></v-text-field>
-
-              <v-treeview
-                :items="treeData"
-                v-model="selectedIds"
-                selectable
-                :search="search"
-                activatable
-                open-on-click
-                :filter="filter"
-                :open.sync="open"
-              ></v-treeview>
-            </v-col>
-            <v-col cols="6">
-              <v-card>
-                <v-card-title>已选择的人员</v-card-title>
-                <v-list dense>
-                  <div v-for="(item, index) in selectedItems" :key="index">
-                    <v-list-item>
-                      <v-list-item-avatar>
-                        <v-avatar color="primary" size="30">
-                          <span class="white--text"
-                            >{{ item.username[0] }}</span
-                          >
-                        </v-avatar>
-                      </v-list-item-avatar>
-
-                      <v-list-item-title>{{ item.username }}</v-list-item-title>
-                    </v-list-item>
-                    <v-divider></v-divider>
-                  </div>
-                </v-list>
-              </v-card>
-            </v-col>
-          </v-row>
-        </v-card-text>
-
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" text @click="doUiAction('addPerson')">
-            确定
-          </v-btn>
-          <v-btn text @click="isDialogShown=false"> 取消 </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <select-org-user-dialog
+      :show="isDialogShown"
+      :selected-ids.sync="selectedIds"
+      :selected-origin-items="selectedItems"
+      @confirm="doUiAction('addPerson', $event)"
+    ></select-org-user-dialog>
   </div>
 </template>
 
@@ -160,37 +102,13 @@
       treeData: [],
       selectedIds: [],
       selectedItems: [],
-
-      search: null,
-      open: [],
     }),
-    created() {
-      this.doUiAction("getUserList");
-    },
-    computed: {
-      filter() {
-        return (item, search, textKey) => item[textKey].indexOf(search) > -1;
-      },
-    },
-    watch: {
-      selectedIds(val) {
-        console.log("------------------------------------");
-        console.log("selectedIds", val, this.approvalPersonList);
-        this.setSelectedItems();
-        console.log("------------------------------------");
-      },
-    },
 
     methods: {
       async doUiAction(uiActionId, uiActionData) {
         switch (uiActionId) {
-          case "getUserList":
-            await this.getUserList();
-            await this.buildTreeData();
-            break;
           case "startAddPerson":
             await this.startAddPerson(uiActionData);
-            await this.buildTreeData();
             break;
           case "addPerson":
             await this.addPerson(uiActionData);
@@ -206,114 +124,16 @@
             break;
         }
       },
-      async getUserList() {
-        const rows = (
-          await window.jianghuAxios({
-            data: {
-              appData: {
-                pageId: "allPage",
-                actionId: "getUserList",
-                actionData: {},
-              },
-            },
-          })
-        ).data.appData.resultData.rows;
-        this.userList = rows;
-      },
-
-      randomString(len) {
-        const charSet =
-          "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-        return _.sample(charSet, len).toString().replace(/,/g, "");
-      },
-      async buildTreeData() {
-        let data = [...this.userList];
-        if (this.updateKey) {
-          data = data.map(item=> {
-            item.disabled = false
-            this[this.updateKey].map((user) => {
-              if (item.userId === user.userId) {
-                item.disabled = user.readonly;
-              }
-            })
-            return item
-          });
-        }
-        
-        const treeData = [];
-
-        data.forEach((item, index) => {
-          const items = item.orgFullName || item.groupAllName || ''
-          const parts = items.split("-");
-          let currentLevel = treeData;
-
-          parts.forEach((part, partIndex) => {
-            let existingNode = currentLevel.find((node) => node.name === part);
-            if (!existingNode) {
-
-              const newNode = {
-                id: `${index}-${partIndex}`,
-                name: part,
-                children: [],
-              };
-              currentLevel.push(newNode);
-              currentLevel = newNode.children;
-            } else {
-              currentLevel = existingNode.children;
-            }
-          });
-
-    
-          currentLevel.push({
-            id: item.userId,
-            userId: item.userId,
-            name: item.username,
-            disabled: item.disabled,
-          });
-        });
-        console.log("------------------------------------");
-        console.log("treeData", treeData);
-        console.log("------------------------------------");
-        this.treeData = treeData;
-      },
 
       async startAddPerson({ key }) {
         this.isDialogShown = true;
         this.updateKey = key;
-
-        this.selectedItems = this[key];
         this.selectedIds = this[key].map((item) => item.userId);
-
+        this.selectedItems = this[key]
       },
-
-      async addPerson() {
-        const selectedItems = this.selectedItems.map((item) => ({
-          id: item.id,
-          username: item.username,
-          userId: item.userId,
-          position: item.position,
-          readonly: item.readonly,
-        }));
+      async addPerson(selectedItems) {
         this.$emit(`update:${this.updateKey}`, selectedItems);
         this.isDialogShown = false;
-      },
-
-      setSelectedItems() {
-        const data = [];
-        this.selectedIds.map((id) => {
-          const currentUser = this.userList.find((item) => item.userId === id);
-          // 取this.updateKey 只读状态
-          const selectedUser = this[this.updateKey].find(
-            (item) => item.userId === id
-          ) || {};
-          currentUser.readonly = selectedUser.readonly;
-          if (currentUser) {
-            data.push(currentUser);
-          }
-        });
-
-        this.selectedItems = data;
       },
     },
   });
@@ -325,10 +145,10 @@
     display: flex;
     align-items: center;
     cursor: pointer;
-    height: 40px;
+    height: 45px;
   }
   .add-block {
-    width: 40px;
+    width: 45px;
     justify-content: center;
   }
   .v-timeline {
