@@ -127,7 +127,11 @@
             <v-row class="ma-0 pa-4">
               <v-spacer></v-spacer>
               <!-- 搜索过滤 -->
-
+              <v-col cols="12" xs="12" sm="4" md="3" xl="2" class="pa-0 text-md-right">
+                <v-btn-toggle :value="0"  @change="doUiAction('useScene', sceneList[$event])" class="mr-2 mt-2 mt-md-0" color="success" small>
+                  <v-btn v-for="scene in sceneList" small>{{scene.name}}</v-btn>
+                </v-btn-toggle>
+              </v-col>
               <v-col cols="12" xs="8" sm="4" md="3" xl="2" class="pa-0">
                 <v-text-field
                   color="success"
@@ -280,7 +284,25 @@ include 'common/constant.html' %} {% include
       // 下拉选项
       constantObj: constantObj,
 
-      currentSceneId: null,
+      currentSceneId: 'wait',
+      sceneList: [
+        {
+          "form": { taskAuditUserIdList: `%${window.userInfo.userId}%`},
+          "name": "待处理",
+          "id": "wait"
+        },
+        {
+          "form": { taskAuditedUserIdList: `%${window.userInfo.userId}%` },
+          "name": "已处理",
+          "id": "processed"
+        },
+        {
+          "form": { taskAuditUserIdList: null, taskNoticeConfig: `%${window.userInfo.userId}%` },
+          "name": "抄送我的",
+          "id": "bcc"
+        },
+      ],
+
       serverSearchInput: {
         taskType: "审批",
         taskStatus: null,
@@ -344,6 +366,10 @@ include 'common/constant.html' %} {% include
             await this.clearDeleteItem();
             await this.getTableData();
             break;
+          case 'useScene':
+            await this.useScene(uiActionData);
+            await this.getTableData(uiActionData.form);
+            break;
           default:
             console.error("[doUiAction] uiActionId not find", { uiActionId });
             break;
@@ -352,12 +378,12 @@ include 'common/constant.html' %} {% include
       /**
        * 获取表格数据
        */
-      async getTableData() {
+      async getTableData(params = {}) {
         this.isTableLoading = true;
 
-        const whereData = _.pickBy(this.serverSearchInput, _.identity);
+        const whereData = _.pickBy({...this.serverSearchInput, ...params}, _.identity);
 
-        const rows = (
+        let rows = (
           await window.jianghuAxios({
             data: {
               appData: {
@@ -370,6 +396,11 @@ include 'common/constant.html' %} {% include
             },
           })
         ).data.appData.resultData.rows;
+
+        if (this.currentSceneId === 'wait') {
+          // 前端过滤下
+          rows = rows.filter(row => !row.taskAuditedUserIdList?.includes(this.userId));
+        }
 
         this.tableData = rows;
         this.isTableLoading = false;
@@ -445,6 +476,9 @@ include 'common/constant.html' %} {% include
         ).data.appData.resultData.rows;
 
         this.taskTemplateList = rows;
+      },
+      async useScene(funObj) {
+        this.currentSceneId = funObj.id;
       },
 
       // ---------- <<<<<<<<<<<<< 审批模板 ----------
