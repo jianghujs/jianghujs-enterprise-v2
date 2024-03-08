@@ -23,6 +23,9 @@
             <v-list-item @click="downloadFile(item)">
               <v-list-item-title>下载</v-list-item-title>
             </v-list-item>
+            <v-list-item @click="jumpPreviewPage(item)">
+              <v-list-item-title>预览</v-list-item-title>
+            </v-list-item>
             <v-list-item v-if="!readonly" @click="deleteFile(index)">
               <v-list-item-title>删除</v-list-item-title>
             </v-list-item>
@@ -100,6 +103,11 @@
           }
         }
       },
+      async jumpPreviewPage(item) {
+        const { downloadBasePath, downloadPath, filename } = item;
+        const fileUrl = `/<$ ctx.app.config.appId $>/page/previewFile?url=${window.location.origin}${downloadBasePath}${downloadPath}`;
+        window.open(fileUrl, '_blank');
+      }
 
     },
   })

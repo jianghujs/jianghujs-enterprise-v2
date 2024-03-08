@@ -1,0 +1,82 @@
+{% extends 'template/jhTemplateV4.html'%} {% block vueTemplate %}
+
+<script type="text/html" id="app-template">
+  <div>
+    <v-app mobile-breakpoint="sm">
+      <v-main>
+        <!-- 视频预览 -->
+          <div class="text-center" v-if="previewFileType == 'video'">
+            <video class="mx-auto" :src="previewFileUrl" controls style="max-width: 100%; height: 100vh"></video>
+          </div>
+          <!-- 图片预览 -->
+          <div class="text-center" v-if="previewFileType == 'img'">
+            <img :src="previewFileUrl" style="max-width: 100%; height: 100vh" />
+          </div>
+          <!-- pdf预览 -->
+          <div class="text-center" v-if="previewFileType == 'pdf'">
+            <iframe :src="'/<$ ctx.app.config.appId $>/public/pdf/web/viewer.html?file=' + previewFileUrl" frameborder="0"
+              style="width: 75vw; height: 100vh; padding: 50px 0 0 0;"></iframe>
+          </div>
+          <!-- word excel预览 -->
+          <div class="text-center" v-if="previewFileType == 'pdf'">
+            <iframe :src="'https://view.officeapps.live.com/op/view.aspx?src=' + previewFileUrl" frameborder="0"
+              style="width: 75vw; height: 100vh; padding: 50px 0 0 0;"></iframe>
+          </div>
+      </v-main>
+    </v-app>
+
+    <jh-toast />
+    <jh-mask />
+    <jh-confirm-dialog />
+  </div>
+</script>
+
+<div id="app"></div>
+
+{% endblock %} {% block vueScript %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.9.359/pdf.min.js"></script>
+
+<script type="module">
+  new Vue({
+    el: "#app",
+    template: "#app-template",
+    vuetify: new Vuetify(),
+    data: () => ({
+      previewFileUrl: "",
+      previewFileType: null,
+    }),
+    watch: {},
+    mounted() {
+      // 获取url页面参数
+      const urlParams = new URLSearchParams(window.location.search);
+      const previewFileUrl = urlParams.get("url");
+      this.previewFileUrl = previewFileUrl;
+
+      //   取文件名称，以最后一个/后的字符串为文件名
+      const filename = previewFileUrl.split("/").pop();
+
+      if (/\.(gif|jpg|jpeg|png|GIF|JPG|PNG)$/.test(filename)) {
+        this.previewFileType = "img";
+      }
+      if (/\.(mp4)$/.test(filename)) {
+        this.previewFileType = "video";
+      }
+      if (/\.(pdf|PDF)$/.test(filename)) {
+        this.previewFileType = "pdf";
+      }
+      if (/\.(xls|xlsx)$/.test(filename)) {
+        this.previewFileType = "excel";
+        window.vtoast.success("excel文件不能预览");
+      }
+    },
+    methods: {},
+  });
+</script>
+
+<style scoped>
+
+  body {
+    background-color: black!important;
+  }
+</style>
+{% endblock %}
