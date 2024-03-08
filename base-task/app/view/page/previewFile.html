@@ -18,7 +18,7 @@
               style="width: 75vw; height: 100vh; padding: 50px 0 0 0;"></iframe>
           </div>
           <!-- word excel预览 -->
-          <div class="text-center" v-if="previewFileType == 'pdf'">
+          <div class="text-center" v-if="previewFileType == 'wps'">
             <iframe :src="'https://view.officeapps.live.com/op/view.aspx?src=' + previewFileUrl" frameborder="0"
               style="width: 75vw; height: 100vh; padding: 50px 0 0 0;"></iframe>
           </div>
@@ -64,9 +64,8 @@
       if (/\.(pdf|PDF)$/.test(filename)) {
         this.previewFileType = "pdf";
       }
-      if (/\.(xls|xlsx)$/.test(filename)) {
-        this.previewFileType = "excel";
-        window.vtoast.success("excel文件不能预览");
+      if (/\.(doc|docx|xls|xlsx|ppt)$/.test(filename)) {
+        this.previewFileType = "wps";
       }
     },
     methods: {},
