@@ -4,6 +4,9 @@ const { BizError, errorInfoEnum } = require('../constant/error');
 const { tableEnum } = require('../constant/constant');
 const _ = require('lodash');
 const idGenerateUtil = require("@jianghujs/jianghu/app/common/idGenerateUtil");
+const wecomUtil = require('../common/wecomUtil.js')
+
+
 const dayjs = require('dayjs')
 const actionDataScheme = Object.freeze({
   addNotice: {
@@ -21,10 +24,12 @@ class NoticeService extends Service {
   // 添加消息通知
   async addNotice(actionData) {
     validateUtil.validate(actionDataScheme.addNotice, actionData);
-
-    const { jianghuKnex, knex } = this.app;
-    const { username } = this.ctx.userInfo;
+    const { ctx} = this
+    const { jianghuKnex, knex } = ctx.app;
+    const { wecom } = ctx.app.config;
+    const { username } = ctx.userInfo;
     let { rowId, taskMemberIdList, taskManagerId, taskTitle, taskContent, taskType, taskDesc } = actionData;
+    await wecomUtil.initConfig(wecom);
 
     let taskBizId = null
     // 根据rowId查task的taskId
@@ -95,7 +100,15 @@ class NoticeService extends Service {
       }
     })
 
+
     await jianghuKnex(tableEnum.task).jhInsert(insertData)
+    // await wecomUtil.sendMessage({
+    //   msgtype: 'text',
+    //   touser: '',
+    //   text: {
+    //     content: taskDesc
+    //   }
+    // })
   }
 
   // 更新所有未读消息为【已读】
