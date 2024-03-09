@@ -120,7 +120,7 @@
               </template>
               <!-- 表格操作按钮 -->
               <template v-slot:item.action="{ item }">
-             
+
                 <span
                   role="button"
                   class="success--text font-weight-medium font-size-2 mr-2"
@@ -175,97 +175,141 @@
                   >新增信息</span
                 >
               </v-row>
-              <!-- 抽屉表单 -->
-              <!-- <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.xxxId" :rules="validationRules.requireRules"></v-text-field> -->
-              <v-row class="mt-0 px-4">
-                <v-col cols="12" sm="12" md="4">
-                  <span class="jh-input-label">模板名称</span>
-                  <v-text-field
-                    class="jh-v-input"
-                    dense
-                    single-line
-                    filled
-                    v-model="createItem.taskTemplateName"
-                  ></v-text-field>
-                </v-col>
-                <v-col cols="12" sm="12" md="4">
-                  <span class="jh-input-label">模板icon</span>
-                  <v-menu
-                    :nudge-right="40"
-                    transition="scale-transition"
-                    offset-y
-                    min-width="auto"
-                    max-width="20%"
-                    max-height="60%"
+              <v-stepper v-model="stepNum">
+                <v-stepper-header>
+                  <v-stepper-step
+                    :complete="stepNum > 1"
+                    step="1"
+                    editable
                   >
-                    <template v-slot:activator="{ on, attrs }">
-                      <v-text-field
-                        class="jh-v-input"
-                        dense
-                        single-line
-                        filled
-                        v-model="createItem.taskTemplateIcon"
-                        v-bind="attrs"
-                        v-on="on"
-                      >
-                        <template #prepend-inner>
-                          <v-img
-                            max-height="30"
-                            max-width="30"
-                            :src="`/<$ ctx.app.config.appId $>/public/${createItem.taskTemplateIcon}`"
-                          ></v-img>
-                        </template>
-                        <template v-slot:append>
-                          <v-icon>mdi-menu-down</v-icon>
-                        </template>
-                      </v-text-field>
-                    </template>
-                    <v-card>
-                      <div class="d-flex flex-wrap">
-                        <div
-                          v-for="icon in materialDesignIcons"
-                          :class="`item-icon pa-1 ${createItem.taskTemplateIcon == icon && 'green'}`"
-                          @click="createItem.taskTemplateIcon=icon"
-                        >
-                          <v-img
-                            max-height="30"
-                            max-width="30"
-                            :src="`/<$ ctx.app.config.appId $>/public/${icon}`"
-                          ></v-img>
-                        </div>
-                      </div>
-                    </v-card>
-                  </v-menu>
-                </v-col>
+                    基础信息
+                  </v-stepper-step>
 
-                <v-col cols="12" sm="12" md="4">
-                  <span class="jh-input-label">模板分组</span>
-                  <v-autocomplete
-                    class="jh-v-input"
-                    :items="constantObj.taskTemplateGroup"
-                    dense
-                    single-line
-                    filled
-                    v-model="createItem.taskTemplateGroup"
-                  ></v-autocomplete>
-                </v-col>
-                <v-col cols="12" sm="12" md="12">
-                  <span class="jh-input-label">审批流程</span>
-                  <task-approval-workflow
-                    :approval-person-list.sync="createItem.taskTemplatePersonList"
-                    :notice-person-list.sync="createItem.taskTemplateNoticePersonList"
-                  />
-                </v-col>
-                <v-col cols="12" sm="12" md="12">
-                  <span class="jh-input-label">审批表单配置</span>
-                  <form-item-list-generator
-                    :select-canva-id="selectCanvaId"
-                    :form-item-list="createItem.taskTemplateForm"
-                    @change="createItem.taskTemplateForm=$event"
-                  />
-                </v-col>
-              </v-row>
+                  <v-divider></v-divider>
+                  <v-stepper-step
+                    :complete="stepNum > 2"
+                    step="2"
+                    editable
+                  >
+                    审批流程
+                  </v-stepper-step>
 
+                  <v-divider></v-divider>
+
+                  <v-stepper-step
+                    :complete="stepNum > 3"
+                    step="3"
+                    editable
+                  >
+                    表单配置
+                  </v-stepper-step>
+                </v-stepper-header>
+
+                <v-stepper-items>
+                  <v-stepper-content step="1">
+                    <v-form>
+                      <v-row class="mt-0 px-4">
+                        <v-col cols="12" sm="12" md="4">
+                          <span class="jh-input-label">模板名称</span>
+                          <v-text-field
+                            class="jh-v-input"
+                            dense
+                            single-line
+                            filled
+                            v-model="createItem.taskTemplateName"
+                          ></v-text-field>
+                        </v-col>
+                        <v-col cols="12" sm="12" md="4">
+                          <span class="jh-input-label">模板icon</span>
+                          <v-menu
+                            :nudge-right="40"
+                            transition="scale-transition"
+                            offset-y
+                            min-width="auto"
+                            max-width="20%"
+                            max-height="60%"
+                          >
+                            <template v-slot:activator="{ on, attrs }">
+                              <v-text-field
+                                class="jh-v-input"
+                                dense
+                                single-line
+                                filled
+                                v-model="createItem.taskTemplateIcon"
+                                v-bind="attrs"
+                                v-on="on"
+                              >
+                                <template #prepend-inner>
+                                  <v-img
+                                    max-height="30"
+                                    max-width="30"
+                                    :src="`/<$ ctx.app.config.appId $>/public/${createItem.taskTemplateIcon}`"
+                                  ></v-img>
+                                </template>
+                                <template v-slot:append>
+                                  <v-icon>mdi-menu-down</v-icon>
+                                </template>
+                              </v-text-field>
+                            </template>
+                            <v-card>
+                              <div class="d-flex flex-wrap">
+                                <div
+                                  v-for="icon in materialDesignIcons"
+                                  :class="`item-icon pa-1 ${createItem.taskTemplateIcon == icon && 'green'}`"
+                                  @click="createItem.taskTemplateIcon=icon"
+                                >
+                                  <v-img
+                                    max-height="30"
+                                    max-width="30"
+                                    :src="`/<$ ctx.app.config.appId $>/public/${icon}`"
+                                  ></v-img>
+                                </div>
+                              </div>
+                            </v-card>
+                          </v-menu>
+                        </v-col>
+
+                        <v-col cols="12" sm="12" md="4">
+                          <span class="jh-input-label">模板分组</span>
+                          <v-autocomplete
+                            class="jh-v-input"
+                            :items="constantObj.taskTemplateGroup"
+                            dense
+                            single-line
+                            filled
+                            v-model="createItem.taskTemplateGroup"
+                          ></v-autocomplete>
+                        </v-col>
+
+
+                      </v-row>
+                    </v-form>
+                  </v-stepper-content>
+                  <v-stepper-content step="2">
+                    <v-col cols="12" sm="12" md="12">
+                      <span class="jh-input-label">审批流程</span>
+                      <task-approval-workflow
+                        :approval-person-list.sync="createItem.taskTemplatePersonList"
+                        :notice-person-list.sync="createItem.taskTemplateNoticePersonList"
+                      />
+
+                  </v-stepper-content>
+
+                  </v-col>
+                  <v-stepper-content step="3">
+                    <v-col cols="12" sm="12" md="12">
+                      <span class="jh-input-label">审批表单配置</span>
+                      <form-item-list-generator
+                        :select-canva-id="selectCanvaId"
+                        :form-item-list="createItem.taskTemplateForm"
+                        @change="createItem.taskTemplateForm=$event"
+                      />
+                    </v-col>
+
+
+                  </v-stepper-content>
+                </v-stepper-items>
+              </v-stepper>
               <!-- 抽屉操作按钮 -->
               <v-row class="justify-end mx-0 mt-8 px-6">
                 <v-btn color="success" @click="doUiAction('createItem')" small
@@ -278,8 +322,9 @@
                   >取消</v-btn
                 >
               </v-row>
-            </v-form>
-            <!-- 抽屉关闭按钮 -->
+              <!-- 抽屉关闭按钮 -->
+
+
             <v-btn
               elevation="0"
               color="success"
@@ -314,97 +359,143 @@
                 >
               </v-row>
               <!-- 抽屉表单 -->
-              <v-row class="mt-0 px-4">
-                <!-- <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.xxxId" :rules="validationRules.requireRules"></v-text-field> -->
 
-                <v-col cols="12" sm="12" md="4">
-                  <span class="jh-input-label">任务模板名称</span>
-                  <v-text-field
-                    class="jh-v-input"
-                    dense
-                    single-line
-                    filled
-                    v-model="updateItem.taskTemplateName"
-                  ></v-text-field>
-                </v-col>
-                <v-col cols="12" sm="12" md="4">
-                  <span class="jh-input-label">模板icon</span>
-                  <v-menu
-                    :nudge-right="40"
-                    transition="scale-transition"
-                    offset-y
-                    min-width="auto"
-                    max-width="20%"
-                    max-height="60%"
+              <v-stepper v-model="stepNum">
+                <v-stepper-header>
+                  <v-stepper-step
+                    :complete="stepNum > 1"
+                    step="1"
+                    editable
                   >
-                    <template v-slot:activator="{ on, attrs }">
-                      <v-text-field
-                        class="jh-v-input"
-                        dense
-                        single-line
-                        filled
-                        v-model="updateItem.taskTemplateIcon"
-                        v-bind="attrs"
-                        v-on="on"
-                      >
-                        <template #prepend-inner>
-                          <v-img
-                            max-height="30"
-                            max-width="30"
-                            :src="`/<$ ctx.app.config.appId $>/public/${updateItem.taskTemplateIcon}`"
-                          ></v-img>
-                        </template>
-                        <template v-slot:append>
-                          <v-icon>mdi-menu-down</v-icon>
-                        </template>
-                      </v-text-field>
-                    </template>
-                    <v-card>
-                      <div class="d-flex flex-wrap">
-                        <div
-                          v-for="icon in materialDesignIcons"
-                          :class="`item-icon pa-1 ${updateItem.taskTemplateIcon == icon && 'green'}`"
-                          @click="updateItem.taskTemplateIcon=icon"
-                        >
-                          <v-img
-                            max-height="30"
-                            max-width="30"
-                            :src="`/<$ ctx.app.config.appId $>/public/${icon}`"
-                          ></v-img>
-                        </div>
-                      </div>
-                    </v-card>
-                  </v-menu>
-                </v-col>
+                    基础信息
+                  </v-stepper-step>
 
-                <v-col cols="12" sm="12" md="4">
-                  <span class="jh-input-label">模板分组</span>
-                  <v-autocomplete
-                    class="jh-v-input"
-                    :items="constantObj.taskTemplateGroup"
-                    dense
-                    single-line
-                    filled
-                    v-model="updateItem.taskTemplateGroup"
-                  ></v-autocomplete>
-                </v-col>
+                  <v-divider></v-divider>
+                  <v-stepper-step
+                    :complete="stepNum > 2"
+                    step="2"
+                    editable
+                  >
+                    审批流程
+                  </v-stepper-step>
 
-                <v-col cols="12" sm="12" md="12">
-                  <span class="jh-input-label">审批流程</span>
-                  <task-approval-workflow
-                    :approval-person-list.sync="updateItem.taskTemplatePersonList"
-                    :notice-person-list.sync="updateItem.taskTemplateNoticePersonList"
-                  />
-                </v-col>
-                <v-col cols="12" sm="12" md="12">
-                  <span class="jh-input-label">审批表单配置</span>
-                  <form-item-list-generator
-                    :select-canva-id="selectCanvaId"
-                    :form-item-list="updateItem.taskTemplateForm"
-                    @change="updateItem.taskTemplateForm=$event"
-                  />
-                </v-col>
-              </v-row>
+                  <v-divider></v-divider>
+
+                  <v-stepper-step
+                    :complete="stepNum > 3"
+                    step="3"
+                    editable
+                  >
+                    表单配置
+                  </v-stepper-step>
+                </v-stepper-header>
+
+                <v-stepper-items>
+                  <v-stepper-content step="1">
+                    <v-form>
+                      <v-row class="mt-0 px-4">
+                        <v-col cols="12" sm="12" md="4">
+                          <span class="jh-input-label">模板名称</span>
+                          <v-text-field
+                            class="jh-v-input"
+                            dense
+                            single-line
+                            filled
+                            v-model="updateItem.taskTemplateName"
+                          ></v-text-field>
+                        </v-col>
+                        <v-col cols="12" sm="12" md="4">
+                          <span class="jh-input-label">模板icon</span>
+                          <v-menu
+                            :nudge-right="40"
+                            transition="scale-transition"
+                            offset-y
+                            min-width="auto"
+                            max-width="20%"
+                            max-height="60%"
+                          >
+                            <template v-slot:activator="{ on, attrs }">
+                              <v-text-field
+                                class="jh-v-input"
+                                dense
+                                single-line
+                                filled
+                                v-model="updateItem.taskTemplateIcon"
+                                v-bind="attrs"
+                                v-on="on"
+                              >
+                                <template #prepend-inner>
+                                  <v-img
+                                    max-height="30"
+                                    max-width="30"
+                                    :src="`/<$ ctx.app.config.appId $>/public/${updateItem.taskTemplateIcon}`"
+                                  ></v-img>
+                                </template>
+                                <template v-slot:append>
+                                  <v-icon>mdi-menu-down</v-icon>
+                                </template>
+                              </v-text-field>
+                            </template>
+                            <v-card>
+                              <div class="d-flex flex-wrap">
+                                <div
+                                  v-for="icon in materialDesignIcons"
+                                  :class="`item-icon pa-1 ${updateItem.taskTemplateIcon == icon && 'green'}`"
+                                  @click="updateItem.taskTemplateIcon=icon"
+                                >
+                                  <v-img
+                                    max-height="30"
+                                    max-width="30"
+                                    :src="`/<$ ctx.app.config.appId $>/public/${icon}`"
+                                  ></v-img>
+                                </div>
+                              </div>
+                            </v-card>
+                          </v-menu>
+                        </v-col>
+
+                        <v-col cols="12" sm="12" md="4">
+                          <span class="jh-input-label">模板分组</span>
+                          <v-autocomplete
+                            class="jh-v-input"
+                            :items="constantObj.taskTemplateGroup"
+                            dense
+                            single-line
+                            filled
+                            v-model="updateItem.taskTemplateGroup"
+                          ></v-autocomplete>
+                        </v-col>
+
+
+                      </v-row>
+                    </v-form>
+                  </v-stepper-content>
+                  <v-stepper-content step="2">
+                    <v-col cols="12" sm="12" md="12">
+                      <span class="jh-input-label">审批流程</span>
+                      <task-approval-workflow
+                        :approval-person-list.sync="updateItem.taskTemplatePersonList"
+                        :notice-person-list.sync="updateItem.taskTemplateNoticePersonList"
+                      />
+
+                  </v-stepper-content>
+
+                  </v-col>
+                  <v-stepper-content step="3">
+                    <v-col cols="12" sm="12" md="12">
+                      <span class="jh-input-label">审批表单配置</span>
+                      <form-item-list-generator
+                        :select-canva-id="selectCanvaId"
+                        :form-item-list="updateItem.taskTemplateForm"
+                        @change="updateItem.taskTemplateForm=$event"
+                      />
+                    </v-col>
+
+
+                  </v-stepper-content>
+                </v-stepper-items>
+              </v-stepper>
+           
               <!-- 抽屉操作按钮 -->
               <v-row class="justify-end mx-0 mt-8 px-6">
                 <v-btn color="success" @click="doUiAction('updateItem')" small
@@ -417,7 +508,6 @@
                   >取消</v-btn
                 >
               </v-row>
-            </v-form>
             <!-- 抽屉关闭按钮 -->
             <v-btn
               elevation="0"
@@ -555,6 +645,7 @@
       materialDesignIcons,
 
       selectCanvaId: "",
+      stepNum: 1,
     }),
     watch: {
       isHelpPageDrawerShown(val) {
@@ -645,8 +736,11 @@
         ).data.appData.resultData.rows;
 
         rows.forEach((row) => {
-
-          ['taskTemplatePersonList', 'taskTemplateNoticePersonList', 'taskTemplateForm'].forEach(key => {
+          [
+            "taskTemplatePersonList",
+            "taskTemplateNoticePersonList",
+            "taskTemplateForm",
+          ].forEach((key) => {
             row[key] = JSON.parse(row[key] || "[]");
           });
         });
@@ -759,9 +853,7 @@
         data.taskTemplateNoticePersonList = JSON.stringify(
           data.taskTemplateNoticePersonList
         );
-        data.taskTemplateForm = JSON.stringify(
-          data.taskTemplateForm
-        );
+        data.taskTemplateForm = JSON.stringify(data.taskTemplateForm);
         this.updateActionData = data;
       },
 
@@ -837,4 +929,8 @@
   });
 </script>
 
-<style scoped></style>{% endblock %}
+<style scoped>
+  .v-stepper__wrapper {
+    overflow: visible;
+  }</style
+>{% endblock %}
