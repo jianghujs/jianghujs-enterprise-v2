@@ -33,6 +33,7 @@ class TicketService extends Service {
       auditedUsers.push(userId);
     }
     const auditConfig = JSON.parse(task.taskAuditConfig);
+    const noticeConfig = JSON.parse(task.taskNoticeConfig);
     const userAudit = auditConfig.find(item => item.userId === userId && !item.status);
     if (userAudit) {
       userAudit.username = username;
@@ -69,6 +70,9 @@ class TicketService extends Service {
         taskAuditConfig: JSON.stringify(auditConfig),
         ...updateTaskData,
       });
+
+      // TODO:taskStatus为已完成，将给所有抄送人发通知,noticeConfig
+
     })
 
 
