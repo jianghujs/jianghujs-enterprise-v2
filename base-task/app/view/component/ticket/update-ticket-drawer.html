@@ -190,15 +190,16 @@
         // }
         // throw new Error("请完善表单信息");
         this.updateItem.taskContent.forEach((item) => {
-          if (item.component.required && !!item.component.value) {
-            window.vtoast.fail("请完善表单信息");
-            throw new Error("请完善表单信息");
+          
+          if (item.component.required && _.isEmpty(item.component.value)) {
+            window.vtoast.fail(`[${item.component.label}]不能为空`);
+            throw new Error(`请完善表单信息`);
           }
         });
         // 审批人不能为空
         if (this.updateItem.taskAuditConfig.length === 0) {
-          window.vtoast.fail("审批人不能为空");
-          throw new Error("审批人不能为空");
+          window.vtoast.fail(`审批人不能为空`);
+          throw new Error(`审批人不能为空`);
         }
 
       },
