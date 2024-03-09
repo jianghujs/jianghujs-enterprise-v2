@@ -8,10 +8,11 @@
         small
         left
       >
-        <div class="font-weight-bold">审批人</div>
+        <div class="font-weight-bold">审批人<span class="red--text">*</span>
+        </span></div>
 
         <div class="d-flex flex-wrap">
-          <div cols="3" class="mr-2" v-for="item in approvalPersonList">
+          <div cols="3" class="mr-2 mb-2" v-for="item in approvalPersonList">
             <div class="small-card px-4">
               <v-avatar tile color="primary" size="25">
                 <span class="white--text">{{ item.username[0] }}</span>
@@ -26,7 +27,6 @@
               >
                 <v-icon>mdi-close</v-icon>
               </v-btn>
-
             </div>
           </div>
           <div

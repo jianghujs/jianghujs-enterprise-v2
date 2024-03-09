@@ -9,103 +9,94 @@
     width="80%"
     class="elevation-24"
   >
-    <v-form ref="createForm" lazy-validation>
-      <!-- 抽屉标题 -->
-      <v-row no-gutters>
-        <span class="text-h7 font-weight-bold pa-4"
-          >新建{{ticketApplyType}}</span
+    <!-- 抽屉标题 -->
+    <v-row no-gutters>
+      <span class="text-h7 font-weight-bold pa-4">新建{{ticketApplyType}}</span>
+    </v-row>
+    <v-divider class="jh-divider"></v-divider>
+    <!-- 抽屉表单 -->
+    <!-- <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.xxxId" :rules="validationRules.requireRules"></v-text-field> -->
+    <v-form ref="form" lazy-validation>
+      <v-row class="mt-0 px-4">
+        <v-col
+          cols="12"
+          sm="12"
+          md="12"
+          v-for="(item, index) in createItem.taskContent"
         >
-      </v-row>
-      <v-divider class="jh-divider"></v-divider>
-      <!-- 抽屉表单 -->
-      <!-- <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.xxxId" :rules="validationRules.requireRules"></v-text-field> -->
-      <v-form ref="form" lazy-validation>
-        <v-row class="mt-0 px-4">
-          <v-col
-            cols="12"
-            sm="12"
-            md="12"
-            v-for="(item, index) in createItem.taskContent"
+          <span class="jh-input-label">
+            <span v-if="item.component.required" class="red--text">*</span>
+            {{item.component.label}}</span
           >
-            <span class="jh-input-label">
-              <span v-if="item.component.required" class="red--text">*</span>
-              {{item.component.label}}</span
-            >
-            <v-menu
-              :close-on-content-click="false"
-              :nudge-right="40"
-              transition="scale-transition"
-              offset-y
-              min-width="auto"
-              v-if="item.component.type === 'date'"
-            >
-              <template v-slot:activator="{ on, attrs }">
-                <v-text-field
-                  class="jh-v-input"
-                  v-model="item.component.value"
-                  dense
-                  single-line
-                  filled
-                  v-bind="attrs"
-                  v-on="on"
-                  :required="item.component.required"
-                ></v-text-field>
-              </template>
-              <v-date-picker
+          <v-menu
+            :close-on-content-click="false"
+            :nudge-right="40"
+            transition="scale-transition"
+            offset-y
+            min-width="auto"
+            v-if="item.component.type === 'date'"
+          >
+            <template v-slot:activator="{ on, attrs }">
+              <v-text-field
+                class="jh-v-input"
                 v-model="item.component.value"
-                no-title
-                scrollable
-              ></v-date-picker>
-            </v-menu>
-
-            <task-attachment-list
-              :files="item.component.value"
-              v-else-if="item.component.type === 'file'"
-            ></task-attachment-list>
-            <component
-              v-else
-              class="jh-v-input"
+                dense
+                single-line
+                filled
+                v-bind="attrs"
+                v-on="on"
+                :rules="item.component.required && [v=> !!v || '必填']"
+              ></v-text-field>
+            </template>
+            <v-date-picker
               v-model="item.component.value"
-              :items="item.component.items.split(',')"
-              dense
-              single-line
-              filled
-              :key="index"
-              :required="item.component.required"
-              :is="item.component.tag"
-              :placeholder="`请输入${item.component.label}`"
-            ></component>
-          </v-col>
-          <v-col
-            cols="12"
-            sm="12"
-            md="12"
-          >
-            <span class="jh-input-label">
-              审批流程<span class="red--text">*</span>
-            </span>
+              no-title
+              scrollable
+            ></v-date-picker>
+          </v-menu>
 
-            <task-approval-workflow
-              :approval-person-list.sync="createItem.taskAuditConfig"
-              :notice-person-list.sync="createItem.taskNoticeConfig"
-            />
-          </v-col>
-        </v-row>
-      </v-form>
 
-      <!-- 抽屉操作按钮 -->
-      <v-row class="justify-end mx-0 mt-8 px-6">
-        <v-btn color="success" @click="doUiAction('createItem')" small
-          >保存</v-btn
-        >
-        <v-btn
-          class="elevation-0 ml-2"
-          @click="isCreateDrawerShown = false"
-          small
-          >取消</v-btn
-        >
+          <task-attachment-list
+            :files="item.component.value"
+            v-else-if="item.component.type === 'file'"
+          ></task-attachment-list>
+           
+
+          <component
+            v-else
+            class="jh-v-input"
+            v-model="item.component.value"
+            :items="item.component.items.split(',')"
+            dense
+            single-line
+            filled
+            :key="index"
+            :rules="item.component.required && [v=> !!v || '必填']"
+            :is="item.component.tag"
+            :placeholder="`请输入${item.component.label}`"
+          ></component>
+        </v-col>
+        <v-col cols="12" sm="12" md="12">
+          <span class="jh-input-label">
+            审批流程
+
+          <task-approval-workflow
+            :approval-person-list.sync="createItem.taskAuditConfig"
+            :notice-person-list.sync="createItem.taskNoticeConfig"
+          />
+        </v-col>
       </v-row>
     </v-form>
+
+    <!-- 抽屉操作按钮 -->
+    <v-row class="justify-end mx-0 mt-8 px-6">
+      <v-btn color="success" @click="doUiAction('createItem')" small
+        >保存</v-btn
+      >
+      <v-btn class="elevation-0 ml-2" @click="isCreateDrawerShown = false" small
+        >取消</v-btn
+      >
+    </v-row>
     <!-- 抽屉关闭按钮 -->
     <v-btn
       elevation="0"
@@ -162,8 +153,10 @@
 
         const { userId } = window.userInfo;
 
-        const taskAuditConfig = JSON.parse(item.taskTemplatePersonList || '[]')
-        const taskNoticeConfig = JSON.parse(item.taskTemplateNoticePersonList || '[]')
+        const taskAuditConfig = JSON.parse(item.taskTemplatePersonList || "[]");
+        const taskNoticeConfig = JSON.parse(
+          item.taskTemplateNoticePersonList || "[]"
+        );
         taskAuditConfig.forEach((item) => {
           item.readonly = true;
         });
@@ -173,9 +166,9 @@
 
         this.createItem = {
           taskTemplateNameId: item.taskTemplateNameId,
-          taskTitle: `${item.taskTemplateName}-${window.userInfo.username}-${
-            dayjs().format("YYYYMMDDHHmmss")
-          }`,
+          taskTitle: `${item.taskTemplateName}-${
+            window.userInfo.username
+          }-${dayjs().format("YYYYMMDDHHmmss")}`,
           taskAuditConfig,
           taskNoticeConfig,
           taskContent: JSON.parse(item.taskTemplateForm),
@@ -183,19 +176,27 @@
         };
       },
       // ---------- 新增数据 uiAction >>>>>>>>>> --------
-      async prepareCreateFormData() {
-      
-      },
+      async prepareCreateFormData() {},
 
       async openCreateDrawer() {
         this.isCreateDrawerShown = true;
       },
 
       async prepareCreateValidate() {
-        if (await this.$refs.createForm.validate()) {
-          return true;
+        // if (await this.$refs.form.validate()) {
+        //   return true;
+        // }
+        this.createItem.taskContent.forEach((item) => {
+          if (item.component.required && !!item.component.value) {
+            window.vtoast.fail("请完善表单信息");
+            throw new Error("请完善表单信息");
+          }
+        });
+        // 审批人不能为空
+        if (this.createItem.taskAuditConfig.length === 0) {
+          window.vtoast.fail("审批人不能为空");
+          throw new Error("审批人不能为空");
         }
-        throw new Error("请完善表单信息");
       },
 
       async confirmCreateItemDialog() {

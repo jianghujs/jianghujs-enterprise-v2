@@ -107,31 +107,20 @@
             >
               <template v-slot:item.taskTemplateName="{ item }">
                 <div class="d-flex align-center">
-                  <span
-                  v-if="item.taskTemplateIcon"
-                  class="pa-1 mr-1 row-icon"
-                >
-                  <v-img
-                    max-height="30"
-                    max-width="30"
-                    :src="`/<$ ctx.app.config.appId $>/public/${item.taskTemplateIcon}`"
-                  ></v-img>
-                </span>
+                  <span v-if="item.taskTemplateIcon" class="pa-1 mr-1 row-icon">
+                    <v-img
+                      max-height="30"
+                      max-width="30"
+                      :src="`/<$ ctx.app.config.appId $>/public/${item.taskTemplateIcon}`"
+                    ></v-img>
+                  </span>
 
-                {{item.taskTemplateName}}
+                  {{item.taskTemplateName}}
                 </div>
               </template>
               <!-- 表格操作按钮 -->
               <template v-slot:item.action="{ item }">
-                <span
-                  role="button"
-                  class="success--text font-weight-medium font-size-2 mr-2"
-                  @click="doUiAction('jumpTaskTemplateFormPage', item)"
-                >
-                  <v-icon size="16" class="success--text"
-                    >mdi-note-edit-outline</v-icon
-                  >表单配置
-                </span>
+             
                 <span
                   role="button"
                   class="success--text font-weight-medium font-size-2 mr-2"
@@ -225,7 +214,6 @@
                             max-width="30"
                             :src="`/<$ ctx.app.config.appId $>/public/${createItem.taskTemplateIcon}`"
                           ></v-img>
-
                         </template>
                         <template v-slot:append>
                           <v-icon>mdi-menu-down</v-icon>
@@ -261,11 +249,19 @@
                     v-model="createItem.taskTemplateGroup"
                   ></v-autocomplete>
                 </v-col>
-                <v-col cols="12" sm="12" md="4">
+                <v-col cols="12" sm="12" md="12">
                   <span class="jh-input-label">审批流程</span>
                   <task-approval-workflow
-                    :approval-person-list.sync="updateItem.taskTemplatePersonList"
-                    :notice-person-list.sync="updateItem.taskTemplateNoticePersonList"
+                    :approval-person-list.sync="createItem.taskTemplatePersonList"
+                    :notice-person-list.sync="createItem.taskTemplateNoticePersonList"
+                  />
+                </v-col>
+                <v-col cols="12" sm="12" md="12">
+                  <span class="jh-input-label">审批表单配置</span>
+                  <form-item-list-generator
+                    :select-canva-id="selectCanvaId"
+                    :form-item-list="createItem.taskTemplateForm"
+                    @change="createItem.taskTemplateForm=$event"
                   />
                 </v-col>
               </v-row>
@@ -357,7 +353,6 @@
                             max-width="30"
                             :src="`/<$ ctx.app.config.appId $>/public/${updateItem.taskTemplateIcon}`"
                           ></v-img>
-
                         </template>
                         <template v-slot:append>
                           <v-icon>mdi-menu-down</v-icon>
@@ -394,11 +389,19 @@
                   ></v-autocomplete>
                 </v-col>
 
-                <v-col cols="12" sm="12" md="4">
+                <v-col cols="12" sm="12" md="12">
                   <span class="jh-input-label">审批流程</span>
                   <task-approval-workflow
                     :approval-person-list.sync="updateItem.taskTemplatePersonList"
                     :notice-person-list.sync="updateItem.taskTemplateNoticePersonList"
+                  />
+                </v-col>
+                <v-col cols="12" sm="12" md="12">
+                  <span class="jh-input-label">审批表单配置</span>
+                  <form-item-list-generator
+                    :select-canva-id="selectCanvaId"
+                    :form-item-list="updateItem.taskTemplateForm"
+                    @change="updateItem.taskTemplateForm=$event"
                   />
                 </v-col>
               </v-row>
@@ -481,11 +484,16 @@
 {% endblock %} {% block vueScript %} {% include
 'common/jianghuJs/fixedTableHeightV4.html' %} {% include
 'common/constantUtil.html' %} {% include 'component/task-approval-workflow.html'
-%} {% include 'component/select-org-user-dialog.html' %}
+%} {% include 'component/select-org-user-dialog.html' %} {% include
+'common/assignmentUtil.html' %} {% include
+'component/taskTemplate/formItemListContent.html' %} {% include
+'component/taskTemplate/formItemListGenerator.html' %}
 
 <script src="/<$ ctx.app.config.appId $>/public/task-template-icons.js"></script>
 
 <script type="module">
+  window.eventBus = new Vue();
+
   new Vue({
     el: "#app",
     template: "#app-template",
@@ -545,6 +553,8 @@
       deleteItem: {},
       deleteItemId: null,
       materialDesignIcons,
+
+      selectCanvaId: "",
     }),
     watch: {
       isHelpPageDrawerShown(val) {
@@ -553,7 +563,11 @@
         }
       },
     },
-    async created() {},
+    created() {
+      eventBus.$on("updateSelectCanvaId", (val) => {
+        this.selectCanvaId = val;
+      });
+    },
     mounted() {
       this.doUiAction("getTableData");
     },
@@ -631,12 +645,10 @@
         ).data.appData.resultData.rows;
 
         rows.forEach((row) => {
-          row.taskTemplatePersonList = JSON.parse(
-            row.taskTemplatePersonList || "[]"
-          );
-          row.taskTemplateNoticePersonList = JSON.parse(
-            row.taskTemplateNoticePersonList || "[]"
-          );
+
+          ['taskTemplatePersonList', 'taskTemplateNoticePersonList', 'taskTemplateForm'].forEach(key => {
+            row[key] = JSON.parse(row[key] || "[]");
+          });
         });
         this.tableData = rows;
         this.isTableLoading = false;
@@ -674,11 +686,11 @@
         const { id, ...data } = this.createItem;
 
         data.taskTemplateCreateAt = dayjs().format("YYYY-MM-DD HH:mm:ss");
-        data.taskTemplateNoticePersonList = JSON.stringify(
-          data.taskTemplateNoticePersonList
-        );
-        data.taskTemplatePersonList = JSON.stringify(
-          data.taskTemplatePersonList
+
+        ["taskTemplatePersonList", "taskTemplateNoticePersonList"].forEach(
+          (key) => {
+            data[key] = JSON.stringify(data[key]);
+          }
         );
         this.createActionData = data;
       },
@@ -746,6 +758,9 @@
         );
         data.taskTemplateNoticePersonList = JSON.stringify(
           data.taskTemplateNoticePersonList
+        );
+        data.taskTemplateForm = JSON.stringify(
+          data.taskTemplateForm
         );
         this.updateActionData = data;
       },
