@@ -20,14 +20,13 @@ const actionDataScheme = Object.freeze({
   },
 });
 
-const appRootUrl = "https://foison06-exabytes.eggjs.tech"
 
 class NoticeService extends Service {
   // 添加审批通知
   async addApprovalNotice(actionData) {
     const { ctx } = this
     const { jianghuKnex, knex } = ctx.app;
-    const { wecom } = ctx.app.config;
+    const { wecom, appRootUrl } = ctx.app.config;
     const { username } = ctx.userInfo;
     let { rowId, taskAuditConfig, taskManagerId, taskTitle, taskContent, taskType, taskDesc, taskStatus, taskNoticeConfig } = actionData;
     taskAuditConfig = JSON.parse(taskAuditConfig)
