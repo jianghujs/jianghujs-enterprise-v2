@@ -6,8 +6,8 @@ const _ = require('lodash');
 const idGenerateUtil = require("@jianghujs/jianghu/app/common/idGenerateUtil");
 const wecomUtil = require('../common/wecomUtil.js')
 
-
 const dayjs = require('dayjs')
+
 const actionDataScheme = Object.freeze({
   addNotice: {
     type: 'object',
@@ -22,14 +22,60 @@ const actionDataScheme = Object.freeze({
 
 
 class NoticeService extends Service {
+  async _sendNotice(data) {
+    const { jianghuKnex, knex } = this.ctx.app;
+    let idSequence = await idGenerateUtil.idPlus({
+      knex,
+      tableName: 'task',
+      columnName: 'idSequence',
+    })
+    const { taskTitle, taskDesc, taskContent, allUserList, jumpUrl } = data
+
+    const taskId = `TZ${idSequence}`
+    const taskBizId = data.taskBizId || taskId
+
+    if (data.userId) {
+      await jianghuKnex(tableEnum.task).jhInsert({
+        taskBizId,
+        taskTitle,
+        taskContent,
+        taskDesc,
+        taskManagerId: data.userId,
+        idSequence,
+        taskType: '通知',
+        taskCreateAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+        taskId,
+      })
+    }
+
+    const approvalUser = allUserList.find(item => item.userId === data.userId) || {}
+
+    if (approvalUser.qiweiId) {
+      await wecomUtil.sendMessage({
+        msgtype: 'textcard',
+        touser: approvalUser.qiweiId,
+        textcard: {
+        "title": taskTitle,
+        "description": `
+          <div class="gray">${dayjs().format('YYYY年MM月DD日')}</div><div>${taskDesc}</div>
+        `,
+        "url": jumpUrl,
+        "btntxt": "详情"
+      },
+      })
+    }
+  }
   // 添加审批通知
   async addApprovalNotice(actionData) {
     const { ctx } = this
     const { jianghuKnex, knex } = ctx.app;
     const { wecom, appRootUrl } = ctx.app.config;
     const { username } = ctx.userInfo;
-    let { rowId, taskAuditConfig, taskManagerId, taskTitle, taskContent, taskType, taskDesc, taskStatus, taskNoticeConfig } = actionData;
+    let { rowId, taskAuditConfig, taskManagerId, taskTitle, taskDesc, taskStatus, taskNoticeConfig } = actionData;
     taskAuditConfig = JSON.parse(taskAuditConfig)
+
+    // 获取所有用户，用于取企微id
+    const allUserList = await jianghuKnex('_view01_user').select();
 
     // 业务id的获取
     let taskBizId = null
@@ -40,58 +86,43 @@ class NoticeService extends Service {
 
     // 只通知当前要审批的人
     const currentAuditUser = taskAuditConfig.find(item => !item.status) || {}
-
-    let idSequence = await idGenerateUtil.idPlus({
-      knex,
-      tableName: 'task',
-      columnName: 'idSequence',
-    })
-
-    const taskId = `TZ${idSequence}`
-    taskBizId = taskBizId || taskId
-
-    if (!taskDesc) {
-      taskDesc = `${username} 提交了<a href="${appRootUrl}/task/page/noticeManagement?taskId=${taskBizId}">《${taskTitle}》</a>，请及时处理`;
-      taskTitle = '待审批提醒';
-    }
+    const jumpUrl = `${appRootUrl}/task/page/noticeManagement?taskId=${taskBizId}`
 
     await wecomUtil.initConfig(wecom);
 
-    if (currentAuditUser.userId) {
-      await jianghuKnex(tableEnum.task).jhInsert({
+    // 给发起人发通知
+    if (taskStatus === '已拒绝') {
+      await this._sendNotice({
+        userId: taskManagerId,
         taskBizId,
-        taskTitle,
-        taskContent,
-        taskDesc,
-        taskManagerId: currentAuditUser.userId,
-        idSequence,
-        taskType: '通知',
-        taskCreateAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-        taskId,
+        jumpUrl,
+        taskDesc: `你提交的<a>《${taskTitle}》</a>，已被拒绝`,
+        taskTitle: '审批拒绝提醒',
+        allUserList,
       })
-    }
-    if (currentAuditUser.qiweiId) {
-      await wecomUtil.sendMessage({
-        msgtype: 'text',
-        touser: currentAuditUser.qiweiId,
-        text: {
-          content: taskDesc
-        }
-      })
+      return;
     }
 
-    
+    await this._sendNotice({
+      userId: currentAuditUser.userId,
+      taskBizId,
+      jumpUrl,
+      taskDesc: `${username} 提交了<a>《${taskTitle}》</a>，请及时处理`,
+      taskTitle: '待审批提醒',
+      allUserList,
+    })
+
+
     if (taskStatus === '已完成') {
       taskNoticeConfig = JSON.parse(taskNoticeConfig || '[]')
-      // 通知所有抄送人
-      const qiweiIdList = taskNoticeConfig.map(item=> item.qiweiId).filter(item=> item).join('|')
-      if (taskNoticeConfig.length) {
-        await wecomUtil.sendMessage({
-          msgtype: 'text',
-          touser: qiweiIdList,
-          text: {
-            content: `${username} 发起的<a href="${appRootUrl}/task/page/noticeManagement?taskId=${taskBizId}">《${taskTitle}》</a>，已经处理完成`
-          }
+      // 审批完成后，给所有抄送人发通知
+      for (let i = 0; i < taskNoticeConfig.length; i++) {
+        await this._sendNotice({
+          ...taskNoticeConfig[i],
+          allUserList,
+          jumpUrl,
+          taskTitle: '审批完成提醒',
+          taskDesc: `${username} 发起的<a>《${taskTitle}》</a>，已经处理完成`,
         })
       }
     }
@@ -247,11 +278,17 @@ class NoticeService extends Service {
     await wecomUtil.initConfig(wecom);
 
     await wecomUtil.sendMessage({
-      msgtype: 'text',
-      touser: 'ChuBing',
-      text: {
-        content: "测试"
-      }
+      "msgtype": 'textcard',
+      "touser": 'ChuBing',
+      "textcard": {
+        "title": "待审批提醒",
+        "description": `
+          <div class="gray">2016年9月26日</div><div>超级管理员提交了《xxx申请》</div><div class="highlight">请及时处理！</div>
+        `,
+        "url": "URL",
+        "btntxt": "更多"
+      },
+
     })
   }
 
