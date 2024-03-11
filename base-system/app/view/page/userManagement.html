@@ -679,14 +679,12 @@ new Vue({
       }
     },
     prepareDoUpdateItem() {
-      console.log("this.updateItem",this.updateItem);
       const {id, userId, ...data} = this.updateItem;
       this.updateUserId = userId
       this.updateActionData = data;
     },
     async doUpdateItem() {
       await window.vtoast.loading("保存中");
-      console.log(this.updateActionData);
       await window.jianghuAxios({
         data: {
           appData: {
@@ -696,6 +694,7 @@ new Vue({
               username: this.updateActionData.username,
               userStatus: this.updateActionData.userStatus,
               qiweiId: this.updateActionData.qiweiId,
+              groupId: this.updateActionData.groupId
             },
             where: {userId: this.updateUserId},
             taskNoticeList: [{
@@ -801,7 +800,11 @@ new Vue({
           appData: {
             pageId: 'userManagement',
             actionId: 'resetUserPassword',
-            actionData: {userId: this.resetPasswordUserId, clearTextPassword: this.clearTextPassword},
+            actionData: { 
+              userId: this.resetPasswordUserId, 
+              clearTextPassword: this.clearTextPassword,
+              groupId: this.userPasswordItem.groupId
+            },
             where: {},
             taskNoticeList: [{
               taskTitle: '修改密码',
