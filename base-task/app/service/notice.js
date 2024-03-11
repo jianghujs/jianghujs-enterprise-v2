@@ -51,18 +51,23 @@ class NoticeService extends Service {
     const approvalUser = allUserList.find(item => item.userId === data.userId) || {}
 
     if (approvalUser.qiweiId) {
-      await wecomUtil.sendMessage({
-        msgtype: 'textcard',
-        touser: approvalUser.qiweiId,
-        textcard: {
-        "title": taskTitle,
-        "description": `
-          <div class="gray">${dayjs().format('YYYY年MM月DD日')}</div><div>${taskDesc}</div>
-        `,
-        "url": jumpUrl,
-        "btntxt": "详情"
-      },
-      })
+      try {
+        await wecomUtil.sendMessage({
+          msgtype: 'textcard',
+          touser: approvalUser.qiweiId,
+          textcard: {
+          "title": taskTitle,
+          "description": `
+            <div class="gray">${dayjs().format('YYYY年MM月DD日')}</div><div>${taskDesc}</div>
+          `,
+          "url": jumpUrl,
+          "btntxt": "详情"
+        },
+        })
+      } catch (error) {
+        
+      }
+     
     }
   }
   // 添加审批通知
