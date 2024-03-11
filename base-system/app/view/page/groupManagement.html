@@ -400,8 +400,11 @@ new Vue({
           item.name = item.groupName;
           const children = rows.filter(child => {
             const parentPath = item.groupId ? item.groupId : item.groupPath + '-' + item.groupLastId;
-            return child.groupPath == parentPath;
-          });
+            return child.groupPath == parentPath
+          }).map(child=>{
+            child.principalId = child.principalId == null ? item.principalId : item.principalId + ',' + child.principalId
+            return child
+          })
           if (children.length) {
             if( item.groupId == "FS" || _.countBy(item.groupId)['-'] <= 1){
                 this.openIdList.push(item.groupId);

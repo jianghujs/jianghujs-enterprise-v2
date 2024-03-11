@@ -156,20 +156,29 @@ class UserGroupRoleService extends Service {
   //   }
   // }
 
-  async checkIsGroupPrincipal() {
+  async checkIsGroupPrincipalByInsert() {
     const { userId, userGroupRoleList } = this.ctx.userInfo;
     const { jianghuKnex } = this.app;
     // 兼容校验：新增用户校验、新增组织校验、给组织分配用户校验
     const { groupPath, groupId } = this.ctx.request.body.appData.actionData;
     let operationGroupId = groupPath || groupId
+    let isHasAuth = false
 
     // 管理员组可以操作所有组织
     if (!((userGroupRoleList.length > 0 && ['超级管理员'].indexOf(userGroupRoleList[userGroupRoleList.length - 1].groupId)) > -1)) {
-      const groupIdData = await jianghuKnex('enterprise_group').where({ groupId: operationGroupId }).where("principalId", "like", "%" + userId + "%").select();
-      if (groupIdData.length < 1) {
+      const groupIdData = await jianghuKnex('enterprise_group').where("principalId", "like", "%" + userId + "%").select();
+      if (groupIdData.length > 0) {
+        groupIdData.forEach(item => {
+          if (operationGroupId.includes(item.groupId)) {
+            isHasAuth = true
+          }
+        })
+      }
+      if (!isHasAuth) {
         throw new Error(`暂无权限，请联系管理员！`);
       }
     }
+    
   }
 }
 
