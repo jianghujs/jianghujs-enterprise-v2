@@ -206,7 +206,10 @@
             const children = rows.filter(child => {
               const parentPath = item.groupId ? item.groupId : item.groupPath + '-' + item.groupLastId;
               return child.groupPath == parentPath;
-            });
+            }).map(child=>{
+              child.principalId = child.principalId == null ? item.principalId : item.principalId + ',' + child.principalId
+              return child
+            })
             if (children.length) {
               // 展开到二级结构
               if( item.groupId == "FS" || _.countBy(item.groupId)['-'] <= 1){
