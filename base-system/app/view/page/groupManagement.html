@@ -52,9 +52,6 @@ SQL END!-->
       <!-- 页面内容 >>>>>>>>>>>>> -->
       <v-card class="rounded-lg">
         <v-row class="ma-0 pa-4 pb-2">
-          <!-- 新增按钮 -->
-          <v-btn color="success" class="elevation-0 mr-2" @click="doUiAction('startCreateItem')" small>新增
-          </v-btn>
           <v-spacer></v-spacer>
           <!-- 搜索过滤 -->
           <v-col cols="12" xs="8" sm="4" md="3" xl="2" class="pa-0">
@@ -114,12 +111,12 @@ SQL END!-->
             <!-- <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.xxxId" :rules="validationRules.requireRules"></v-text-field> -->
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">组织Id</span>
+              <span class="jh-input-label">组织Id<span class="red--text text--accent-2 ml-1">*必填</span></span>
               <v-text-field class="jh-v-input" dense single-line filled :prefix="createItem.groupPath + '-'" v-model="createItem.groupId" :rules="validationRules.requireRules"></v-text-field>
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">组织名称</span>
+              <span class="jh-input-label">组织名称<span class="red--text text--accent-2 ml-1">*必填</span></span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.groupName" :rules="validationRules.requireRules"></v-text-field>
             </v-col>
              
@@ -159,8 +156,8 @@ SQL END!-->
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">组织名称</span>
-              <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.groupName"></v-text-field>
+              <span class="jh-input-label">组织名称<span class="red--text text--accent-2 ml-1">*必填</span></span>
+              <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.groupName" :rules="validationRules.requireRules"></v-text-field>
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
@@ -269,10 +266,8 @@ new Vue({
     createActionData: {},
     isUpdateDrawerShown: false,
     updateItem: {},
-    updateItemId: null,
     updateActionData: {},
     deleteItem: {},
-    deleteItemId: null,
     setPrincipalItem:{},
     setPrincipalData:{},
     // 树形视图
@@ -448,10 +443,11 @@ new Vue({
     prepareDoCreateItem() {
       const {id, ...data} = this.createItem;
       this.createActionData = { 
-        groupId: data.groupPath + data.groupId,
-        groupLastId: data.groupLastId,
+        groupId: data.groupPath + '-' + data.groupId,
+        groupLastId: data.groupId,
         groupPath: data.groupPath,
         groupName: data.groupName,
+        groupDeptName: data.groupName,
         groupAllName: data.groupPathName == '' ? data.groupName : data.groupPathName + '-' + data.groupName 
       };
     },
@@ -501,8 +497,12 @@ new Vue({
 
     async prepareDoUpdateItem() {
       const {id, name, ...data} = this.updateItem;
-      this.updateItemId = id;
-      this.updateActionData = data;
+      this.updateActionData = {
+        groupId: data.groupId,
+        groupName: data.groupName,
+        groupAllName: _.slice(data.groupAllName, 0, _.lastIndexOf(data.groupAllName,'-')).join('-')+ '-' + data.groupName,
+        groupDesc: data.groupDesc
+      };
     },
 
     async doUpdateItem() {
@@ -514,7 +514,7 @@ new Vue({
             pageId: 'groupManagement',
             actionId: 'updateItem',
             actionData: this.updateActionData,
-            where: {id: this.updateItemId}
+            where: {groupId: this.updateActionData.groupId}
           }
         }
       })
@@ -527,7 +527,6 @@ new Vue({
       this.isUpdateDrawerShown = false;
       this.updateItem = {};
       this.updateActionData = null;
-      this.updateItemId = null;
     },
     // ---------- <<<<<<<<<<< 修改数据 uiAction ---------
     // ---------- 删除数据 uiAction >>>>>>>>>>>> --------
@@ -547,7 +546,6 @@ new Vue({
     },
     async prepareDoDeleteItem() {
       const {id} = this.deleteItem;
-      this.deleteItemId = id;
     },
     async doDeleteItem() {
       await window.vtoast.loading("删除数据");
@@ -567,7 +565,6 @@ new Vue({
     },
     async clearDeleteItem() {
       this.deleteItem = {};
-      this.deleteItemId = null;
     },
     // ---------- <<<<<<<<<<< 删除数据 uiAction ---------
     // ---------- 设置负责人 uiAction >>>>>>>>>>>> --------

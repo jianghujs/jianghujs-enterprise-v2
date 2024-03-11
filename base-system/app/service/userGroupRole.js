@@ -155,6 +155,22 @@ class UserGroupRoleService extends Service {
   //       }
   //   }
   // }
+
+  async checkIsGroupPrincipal() {
+    const { userId, userGroupRoleList } = this.ctx.userInfo;
+    const { jianghuKnex } = this.app;
+    // 兼容校验：新增用户校验、新增组织校验、给组织分配用户校验
+    const { groupPath, groupId } = this.ctx.request.body.appData.actionData;
+    let operationGroupId = groupPath || groupId
+
+    // 管理员组可以操作所有组织
+    if (!((userGroupRoleList.length > 0 && ['超级管理员'].indexOf(userGroupRoleList[userGroupRoleList.length - 1].groupId)) > -1)) {
+      const groupIdData = await jianghuKnex('enterprise_group').where({ groupId: operationGroupId }).where("principalId", "like", "%" + userId + "%").select();
+      if (groupIdData.length < 1) {
+        throw new Error(`暂无权限，请联系管理员！`);
+      }
+    }
+  }
 }
 
 module.exports = UserGroupRoleService;
