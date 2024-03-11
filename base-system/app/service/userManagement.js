@@ -8,6 +8,8 @@ const idGenerateUtil = require('@jianghujs/jianghu/app/common/idGenerateUtil');
 // ========================================常用 require end=============================================
 const _ = require('lodash');
 const md5 = require('md5-node');
+const dayjs = require('dayjs');
+
 const appDataSchema = Object.freeze({
   addUser: {
     type: 'object',
@@ -41,7 +43,7 @@ class UserManagementService extends Service {
     const { jianghuKnex } = this.app;
     const actionData = this.ctx.request.body.appData.actionData;
     validateUtil.validate(appDataSchema.addUser, actionData);
-    const { clearTextPassword } = actionData;
+    const { clearTextPassword, roleConfig, groupId } = actionData;
     const md5Salt = idGenerateUtil.randomString(12);
     const password = md5(`${clearTextPassword}_${md5Salt}`);
     const maxUserId = await jianghuKnex('_user').where("userId", "<>", "F10001").max('userId as maxUserId').first()
@@ -53,8 +55,22 @@ class UserManagementService extends Service {
     if (userExistCount > 0) {
       throw new BizError(errorInfoEnum.user_id_exist);
     }
-    const insertParams = _.pick(actionData, [ 'username', 'userStatus', 'qiweiId' ]);
-    await jianghuKnex('_user', this.ctx).insert({ ...insertParams, userId, password, clearTextPassword, md5Salt });
+    const insertParams = _.pick(actionData, ['username', 'userStatus', 'qiweiId']);
+    const roleInsertList = [];
+
+    roleConfig.forEach(item => {
+      roleInsertList.push({
+        userId,
+        roleId: item.roleId,
+        groupId: groupId,
+        roleDeadline: item.roleDeadline == -1 ? item.roleDeadline : dayjs().add(item.roleDeadline, 'day').format('YYYY-MM-DD')
+      })
+    })
+
+    if (roleInsertList.length > 0) {
+      await jianghuKnex('enterprise_user_group_role', this.ctx).insert(roleInsertList);
+    }
+    await jianghuKnex('_user', this.ctx).jhInsert({ ...insertParams, userId, password, clearTextPassword, md5Salt });
     await this.service.app.buildUserApp(userId);
     return {};
   }
