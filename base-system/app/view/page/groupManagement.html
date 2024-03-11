@@ -500,7 +500,7 @@ new Vue({
       this.updateActionData = {
         groupId: data.groupId,
         groupName: data.groupName,
-        groupAllName: _.slice(data.groupAllName, 0, _.lastIndexOf(data.groupAllName,'-')).join('-')+ '-' + data.groupName,
+        groupAllName: _.slice(data.groupAllName, 0, _.lastIndexOf(data.groupAllName,'-')).join('')+ '-' + data.groupName,
         groupDesc: data.groupDesc
       };
     },
