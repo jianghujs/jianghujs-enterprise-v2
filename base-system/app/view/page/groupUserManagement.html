@@ -27,7 +27,7 @@
         <v-row no-gutters>
           <v-col cols="3" md="3" xl="2" class="pr-2">
             <v-card class="rounded-lg" style="overflow: hidden;">
-              <select-group-tree @change-active="changeActiveGroup" @change-group-list="constantObj.groupList = $event"></select-group-tree>
+              <select-group-tree @change-active="changeActiveGroup" @check-principal-auth="setPrincipalAuth" @change-group-list="constantObj.groupList = $event"></select-group-tree>
             </v-card>
           </v-col>
           <v-col cols="9" md="9" xl="10">
@@ -55,7 +55,8 @@
               <v-tabs-items v-model="tabActive">
                 <v-tab-item>
                   <!-- <group-role-page :app-list="constantObj.appList" :role-list="constantObj.roleList" :loading="isAppLoading" v-model="activePageList" :group="activeGroup" @change-role="changeRole" @refresh-role-list="getRoleData"></group-role-page> -->
-                  <group-user :table-data="tableData" :role-list="constantObj.roleList" :loading="isAppLoading" v-model="activePageList" :groupId="activeGroup" @refresh-role-list="getTableData" @get-role-data="getRoleData"></group-user>
+                  <group-user :table-data="tableData" :role-list="constantObj.roleList" :loading="isAppLoading" v-model="activePageList" 
+                    :groupId="activeGroup" @refresh-role-list="getTableData" @get-role-data="getRoleData" :isPrincipal="isPrincipal"></group-user>
                 </v-tab-item>
               </v-tabs-items>
             </v-card>
@@ -146,7 +147,7 @@ new Vue({
     activeGroupPath: null,
 
     activePageList: [],
-    authType: 'group',
+    isPrincipal: false
   },
   computed: {
     tabList() {
@@ -162,9 +163,6 @@ new Vue({
       if (val == 1) {
         this.doUiAction('getUserGroupRolePage');
       }
-    },
-    activePageList(val) {
-      console.log('activePageList', val)
     }
   },
   async created() {
@@ -287,6 +285,10 @@ new Vue({
       }
       this.getTableData();
     },
+    setPrincipalAuth(item){
+      this.isPrincipal = 
+        _.map(window.userInfo.userGroupRoleList, "groupId").join(',').includes('超级管理员') || item.principalId.includes(window.userInfo.userId)
+    }
   }
 })
 </script>

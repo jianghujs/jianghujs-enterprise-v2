@@ -231,6 +231,7 @@
         }
         const item = this.tableData.find(item => item.groupId === event[0]);
         this.$emit('change-active', item);
+        this.$emit('check-principal-auth', item);
       },
       // 重写搜索方法
       filter (value, search) {

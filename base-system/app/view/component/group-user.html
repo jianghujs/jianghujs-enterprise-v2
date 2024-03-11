@@ -4,22 +4,24 @@
         <v-row class="ma-0"> 
           <v-col cols="12" class="pa-2">
             <v-row class="ma-0 pa-1">
-              <v-col cols="12" sm="4" md="4" xl="2" class="pa-0">
-                <div class="d-flex align-center py-0">
-                    <!-- 新增按钮 -->
-                    <v-btn color="success" small @click="doUiAction('startCreateItem')">新增</v-btn> 
-                    <v-checkbox
-                      v-model="isContainSub"
-                      label="包含子部门"
-                      class="ml-2"
-                    ></v-checkbox>
-                </div>
-                </v-col>
-                <v-spacer></v-spacer>
-                <!--搜索过滤-->
+              <template v-if="isPrincipal">
                 <v-col cols="12" sm="4" md="4" xl="2" class="pa-0">
-                    <v-text-field v-model="searchInput" prefix="搜索：" class="jh-v-input" dense filled single-line></v-text-field>
+                  <div class="d-flex align-center py-0">
+                      <!-- 新增按钮 -->
+                      <v-btn color="success" small @click="doUiAction('startCreateItem')">新增</v-btn> 
+                      <v-checkbox
+                        v-model="isContainSub"
+                        label="包含子部门"
+                        class="ml-2"
+                      ></v-checkbox>
+                  </div>
                 </v-col>
+              </template>
+              <v-spacer></v-spacer>
+              <!--搜索过滤-->
+              <v-col cols="12" sm="4" md="4" xl="2" class="pa-0">
+                  <v-text-field v-model="searchInput" prefix="搜索：" class="jh-v-input" dense filled single-line></v-text-field>
+              </v-col>
             </v-row>
             <v-row  class="ma-0 pa-1">
               <v-col cols="12" class="pa-0">
@@ -294,6 +296,10 @@
         groupId: {
           type: String,
           default: ''
+        },
+        isPrincipal: {
+          type: Boolean,
+          default: false
         },
       },
       vuetify: new Vuetify(),
