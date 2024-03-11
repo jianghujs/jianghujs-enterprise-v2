@@ -278,7 +278,7 @@
 
                         <v-col cols="12" sm="12" md="4">
                           <span class="jh-input-label">模板分组（支持输入自定义分组）</span>
-                          <v-combobox v-model="createItem.taskTemplateGroup" :items="constantObj.taskTemplateGroup.map(item=> item.text)" chips deletable-chips class="jh-v-input " dense
+                          <v-combobox v-model="createItem.taskTemplateGroup" :items="constantObj.taskTemplateGroup" chips deletable-chips class="jh-v-input " dense
                             filled single-line small hide-actions hide-controls hide-details>
                             <template v-slot:selection="data">
                               <v-chip small>{{createItem.taskTemplateGroup}}</v-chip>
@@ -462,7 +462,7 @@
 
                         <v-col cols="12" sm="12" md="4">
                           <span class="jh-input-label">模板分组（支持输入自定义分组）</span>
-                          <v-combobox v-model="updateItem.taskTemplateGroup" :items="constantObj.taskTemplateGroup.map(item=> item.text)" chips deletable-chips class="jh-v-input " dense
+                          <v-combobox v-model="updateItem.taskTemplateGroup" :items="constantObj.taskTemplateGroup" chips deletable-chips class="jh-v-input " dense
                             filled single-line small hide-actions hide-controls hide-details>
                             <template v-slot:selection="data">
                               <v-chip small>{{updateItem.taskTemplateGroup}}</v-chip>
