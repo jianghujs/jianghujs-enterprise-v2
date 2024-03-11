@@ -169,6 +169,20 @@ class NoticeService extends Service {
     })
     this.ctx.response.body.appData.resultData.rows = rows;
   }
+
+  // 测试企微通知
+  async testQiWeiNotice() {
+    const { wecom } = this.ctx.app.config;
+    await wecomUtil.initConfig(wecom);
+
+    await wecomUtil.sendMessage({
+      msgtype: 'text',
+      touser: 'ChuBing',
+      text: {
+        content: "测试"
+      }
+    })
+  }
 }
 
 module.exports = NoticeService;

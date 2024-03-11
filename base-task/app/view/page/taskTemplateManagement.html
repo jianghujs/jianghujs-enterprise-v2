@@ -77,6 +77,13 @@
                 small
                 >新增
               </v-btn>
+              <v-btn
+                color="success"
+                class="elevation-0 mr-2"
+                @click="doUiAction('testQiWeiNotice')"
+                small
+                >测试企微通知
+              </v-btn>
               <v-spacer></v-spacer>
               <!-- 搜索过滤 -->
               <v-col cols="12" xs="8" sm="4" md="3" xl="2" class="pa-0">
@@ -703,6 +710,9 @@
           case "jumpTaskTemplateFormPage":
             await this.jumpTaskTemplateFormPage(uiActionData);
             break;
+          case 'testQiWeiNotice':
+            await this.testQiWeiNotice(uiActionData);
+            break;
           default:
             console.error("[doUiAction] uiActionId not find", { uiActionId });
             break;
@@ -925,6 +935,18 @@
           "_blank"
         );
       },
+
+      async testQiWeiNotice() {
+        await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: "taskTemplateManagement",
+              actionId: "testQiWeiNotice",
+              actionData: {},
+            },
+          },
+        });
+      }
     },
   });
 </script>
