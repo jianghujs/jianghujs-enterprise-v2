@@ -16,6 +16,7 @@ module.exports = appInfo => {
       agentId: '12345',
       apiHost: 'https://qyapi.weixin.qq.com',
     },
+    appRootUrl: '',
     static: {
       maxAge: 0,
       buffer: false,

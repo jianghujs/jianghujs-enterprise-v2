@@ -19,17 +19,92 @@ const actionDataScheme = Object.freeze({
     }
   },
 });
+
+
 class NoticeService extends Service {
+  // 添加审批通知
+  async addApprovalNotice(actionData) {
+    const { ctx } = this
+    const { jianghuKnex, knex } = ctx.app;
+    const { wecom, appRootUrl } = ctx.app.config;
+    const { username } = ctx.userInfo;
+    let { rowId, taskAuditConfig, taskManagerId, taskTitle, taskContent, taskType, taskDesc, taskStatus, taskNoticeConfig } = actionData;
+    taskAuditConfig = JSON.parse(taskAuditConfig)
+
+    // 业务id的获取
+    let taskBizId = null
+    if (rowId) {
+      const task = await jianghuKnex(tableEnum.task).where({ id: rowId }).first();
+      taskBizId = task.taskId
+    }
+
+    // 只通知当前要审批的人
+    const currentAuditUser = taskAuditConfig.find(item => !item.status) || {}
+
+    let idSequence = await idGenerateUtil.idPlus({
+      knex,
+      tableName: 'task',
+      columnName: 'idSequence',
+    })
+
+    const taskId = `TZ${idSequence}`
+    taskBizId = taskBizId || taskId
+
+    if (!taskDesc) {
+      taskDesc = `${username} 提交了<a href="${appRootUrl}/task/page/noticeManagement?taskId=${taskBizId}">《${taskTitle}》</a>，请及时处理`;
+      taskTitle = '待审批提醒';
+    }
+
+    await wecomUtil.initConfig(wecom);
+
+    if (currentAuditUser.userId) {
+      await jianghuKnex(tableEnum.task).jhInsert({
+        taskBizId,
+        taskTitle,
+        taskContent,
+        taskDesc,
+        taskManagerId: currentAuditUser.userId,
+        idSequence,
+        taskType: '通知',
+        taskCreateAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+        taskId,
+      })
+    }
+    if (currentAuditUser.qiweiId) {
+      await wecomUtil.sendMessage({
+        msgtype: 'text',
+        touser: currentAuditUser.qiweiId,
+        text: {
+          content: taskDesc
+        }
+      })
+    }
+
+    
+    if (taskStatus === '已完成') {
+      taskNoticeConfig = JSON.parse(taskNoticeConfig || '[]')
+      // 通知所有抄送人
+      const qiweiIdList = taskNoticeConfig.map(item=> item.qiweiId).filter(item=> item).join('|')
+      if (taskNoticeConfig.length) {
+        await wecomUtil.sendMessage({
+          msgtype: 'text',
+          touser: qiweiIdList,
+          text: {
+            content: `${username} 发起的<a href="${appRootUrl}/task/page/noticeManagement?taskId=${taskBizId}">《${taskTitle}》</a>，已经处理完成`
+          }
+        })
+      }
+    }
+  }
 
   // 添加消息通知
   async addNotice(actionData) {
     validateUtil.validate(actionDataScheme.addNotice, actionData);
-    const { ctx} = this
+    const { ctx } = this
     const { jianghuKnex, knex } = ctx.app;
     const { wecom } = ctx.app.config;
     const { username } = ctx.userInfo;
     let { rowId, taskMemberIdList, taskManagerId, taskTitle, taskContent, taskType, taskDesc } = actionData;
-    await wecomUtil.initConfig(wecom);
 
     let taskBizId = null
     // 根据rowId查task的taskId
@@ -47,6 +122,7 @@ class NoticeService extends Service {
     if (!taskMemberIdList.length) {
       return
     }
+
 
     // 合并taskMemberIdList和taskManagerId，要去重
     if (taskManagerId) {
@@ -102,13 +178,8 @@ class NoticeService extends Service {
 
 
     await jianghuKnex(tableEnum.task).jhInsert(insertData)
-    // await wecomUtil.sendMessage({
-    //   msgtype: 'text',
-    //   touser: '',
-    //   text: {
-    //     content: taskDesc
-    //   }
-    // })
+
+
   }
 
   // 更新所有未读消息为【已读】
@@ -148,11 +219,11 @@ class NoticeService extends Service {
 
     const rows = this.ctx.response.body.appData.resultData.rows
 
-    rows.forEach(row=> {
-      let appItem = enterpriseAppList.find(app=> app.appId == row.appId) || {}
+    rows.forEach(row => {
+      let appItem = enterpriseAppList.find(app => app.appId == row.appId) || {}
       // 如果a标签href包含全路径，http或者https，则不替换
       if (row.taskDesc.includes('http') || row.taskDesc.includes('https')) return;
-      
+
       if (!row.taskDesc.includes('href')) {
         // 没有路径的话，就默认noticeManagement页面
         row.taskDesc = row.taskDesc.replace(/<a>/g, `<a href="${appItem.appUrl}/page/noticeManagement?taskId=${row.taskBizId}" target="_blank">`)
@@ -160,7 +231,7 @@ class NoticeService extends Service {
         // 取row.taskDesc中a标签的appId
         const appIdMatch = row.taskDesc.match(/href="\/(.*?)\//)
         if (appIdMatch) {
-          appItem = enterpriseAppList.find(app=> app.appId == appIdMatch[1]) || {}
+          appItem = enterpriseAppList.find(app => app.appId == appIdMatch[1]) || {}
         }
         // 有路径的话，加上全路径
         appItem.appUrl = appItem.appUrl.replace(`/${appItem.appId}`, '');
@@ -183,6 +254,7 @@ class NoticeService extends Service {
       }
     })
   }
+
 }
 
 module.exports = NoticeService;

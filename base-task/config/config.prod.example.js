@@ -9,6 +9,7 @@ module.exports = appInfo => {
     appDirectoryLink: '/directory',
     authTokenKey: 'directory',
     loginPage: '/directory/page/login',
+    appRootUrl: '',
     jiangHuConfig: {
       packageIdCheck: true,
       updateRequestDemoAndResponseDemo: false,

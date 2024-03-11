@@ -58,11 +58,11 @@ class TicketService extends Service {
     // 使用事务更新
     await jianghuKnex.transaction(async trx => {
       // 通知下申请人
-      await this.ctx.service.notice.addNotice({
-        taskMemberIdList: [task.taskManagerId],
-        taskTitle: `审批进度提醒`,
-        taskDesc: `${username} ${userAudit.status}了您<a>《${task.taskTitle}》</a>，请知晓`,
-      })
+      // await this.ctx.service.notice.addNotice({
+      //   taskMemberIdList: [task.taskManagerId],
+      //   taskTitle: `审批进度提醒`,
+      //   taskDesc: `${username} ${userAudit.status}了您<a>《${task.taskTitle}》</a>，请知晓`,
+      // })
 
       // 更新task
       await jianghuKnex(tableEnum.task).where({ taskId }).update({
@@ -72,10 +72,12 @@ class TicketService extends Service {
       });
 
       // TODO:taskStatus为已完成，将给所有抄送人发通知,noticeConfig
-
+      await this.ctx.service.notice.addApprovalNotice({
+        ...task,
+        ...updateTaskData,
+        taskAuditConfig: JSON.stringify(auditConfig)
+      })
     })
-
-
   }
 }
 
