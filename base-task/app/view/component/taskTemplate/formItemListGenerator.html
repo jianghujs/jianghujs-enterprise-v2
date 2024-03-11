@@ -1,7 +1,7 @@
 <template id="form-item-list-generator">
   <v-card
     color="#f5f8fa"
-    style="max-height: 350px"
+    style="max-height: 500px"
     :class="{'d-flex': !isMobile, 'form-item-list-generator-content': !isMobile}"
   >
     <v-card
@@ -38,7 +38,7 @@
 
     <v-card
       class="formItemList pt-5 px-4"
-      style="position: relative; max-height: 100%; overflow-y: auto"
+      style="position: relative;height:500px; overflow-y: auto"
     >
       <div class="d-flex justify-end">
         <!--v-btn small color="primary" @click="$emit('onImportQuestionBank')" class="mr-2">
@@ -70,12 +70,12 @@
       <div v-if="selectCanvaId && selectedFormItem">
         <v-row no-gutters>
           <v-col cols="12" md="12" class="mt-2">
-              <span class="jh-input-label">标签</span>
+              <span class="jh-input-label">名称</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="selectedFormItem.component.label"></v-text-field>
           </v-col>
           <v-col cols="12" md="12" class="mt-2">
-            <span class="jh-input-label">是否必填</span>
-            <v-switch class="jh-v-input mt-0 pt-0" dense single-line filled v-model="selectedFormItem.component.required"></v-switch>
+            <span class="jh-input-label">其他可选</span>
+            <v-checkbox label="必填" class="jh-v-input mt-0 pt-0" dense single-line filled v-model="selectedFormItem.component.required"></v-checkbox>
         </v-col>
         <v-col cols="12" md="12" class="mt-2" v-if="selectedFormItem.component.type == 'select'">
           <span class="jh-input-label">选项(英文逗号分隔)</span>
@@ -120,14 +120,14 @@
           typeDesc: "单行文本框",
           type: "input",
           tag: "v-text-field",
-          icon: "mdi-form-textarea",
+          icon: "mdi-format-text-rotation-none",
           label: '单行文本框',
         },
         {
           typeDesc: "日期选择框",
           type: "date",
           tag: "v-date-picker",
-          icon: "mdi-form-textarea",
+          icon: "mdi-calendar-range",
           label: '日期选择框',
         },
         {
@@ -141,17 +141,17 @@
           typeDesc: "选择框",
           type: "select",
           tag: "v-autocomplete",
-          icon: "mdi-form-textarea",
+          icon: "mdi-select",
           label: '选择框',
         },
-        { typeDesc: "复选框", type: "checkbox", tag: "v-checkbox", icon: "mdi-form-textarea", label: '复选框', },
-        { typeDesc: "单选框", type: "radio", tag: "v-radio", icon: "mdi-form-textarea", label: '单选框', },
-        { typeDesc: "开关", type: "switch", tag: "v-switch", icon: "mdi-form-textarea", label: '开关', },
+        { typeDesc: "复选框", type: "checkbox", tag: "v-checkbox", icon: "mdi-checkbox-outline", label: '复选框', },
+        { typeDesc: "单选框", type: "radio", tag: "v-radio", icon: "mdi-radiobox-marked", label: '单选框', },
+        { typeDesc: "开关", type: "switch", tag: "v-switch", icon: "mdi-toggle-switch-off-outline", label: '开关', },
         {
           typeDesc: "上传文件",
           type: "file",
           tag: "v-file-input",
-          icon: "mdi-form-textarea",
+          icon: "mdi-file-account-outline",
           label: '上传文件',
         },
       ],

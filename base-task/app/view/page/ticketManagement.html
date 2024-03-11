@@ -314,9 +314,12 @@ include 'common/constant.html' %} {% include
       headers: [
         { text: "审批ID", value: "taskId", width: 120 },
         { text: "审批名称", value: "taskTitle", width: 250 },
+        { text: "发起人", value: "username", width: 120 },
+        { text: "发起时间", value: "taskCreateAt", width: 120 },
         { text: "审批状态", value: "taskStatus", width: 120 },
+        { text: "审批类型", value: "taskTemplateName", width: 120 },
         { text: "审批人", value: "taskAuditUserIdList", width: 120 },
-        { text: "已审批人", value: "taskAuditedUserIdList", width: 120 },
+        { text: "历史审批", value: "taskAuditedUserIdList", width: 120 },
         { text: "操作者", value: "operationByUser", width: 120 },
         { text: "操作时间", value: "operationAt", width: 250 },
         {
@@ -387,7 +390,7 @@ include 'common/constant.html' %} {% include
           await window.jianghuAxios({
             data: {
               appData: {
-                pageId: "ticketSubmitManagement",
+                pageId: "ticketManagement",
                 actionId: "selectItemList",
                 actionData: {},
                 whereLike: whereData,
@@ -443,7 +446,7 @@ include 'common/constant.html' %} {% include
         await window.jianghuAxios({
           data: {
             appData: {
-              pageId: "ticketSubmitManagement",
+              pageId: "ticketManagement",
               actionId: "updateItem",
               actionData: {
                 taskStatus: "已撤销",
