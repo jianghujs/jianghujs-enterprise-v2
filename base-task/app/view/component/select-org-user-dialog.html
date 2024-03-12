@@ -61,7 +61,7 @@
         <v-btn color="primary" text @click="doUiAction('confirm')">
           确定
         </v-btn>
-        <v-btn text @click="show=false"> 取消 </v-btn>
+        <v-btn text @click="$emit('update:show', false)"> 取消 </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -142,12 +142,9 @@
             await this.getUserList(uiActionData);
             await this.buildTreeData();
             break;
-          case "open":
-            await this.open(uiActionData);
-            break;
           case "confirm":
             this.$emit("confirm", this.selectedItems);
-            this.show = false;
+            this.$emit("update:selectedIds", this.selectedIds);
             break;
           default:
             console.error("[doUiAction] uiActionId not find", { uiActionId });
@@ -220,9 +217,6 @@
         this.treeData = treeData;
       },
 
-      async open() {
-        this.show = true;
-      },
     },
   });
 </script>

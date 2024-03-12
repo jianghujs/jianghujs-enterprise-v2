@@ -71,7 +71,7 @@
       </v-timeline-item>
     </v-timeline>
     <select-org-user-dialog
-      :show="isDialogShown"
+      :show.sync="isDialogShown"
       :selected-ids.sync="selectedIds"
       :selected-origin-items="selectedItems"
       @confirm="doUiAction('addPerson', $event)"
