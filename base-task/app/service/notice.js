@@ -133,6 +133,16 @@ class NoticeService extends Service {
     }
   }
 
+  // 添加公告通知
+  async addAfficheNotice(actionData) {
+    const { ctx } = this
+    const { jianghuKnex, knex } = ctx.app;
+    const { wecom } = ctx.app.config;
+    const { username } = ctx.userInfo;
+    let { rowId, taskMemberIdList, taskManagerId, taskTitle, taskContent, taskType, taskDesc } = actionData;
+
+  }
+
   // 添加消息通知
   async addNotice(actionData) {
     validateUtil.validate(actionDataScheme.addNotice, actionData);
@@ -158,7 +168,6 @@ class NoticeService extends Service {
     if (!taskMemberIdList.length) {
       return
     }
-
 
     // 合并taskMemberIdList和taskManagerId，要去重
     if (taskManagerId) {
@@ -214,8 +223,6 @@ class NoticeService extends Service {
 
 
     await jianghuKnex(tableEnum.task).jhInsert(insertData)
-
-
   }
 
   // 更新所有未读消息为【已读】
