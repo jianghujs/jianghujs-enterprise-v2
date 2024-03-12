@@ -389,7 +389,7 @@
       // ---------- 删除通知 >>>>>>>>>>>>> ----------
       async doDeleteItem({ item }) {
         const { id } = item;
-        await window.jhMask.show();
+        
         await window.vtoast.loading("删除数据");
         await window.jianghuAxios({
           data: {
@@ -400,7 +400,7 @@
             },
           },
         });
-        await window.jhMask.hide();
+        
         await window.vtoast.success("删除数据成功");
       },
       // ---------- <<<<<<<<<<<<< 删除通知 ----------

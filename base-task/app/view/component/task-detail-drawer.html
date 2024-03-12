@@ -201,7 +201,7 @@
         }
       },
       async updateTask() {
-        await window.jhMask.show();
+        
         await window.vtoast.loading("更新数据");
 
         const { id, ...data } = this.detail
@@ -225,7 +225,7 @@
             }
           }
         })
-        await window.jhMask.hide();
+        
         await window.vtoast.success("更新数据成功");
         this.$emit('save')
       },
