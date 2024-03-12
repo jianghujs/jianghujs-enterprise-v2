@@ -71,7 +71,7 @@
                 <v-icon size="16" class="primary--text">mdi-note-edit-outline</v-icon>预览
               </span>
               <span v-if="item.taskStatus==='草稿'" role="button" class="primary--text font-weight-medium font-size-2" @click="doUiAction('startUpdateItem', { item })">
-                <v-icon size="16" class="primary--text">mdi-trash-can-outline</v-icon>修改
+                <v-icon size="16" class="primary--text">mdi-note-edit-outline</v-icon>修改
               </span>
             </template>
             <!-- <template v-slot:item.taskTitle="{ item }">
@@ -588,15 +588,15 @@
       },
 
       prepareDoUpdateItem({ taskStatus }) {
-        const { id, taskNoticeConfig, taskMemberIdList, taskContent } = this.updateItem;
-
-        const data = {}
-        data.taskNoticeConfig = JSON.stringify(taskNoticeConfig);
-        data.taskStatus = taskStatus;
-        data.taskMemberIdList = taskMemberIdList.join(',');
-        data.taskContent = taskContent;
+        const { id, taskNoticeConfig, taskMemberIdList, taskContent, taskTitle } = this.updateItem;
         
-        this.updateActionData = data;
+        this.updateActionData = {
+          taskNoticeConfig: JSON.stringify(taskNoticeConfig),
+          taskStatus,
+          taskTitle,
+          taskContent,
+          taskMemberIdList: taskMemberIdList.join(',')
+        };
         this.updateId = id;
       },
 
@@ -615,7 +615,7 @@
         await window.vtoast.success("更新草稿成功");
 
         if (this.updateActionData.taskStatus === '已发送') {
-          await this.addNotice({
+          this.addNotice({
             ...this.updateActionData,
             rowId: this.updateId,
           });

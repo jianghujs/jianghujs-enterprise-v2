@@ -177,6 +177,7 @@
         <view-task-detail-drawer ref="taskDetail" />
         <view-notice-detail-drawer ref="noticeDetail" />
         <view-ticket-drawer ref="ticketDetail" />
+        <view-affiche-drawer ref="afficheDrawer" />
 
         <select-org-user-dialog
         :show.sync="isDialogShown"
@@ -209,9 +210,11 @@
 'common/jianghuJs/fixedTableHeightV4.html' %} {% include
 'component/view-journal-detail-drawer.html' %} {% include
 'component/view-notice-detail-drawer.html' %} {% include
-'component/view-task-detail-drawer.html' %} {% include
-'component/ticket/view-ticket-drawer.html' %} {% include 'common/constant.html'
-%} {% include 'component/select-org-user-dialog.html' %}
+'component/view-task-detail-drawer.html' %}
+{% include 'component/ticket/view-ticket-drawer.html' %}
+{% include 'component/view-affiche-drawer.html' %}
+{% include 'common/constant.html'%}
+{% include 'component/select-org-user-dialog.html' %}
 
 <link
   rel="stylesheet"
@@ -489,6 +492,8 @@
           this.$refs.journalDetail.doUiAction("open", { taskId });
         } else if (taskId.includes("TZ")) {
           this.$refs.noticeDetail.doUiAction("open", { taskId });
+        } else if(taskId.includes("GG")) {
+          this.$refs.afficheDrawer.doUiAction("open", { taskId });
         }
       },
       // ---------- <<<<<<<<<<<<< 初始化页面时参数处理 ----------

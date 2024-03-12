@@ -169,6 +169,7 @@ class NoticeService extends Service {
       return
     }
 
+
     // 合并taskMemberIdList和taskManagerId，要去重
     if (taskManagerId) {
       taskMemberIdList = _.union(taskMemberIdList, [taskManagerId])
@@ -269,7 +270,11 @@ class NoticeService extends Service {
 
       if (!row.taskDesc.includes('href')) {
         // 没有路径的话，就默认noticeManagement页面
-        row.taskDesc = row.taskDesc.replace(/<a>/g, `<a href="${appItem.appUrl}/page/noticeManagement?taskId=${row.taskBizId}" target="_blank">`)
+        let defaultPageId = 'noticeManagement'
+        if (row.taskType === '公告') {
+          defaultPageId = 'afficheViewer'
+        }
+        row.taskDesc = row.taskDesc.replace(/<a>/g, `<a href="${appItem.appUrl}/page/${defaultPageId}?taskId=${row.taskBizId}" target="_blank">`)
       } else {
         // 取row.taskDesc中a标签的appId
         const appIdMatch = row.taskDesc.match(/href="\/(.*?)\//)

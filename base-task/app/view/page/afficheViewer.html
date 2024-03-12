@@ -42,6 +42,15 @@
                 </div>
                 <!-- 文档正文 -->
                 <div class="jianghu-doc-contentDoc-content">
+                  <v-skeleton-loader
+                    v-bind="{
+                      class: 'mb-6',
+                      boilerplate: true,
+                      elevation: 2,
+                    }"
+                    type="article"
+                    v-if="isLoading"
+                  ></v-skeleton-loader>
                   <div class="jianghu-doc-contentDoc-main">
                     <div class="jianghu-doc-contentDoc-main-edit-links">
                       <span>
@@ -134,6 +143,8 @@
       articleId: null,
       article: {},
       pageUrl: "/" + window.appInfo.appId + "/page/",
+
+      isLoading: true,
     }),
     computed: {
      
@@ -180,6 +191,7 @@
         }
       },
       async getArticleDetail() {
+        this.isLoading = true
         const result = await window.jianghuAxios({
           data: {
             appData: {
@@ -191,6 +203,7 @@
             }
           }
         })
+        this.isLoading = false
         const article = result.data.appData.resultData.rows[0] || {}
 
         // article.taskContent = article.taskContent.replaceAll('__appId__', '<$ ctx.app.config.appId $>')

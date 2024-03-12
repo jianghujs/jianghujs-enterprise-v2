@@ -1,0 +1,65 @@
+<template id="view-affiche-drawer">
+  <v-navigation-drawer v-model="isDrawerShown" :permanent="isDrawerShown" fixed temporary right width="80%"
+    class="elevation-24">
+    <!-- 抽屉标题 -->
+    <v-row no-gutters>
+      <span class="text-h7 font-weight-bold pa-4">查看公告</span>
+    </v-row>
+    <v-divider class="jh-divider"></v-divider>
+    <!-- 抽屉表单 -->
+    <iframe v-if="url" style="width: 100%; height: 100%" :url="url"></iframe>
+
+    <!-- 抽屉关闭按钮 -->
+    <v-btn elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn"
+      @click="isDrawerShown = false">
+      <v-icon>mdi-close</v-icon>
+    </v-btn>
+  </v-navigation-drawer>
+</template>
+
+<script type="module">
+  Vue.component("view-affiche-drawer", {
+    template: '#view-affiche-drawer',
+    data: () => ({
+      isDrawerShown: false,
+      detail: {},
+      isLoading: false,
+      url: ""
+    }),
+    created() {
+    },
+    methods: {
+      async doUiAction(uiActionId, uiActionData) {
+        switch (uiActionId) {
+          case 'open':
+            await this.open(uiActionData);
+            break;
+          default:
+            console.error("[doUiAction] uiActionId not find", { uiActionId });
+            break;
+        }
+      },
+      async open({ taskId }) {
+        this.isDrawerShown = true;
+        this.url = `${window.location.origin}/<$ ctx.app.config.appId $>/page/afficheViewer?taskId=${taskId}`;
+      },
+    },
+  })
+</script>
+<style scoped>
+  .text-decoration-line-through {
+    text-decoration: line-through;
+  }
+
+  .todo-item {
+    padding: 4px 0 4px 4px;
+  }
+
+  .todo-item input {
+    padding: 0;
+  }
+
+  .todo-item-text {
+    width: 100%;
+  }
+</style>
