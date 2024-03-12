@@ -56,18 +56,18 @@ class NoticeService extends Service {
           msgtype: 'textcard',
           touser: approvalUser.qiweiId,
           textcard: {
-          "title": taskTitle,
-          "description": `
+            "title": taskTitle,
+            "description": `
             <div class="gray">${dayjs().format('YYYY年MM月DD日')}</div><div>${taskDesc}</div>
           `,
-          "url": jumpUrl,
-          "btntxt": "详情"
-        },
+            "url": jumpUrl,
+            "btntxt": "详情"
+          },
         })
       } catch (error) {
-        
+
       }
-     
+
     }
   }
   // 添加审批通知
@@ -92,8 +92,6 @@ class NoticeService extends Service {
     // 只通知当前要审批的人
     const currentAuditUser = taskAuditConfig.find(item => !item.status) || {}
     const jumpUrl = `${appRootUrl}/task/page/noticeManagement?taskId=${taskBizId}`
-
-    await wecomUtil.initConfig(wecom);
 
     // 给发起人发通知
     if (taskStatus === '已拒绝') {

@@ -1,4 +1,5 @@
 'use strict';
+const wecomUtil = require('./app/common/wecomUtil.js')
 
 // app.js
 class AppBootHook {
@@ -9,6 +10,12 @@ class AppBootHook {
   async serverDidReady() {
   }
 
+  async didReady() {
+    const { wecom } = this.ctx.app.config
+    if (wecom) {
+      await wecomUtil.initConfig(wecom);
+    }
+  }
 }
 
 module.exports = AppBootHook;

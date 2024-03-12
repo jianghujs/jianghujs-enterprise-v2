@@ -46,7 +46,7 @@
                   filled
                   v-bind="attrs"
                   v-on="on"
-                  disabled
+                  readonly
                   :required="item.component.required"
                 ></v-text-field>
               </template>
@@ -70,7 +70,7 @@
               single-line
               :items="item.component.items.split(',')"
               filled
-              disabled
+              readonly
               :key="index"
               :required="item.component.required"
               :is="item.component.tag"
@@ -119,6 +119,11 @@
               </v-col>
               </v-row>
         </v-col>
+
+        <v-col cols="12" sm="12" md="12">
+          <span class="jh-input-label">评论</span>
+          <task-comment-list :comments.sync="updateItem.taskCommentList" @confirm="postComment" />
+        </v-col>
       </v-row>
       
     <!-- 抽屉关闭按钮 -->
@@ -138,7 +143,7 @@
     </v-btn>
   </v-navigation-drawer>
 </template>
-
+{% include 'component/task-comment-list.html' %}
 <script type="module">
   Vue.component("view-ticket-drawer", {
     template: "#view-ticket-drawer",
@@ -146,7 +151,8 @@
     data: () => ({
       isUpdateDrawerShown: false,
 
-      updateItem: {},
+      updateItem: {
+      },
 
       isAudited: false,
       validationRules: {
@@ -170,6 +176,11 @@
       ],
       remark: '',
     }),
+    watch: {
+      isUpdateDrawerShown(val) {
+        if (!val) this.remark = null
+      }
+    },
     computed: {
       // 上一个人是否审批过，对比taskAuditUserIdList和taskAuditedUserIdList
       // 上一个人审批了，才能审批
@@ -220,7 +231,6 @@
         }
       },
       async open({ item = {}, taskId } = {}) {
-        this.isUpdateDrawerShown = true;
         let updateItem = item
         if (taskId) {
           this.taskId = taskId
@@ -230,8 +240,11 @@
         newItem.taskAuditConfig = JSON.parse(newItem.taskAuditConfig);
         newItem.taskNoticeConfig = JSON.parse(newItem.taskNoticeConfig);
         newItem.taskContent = JSON.parse(newItem.taskContent);
+        newItem.taskCommentList = JSON.parse(newItem.taskCommentList || '[]');
         this.isAudited = (newItem.taskAuditedUserIdList || '').includes(window.userInfo.userId)
         this.updateItem = newItem;
+        this.isUpdateDrawerShown = true;
+
       },
       async getTaskDetail() {
         const rows = (await window.jianghuAxios({
@@ -286,7 +299,21 @@
       async close() {
         this.isUpdateDrawerShown = false;
       },
-      
+
+      async postComment() {
+        const { id, ...data } = this.updateItem
+        data.taskCommentList = JSON.stringify(data.taskCommentList)
+        await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'allPage',
+              actionId: 'updateTask',
+              actionData: { taskCommentList: data.taskCommentList },
+              where: { id },
+            }
+          }
+        })
+      },
     },
   });
 </script>
