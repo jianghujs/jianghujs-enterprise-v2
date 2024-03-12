@@ -55,7 +55,7 @@ class UserManagementService extends Service {
     if (userExistCount > 0) {
       throw new BizError(errorInfoEnum.user_id_exist);
     }
-    const insertParams = _.pick(actionData, ['username', 'userStatus', 'qiweiId']);
+    const insertParams = _.pick(actionData, ['username', 'userStatus', 'qiweiId', 'phoneNumber', 'email']);
     const roleInsertList = [];
 
     roleConfig.forEach(item => {
@@ -103,6 +103,22 @@ class UserManagementService extends Service {
     // 如果是管理员就看到全部数据
     if (!(userGroupRoleList.length > 0 && userGroupIdList.includes('超级管理员'))) {
       this.ctx.response.body.appData.resultData.rows = rows.filter(item => _.some(principalGroupIdList, e => item.groupId && item.groupId.includes(e)))
+    }
+  }
+
+  async filterGroupByAuth() {
+    const { jianghuKnex } = this.app;
+    const { userId, userGroupRoleList } = this.ctx.userInfo;
+    const { rows } = this.ctx.response.body.appData.resultData;
+
+    const principalGroupIdList = rows.filter(item => item.principalId?.includes(userId))
+
+    // 管理员看到全部数据
+    const userGroupIdList = _.map(userGroupRoleList, "groupId").join(',')
+    if (!(userGroupRoleList.length > 0 && userGroupIdList.includes('超级管理员'))) {
+      this.ctx.response.body.appData.resultData.rows = rows.filter(item => _.some(principalGroupIdList, e => item.groupId && item.groupId.includes(e.groupId)))
+    } else {
+      this.ctx.response.body.appData.resultData.rows = rows
     }
   }
 }

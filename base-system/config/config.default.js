@@ -17,7 +17,7 @@ module.exports = appInfo => {
     appLogo: `${appId}/public/img/logo.png`,
     appType: 'multiApp',
     appDirectoryLink: '/directory',
-    indexPage: `/${appId}/page/appManagement`,
+    indexPage: `/${appId}/page/userManagement`,
     loginPage: `/${appId}/page/login`,
     helpPage: `/${appId}/page/help`,
 

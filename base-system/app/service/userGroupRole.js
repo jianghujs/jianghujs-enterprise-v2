@@ -198,7 +198,6 @@ class UserGroupRoleService extends Service {
         groupIdData.forEach(item => {
           if (operationGroupId.includes(item.groupId)) {
             isHasAuth = true
-            delete this.ctx.request.body.appData.actionData.groupId
           }
         })
       }
@@ -206,7 +205,7 @@ class UserGroupRoleService extends Service {
         throw new Error(`暂无权限，请联系管理员！`);
       }
     }
-
+    delete this.ctx.request.body.appData.actionData.groupId
   }
 }
 

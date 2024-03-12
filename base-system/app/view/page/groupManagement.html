@@ -75,24 +75,52 @@ SQL END!-->
             :active="selectedItem"
           >
 
+          <template v-slot:label="{ item }">
+            {{item.groupName + ' (' + item.groupId + ')'}}
+          </template>
           <template v-slot:append="{ item, open }">
-            <template v-if="constantObj.userGroupRoleList.includes('超级管理员')">
-              <span>{{item.groupId ? item.groupId : item.groupPath + '-' + item.groupLastId}}</span>
-
+            <!-- <template v-if="constantObj.userGroupRoleList.includes('超级管理员')">
               <v-icon size="20" class="ml-2" color="blue" @click.stop="doUiAction('startSetPrincipal', item)">
                 mdi-account-details-outline
               </v-icon>
-            </template>
+            </template> -->
             <template v-if="constantObj.userGroupRoleList.includes('超级管理员') || (item.principalId?.split(',') || []).includes(userInfo.userId)">
-              <v-icon size="20" class="ml-2" color="success" @click.stop="doUiAction('startCreateItem', item)">
-                mdi-plus
-              </v-icon>
-              <v-icon size="20" class="ml-2" color="orange" @click.stop="doUiAction('startUpdateItem', item)">
-                mdi-note-edit-outline
-              </v-icon>
-              <v-icon size="20" class="ml-2" color="red" @click.stop="doUiAction('deleteItem', item)">
-                mdi-trash-can-outline
-              </v-icon>
+              <v-btn
+                  color="success" 
+                  class="white--text mr-2"
+                  @click.stop="doUiAction('startCreateItem', item)"
+                  small
+                  outlined
+                >
+                <v-icon size="20" color="success" >
+                  mdi-plus
+                </v-icon>
+                新增下属组织
+              </v-btn>
+              <v-btn
+                  color="orange" 
+                  class="white--text mr-2"
+                  @click.stop="doUiAction('startUpdateItem', item)"
+                  outlined
+                  small
+                >
+                <v-icon size="20" color="orange" >
+                  mdi-note-edit-outline
+                </v-icon>
+                修改组织信息
+              </v-btn>
+              <v-btn
+                  color="red" 
+                  class="white--text"
+                  @click.stop="doUiAction('deleteItem', item)"
+                  small
+                  outlined
+                >
+                <v-icon size="20" color="red" >
+                  mdi-trash-can-outline
+                </v-icon>
+                删除组织
+              </v-btn>
             </template>
           </template>
         </v-treeview>
@@ -604,6 +632,7 @@ new Vue({
       })
     },
     closeSetPrincipalDialog(){
+      this.setPrincipalItem = {}
       this.isSetPrincipalDialog = false
     },
     // 重写搜索方法
