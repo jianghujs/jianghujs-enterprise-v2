@@ -22,6 +22,7 @@ module.exports = {
      _user_group_role_ui_level: '_user_group_role_ui_level',
      _user_session: '_user_session',
      _app_account: '_app_account',
+     _constant_ui: '_constant_ui',
      // ========================应用表============================
      task: 'task',
      enterprise_app: 'enterprise_app'

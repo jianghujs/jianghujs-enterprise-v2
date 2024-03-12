@@ -191,7 +191,10 @@
             }
           }
         })
-        this.article = result.data.appData.resultData.rows[0] || {};
+        const article = result.data.appData.resultData.rows[0] || {}
+
+        // article.taskContent = article.taskContent.replaceAll('__appId__', '<$ ctx.app.config.appId $>')
+        this.article = article;
       },
       resourceUrl(path) {
         if (!path) {
