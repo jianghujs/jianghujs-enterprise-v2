@@ -55,7 +55,7 @@ class UserManagementService extends Service {
     if (userExistCount > 0) {
       throw new BizError(errorInfoEnum.user_id_exist);
     }
-    const insertParams = _.pick(actionData, ['username', 'userStatus', 'qiweiId']);
+    const insertParams = _.pick(actionData, ['username', 'userStatus', 'qiweiId', 'phoneNumber', 'email']);
     const roleInsertList = [];
 
     roleConfig.forEach(item => {

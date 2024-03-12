@@ -79,11 +79,11 @@ SQL END!-->
             {{item.groupName + ' (' + item.groupId + ')'}}
           </template>
           <template v-slot:append="{ item, open }">
-            <template v-if="constantObj.userGroupRoleList.includes('超级管理员')">
+            <!-- <template v-if="constantObj.userGroupRoleList.includes('超级管理员')">
               <v-icon size="20" class="ml-2" color="blue" @click.stop="doUiAction('startSetPrincipal', item)">
                 mdi-account-details-outline
               </v-icon>
-            </template>
+            </template> -->
             <template v-if="constantObj.userGroupRoleList.includes('超级管理员') || (item.principalId?.split(',') || []).includes(userInfo.userId)">
               <v-btn
                   color="success" 
