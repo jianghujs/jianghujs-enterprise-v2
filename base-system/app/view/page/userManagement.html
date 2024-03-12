@@ -598,7 +598,7 @@ new Vue({
           appData: {
             pageId: 'userManagement',
             actionId: 'getGroupList',
-            whereLike: whereLike
+            orderBy: [{column: 'groupId', order: 'asc'}]
           }
         }
       });
