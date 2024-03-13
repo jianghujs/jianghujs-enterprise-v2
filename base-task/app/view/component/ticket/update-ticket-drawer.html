@@ -96,7 +96,7 @@
 
         <v-col cols="12" sm="12" md="12" v-if="updateItem.taskManagerId===userId">
           <span class="jh-input-label">评论列表
-            <span class="grey--text text-caption">(评论将自动通知审批发起人、当前及之前节点的审批人)</span>
+            <span class="grey--text text-caption">(评论将自动通知当前及之前节点的审批人)</span>
           </span>
           <task-comment-list :comments.sync="updateItem.taskCommentList" @confirm="postComment" />
         </v-col>

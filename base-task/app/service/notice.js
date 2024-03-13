@@ -134,24 +134,14 @@ class NoticeService extends Service {
   // 添加评论通知
   async addCommentNotice(actionData) {
     const { ctx } = this
-    const { jianghuKnex, knex } = ctx.app;
-    const { wecom, appRootUrl } = ctx.app.config;
+    const { jianghuKnex } = ctx.app;
+    const { appRootUrl } = ctx.app.config;
     const { username } = ctx.userInfo;
     let { taskId, taskAuditConfig, taskManagerId, taskTitle } = actionData;
 
-     // 获取所有用户，用于取企微id
-     const allUserList = await jianghuKnex('_view01_user').select();
-     const jumpUrl = `${appRootUrl}/task/page/noticeManagement?taskId=${taskId}`
-
-    // 给发起人发通知，taskManagerId是发起人
-    // await this._sendNotice({
-    //   userId: taskManagerId,
-    //   taskBizId: taskId,
-    //   jumpUrl,
-    //   taskDesc: `${username} 评论了<a>《${taskTitle}》</a>`,
-    //   taskTitle: '评论提醒',
-    //   allUserList,
-    // })
+    // 获取所有用户，用于取企微id
+    const allUserList = await jianghuKnex('_view01_user').select();
+    const jumpUrl = `${appRootUrl}/task/page/noticeManagement?taskId=${taskId}`
 
     // 给当前和当前之前的所有审批人发通知，taskAuditConfig都为false，就只通知第一个
     // 如果有status为true的都通知，并且再往后一个也通知
