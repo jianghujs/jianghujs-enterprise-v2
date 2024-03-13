@@ -137,7 +137,7 @@ class NoticeService extends Service {
     const { jianghuKnex, knex } = ctx.app;
     const { wecom, appRootUrl } = ctx.app.config;
     const { username } = ctx.userInfo;
-    let { taskBizId, taskMemberIdList, taskAuditConfig, taskManagerId, taskTitle, taskContent, taskType, taskDesc } = actionData;
+    let { taskId, taskAuditConfig, taskManagerId, taskTitle } = actionData;
 
      // 获取所有用户，用于取企微id
      const allUserList = await jianghuKnex('_view01_user').select();
@@ -146,7 +146,7 @@ class NoticeService extends Service {
     // 给发起人发通知，taskManagerId是发起人
     await this._sendNotice({
       userId: taskManagerId,
-      taskBizId,
+      taskBizId: taskId,
       jumpUrl,
       taskDesc: `${username} 评论了<a>《${taskTitle}》</a>`,
       taskTitle: '评论提醒',
@@ -160,7 +160,7 @@ class NoticeService extends Service {
     // 只通知当前要审批的人
     await this._sendNotice({
       userId: currentAuditUser.userId,
-      taskBizId,
+      taskBizId: taskId,
       jumpUrl,
       taskDesc: `${username} 评论了<a>《${taskTitle}》</a>，请及时处理`,
       taskTitle: '评论提醒',
