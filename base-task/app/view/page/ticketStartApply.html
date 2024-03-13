@@ -71,48 +71,7 @@
 
           <create-ticket-drawer ref="createTicketDrawer" />
 
-          <v-dialog ref="fileDrawer" v-model="isFileDrawerShow" hide-overlay fullscreen transition="dialog-bottom-transition">
-            <v-card>
-              <v-toolbar
-                  dark
-                  width="100%"
-                  style="background-color: #fff;"
-              >
-                <div class="black--text ml-2" style="font-size: 16px;">选择素材</div>
-                <v-spacer></v-spacer>
-                <v-toolbar-items>
-                  <v-btn
-                      text
-                      @click="isFileDrawerShow = false"
-                  >
-                    <v-icon class="black--text">mdi-close</v-icon>
-                  </v-btn>
-                </v-toolbar-items>
-              </v-toolbar>
-              <v-divider style="border-color: #eff2f5;opacity:0.8;"></v-divider>
-              <file-browser
-                ref="fileBrowser"
-                v-if="isFileDrawerShow"
-                @use-material="doUiAction('useMaterial', $event)"
-                @close-material-picker="doUiAction('closeMaterialPicker')"
-                :material-type="materialType"
-                :material-dir="material.dir"
-                use-file-btn
-                page-id="allPage"
-                :operation-option="{delete: true, recycle: true, copy: true, renameFile: true}"
-              >
-                <template slot="importMaterial">
-                  <import-material 
-                    @close-material-picker="closeImportMaterialPicker" 
-                    @use-material="useMaterial"
-                    :material-type="materialType"
-                    page-id="allPage"
-                  >
-                  </import-material>
-                </template>
-              </file-browser>
-            </v-card>
-          </v-dialog>
+     
         </div>
 
         <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
@@ -192,13 +151,6 @@
       taskTemplateList: [],
       taskTemplateGroupList: [],
       isLoading: true,
-
-      isFileDrawerShow: false,
-      materialType: '',
-      material: {
-        dir: 'taskMaterial',
-        path: ''
-      },
     }),
     watch: {},
     created() {
@@ -241,28 +193,6 @@
         this.isLoading = false;
       },
 
-      async useMaterial({ path, dir }) {
-        let filename, downloadPath = null;
-        const resultData = (await window.jianghuAxios({
-          data: {
-            appData: {
-              pageId: 'allPage',
-              actionId: 'useMaterial',
-              actionData: {
-                path,
-                fromDir: dir,
-                toDir: this.material.dir
-              },
-            }
-          }
-        })).data.appData.resultData;
-        filename = resultData.filename;
-        downloadPath = resultData.downloadPath;
-
-        this.isFileDrawerShow = false;
-        this.editHandlerWhenUseMaterial(filename, downloadPath);
-        
-      },
     },
     
   });

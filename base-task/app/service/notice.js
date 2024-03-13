@@ -36,7 +36,9 @@ class NoticeService extends Service {
       },
     });
   }
-  async _createNotice(jianghuKnex, task) {
+  async _createTask(task) {
+    const { jianghuKnex } = this.ctx.app;
+
     return jianghuKnex(tableEnum.task).jhInsert({
       ...task,
       taskType: '通知',
@@ -59,7 +61,7 @@ class NoticeService extends Service {
     let taskBizId = data.taskBizId || taskId
 
     if (userId) {
-      await this._createNotice({
+      await this._createTask({
         taskBizId,
         taskTitle,
         taskContent,
