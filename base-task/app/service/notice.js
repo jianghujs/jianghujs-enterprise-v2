@@ -56,18 +56,18 @@ class NoticeService extends Service {
           msgtype: 'textcard',
           touser: approvalUser.qiweiId,
           textcard: {
-          "title": taskTitle,
-          "description": `
+            "title": taskTitle,
+            "description": `
             <div class="gray">${dayjs().format('YYYY年MM月DD日')}</div><div>${taskDesc}</div>
           `,
-          "url": jumpUrl,
-          "btntxt": "详情"
-        },
+            "url": jumpUrl,
+            "btntxt": "详情"
+          },
         })
       } catch (error) {
-        
+
       }
-     
+
     }
   }
   // 添加审批通知
@@ -92,8 +92,6 @@ class NoticeService extends Service {
     // 只通知当前要审批的人
     const currentAuditUser = taskAuditConfig.find(item => !item.status) || {}
     const jumpUrl = `${appRootUrl}/task/page/noticeManagement?taskId=${taskBizId}`
-
-    await wecomUtil.initConfig(wecom);
 
     // 给发起人发通知
     if (taskStatus === '已拒绝') {
@@ -168,6 +166,7 @@ class NoticeService extends Service {
     if (!taskMemberIdList.length) {
       return
     }
+
 
     // 合并taskMemberIdList和taskManagerId，要去重
     if (taskManagerId) {
@@ -269,7 +268,11 @@ class NoticeService extends Service {
 
       if (!row.taskDesc.includes('href')) {
         // 没有路径的话，就默认noticeManagement页面
-        row.taskDesc = row.taskDesc.replace(/<a>/g, `<a href="${appItem.appUrl}/page/noticeManagement?taskId=${row.taskBizId}" target="_blank">`)
+        let defaultPageId = 'noticeManagement'
+        if (row.taskType === '公告') {
+          defaultPageId = 'afficheViewer'
+        }
+        row.taskDesc = row.taskDesc.replace(/<a>/g, `<a href="${appItem.appUrl}/page/${defaultPageId}?taskId=${row.taskBizId}" target="_blank">`)
       } else {
         // 取row.taskDesc中a标签的appId
         const appIdMatch = row.taskDesc.match(/href="\/(.*?)\//)

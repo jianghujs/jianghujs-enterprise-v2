@@ -834,7 +834,7 @@
       },
 
       async doCreateItem() {
-        await window.jhMask.show();
+        
         await window.vtoast.loading("新增数据");
         await window.jianghuAxios({
           data: {
@@ -851,7 +851,7 @@
             },
           },
         });
-        await window.jhMask.hide();
+        
         await window.vtoast.success("新增数据成功");
       },
       async closeCreateDrawer() {
@@ -902,7 +902,7 @@
       },
 
       async doUpdateItem() {
-        await window.jhMask.show();
+        
         await window.vtoast.loading("修改数据");
         await window.jianghuAxios({
           data: {
@@ -915,7 +915,7 @@
           },
         });
 
-        await window.jhMask.hide();
+        
         await window.vtoast.success("修改数据成功");
       },
 

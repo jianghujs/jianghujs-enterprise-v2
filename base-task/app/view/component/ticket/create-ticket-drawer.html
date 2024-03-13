@@ -88,6 +88,7 @@
       </v-row>
     </v-form>
 
+
     <!-- 抽屉操作按钮 -->
     <v-row class="justify-end mx-0 mt-8 px-6">
       <v-btn color="success" @click="doUiAction('createItem')" small
@@ -230,7 +231,7 @@
       },
 
       async doCreateItem() {
-        await window.jhMask.show();
+        
         await window.vtoast.loading("新增数据");
         const result = await window.jianghuAxios({
           data: {
@@ -253,7 +254,7 @@
           rowId: result.data.appData.resultData.rows[0],
         });
 
-        await window.jhMask.hide();
+        
         await window.vtoast.success("新增数据成功");
       },
       async closeCreateDrawer() {

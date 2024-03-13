@@ -71,7 +71,7 @@
                 <v-icon size="16" class="primary--text">mdi-note-edit-outline</v-icon>预览
               </span>
               <span v-if="item.taskStatus==='草稿'" role="button" class="primary--text font-weight-medium font-size-2" @click="doUiAction('startUpdateItem', { item })">
-                <v-icon size="16" class="primary--text">mdi-trash-can-outline</v-icon>修改
+                <v-icon size="16" class="primary--text">mdi-note-edit-outline</v-icon>修改
               </span>
             </template>
             <!-- <template v-slot:item.taskTitle="{ item }">
@@ -240,6 +240,49 @@
         <view-ticket-drawer ref="ticketDetail" />
 
         
+        <v-dialog v-model="isFileDrawerShow" hide-overlay fullscreen transition="dialog-bottom-transition">
+          <v-card>
+            <v-toolbar
+                dark
+                width="100%"
+                style="background-color: #fff;"
+            >
+              <div class="black--text ml-2" style="font-size: 16px;">选择素材</div>
+              <v-spacer></v-spacer>
+              <v-toolbar-items>
+                <v-btn
+                    text
+                    @click="isFileDrawerShow = false"
+                >
+                  <v-icon class="black--text">mdi-close</v-icon>
+                </v-btn>
+              </v-toolbar-items>
+            </v-toolbar>
+            <v-divider style="border-color: #eff2f5;opacity:0.8;"></v-divider>
+            <file-browser
+              ref="fileBrowser"
+              v-if="isFileDrawerShow"
+              @use-material="doUiAction('useMaterial', $event)"
+              @close-material-picker="doUiAction('closeMaterialPicker')"
+              :material-type="materialType"
+              :material-dir="material.dir"
+              use-file-btn
+              page-id="allPage"
+              :operation-option="{delete: true, recycle: true, copy: true, renameFile: true}"
+            >
+              <template slot="importMaterial">
+                <import-material 
+                  @close-material-picker="closeImportMaterialPicker" 
+                  @use-material="useMaterial"
+                  :material-type="materialType"
+                  page-id="allPage"
+                >
+                </import-material>
+              </template>
+            </file-browser>
+          </v-card>
+        </v-dialog>
+
       </div>
 
       <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
@@ -269,6 +312,8 @@
 'component/view-task-detail-drawer.html' %} {% include
 'component/ticket/view-ticket-drawer.html' %} {% include 'common/constant.html'
 %} {% include 'component/select-org-user-dialog.html' %}
+{% include 'component/fileBrowser/FileBrowser.html' %}
+{% include 'component/importMaterial/FileBrowser.html' %}
 
 <link
   rel="stylesheet"
@@ -341,6 +386,13 @@
       isMoreMenuShown: false,
 
       isDialogShown: false,
+
+      isFileDrawerShow: false,
+      materialType: '',
+      material: {
+        dir: 'taskMaterial',
+        path: ''
+      },
     }),
     watch: {
       isHelpPageDrawerShown(val) {
@@ -392,6 +444,9 @@
           case 'viewItem':
             window.open(`/<$ ctx.app.config.appId $>/page/afficheViewer?taskId=${uiActionData.item.taskId}`)
             break;
+          case 'useMaterial':
+            await this.useMaterial(uiActionData);
+            break;
           default:
             console.error("[doUiAction] uiActionId not find", { uiActionId });
             break;
@@ -442,8 +497,9 @@
         this.isCreateDrawerShown = true;
 
         this.initEditorMd(this, "taskContent", {
-          image: () => {},
-          pdf: () => {},
+          image: () => {
+            this.openImageUploadDrawer();
+          },
         });
       },
 
@@ -514,8 +570,9 @@
       async openUpdateDrawer() {
         this.isUpdateDrawerShown = true;
         this.initEditorMd(this, "taskContent", {
-          image: () => {},
-          pdf: () => {},
+          image: () => {
+            this.openImageUploadDrawer();
+          },
         });
       },
 
@@ -531,14 +588,15 @@
       },
 
       prepareDoUpdateItem({ taskStatus }) {
-        const { id, taskNoticeConfig, taskMemberIdList } = this.updateItem;
-
-        const data = {}
-        data.taskNoticeConfig = JSON.stringify(taskNoticeConfig);
-        data.taskStatus = taskStatus;
-        data.taskMemberIdList = taskMemberIdList.join(',');
+        const { id, taskNoticeConfig, taskMemberIdList, taskContent, taskTitle } = this.updateItem;
         
-        this.updateActionData = data;
+        this.updateActionData = {
+          taskNoticeConfig: JSON.stringify(taskNoticeConfig),
+          taskStatus,
+          taskTitle,
+          taskContent,
+          taskMemberIdList: taskMemberIdList.join(',')
+        };
         this.updateId = id;
       },
 
@@ -557,7 +615,7 @@
         await window.vtoast.success("更新草稿成功");
 
         if (this.updateActionData.taskStatus === '已发送') {
-          await this.addNotice({
+          this.addNotice({
             ...this.updateActionData,
             rowId: this.updateId,
           });
@@ -615,7 +673,7 @@
         this[this.actionKey].taskNoticeConfig = JSON.stringify(selectedItems);
       },
 
-      initEditorMd(that, key, { image: onImageUpload, pdf: onPdfUpload }) {
+      initEditorMd(that, key, { image: onImageUpload }) {
         that.$nextTick(() => {
           if (document.getElementById("editorMdContainer")) {
             document.getElementById(
@@ -653,7 +711,6 @@
                 "hr",
                 "link",
                 "|",
-                "pdfViewer",
                 "toggle",
                 "articleQuery",
               ]),
@@ -665,8 +722,7 @@
               },
               // 如果没有图标，则可以这样直接插入内容，可以是字符串或HTML标签
               toolbarIconTexts: {
-                pdfViewer:
-                  "<i class='fa fa-file-pdf-o' name='toggle' unselectable='on' style='display: inline-block;'></i><span class='ml-1'>PDF</span>",
+               
                 toggle:
                   "<i class='fa fa-expand' name='toggle' unselectable='on' style='display: inline-block;'></i><span class='ml-1'>收缩</span>",
                 articleQuery:
@@ -676,10 +732,7 @@
                 imageUpload: function (cm, icon, cursor, selection) {
                   onImageUpload();
                 },
-                pdfViewer: function (cm, icon, cursor, selection) {
-                  onPdfUpload();
-                  // cm.replaceSelection(`\n[jh-pdf-viewer src="xxx"/]\n`);
-                },
+              
                 toggle: function (cm, icon, cursor, selection) {
                   cm.replaceSelection(
                     `\n[jh-toggle title=\"折叠容器\" default-open=\"true\"]\n折叠内容\n[/jh-toggle]\n`
@@ -700,7 +753,6 @@
               },
               lang: {
                 toolbar: {
-                  pdfViewer: "pdf 页面预览",
                   toggle: "展开收起",
                   column: "横向排列", // 自定义按钮的提示文本，即title属性
                   articleQuery: "数据列表",
@@ -716,11 +768,62 @@
             requestAnimationFrame(() => {
               this.initEditorMd(that, key, {
                 image: onImageUpload,
-                pdf: onPdfUpload,
               });
             });
           }
         });
+      },
+      async openImageUploadDrawer() {
+        this.materialType = 'image';
+        this.isFileDrawerShow = true;
+      },
+      closeImportMaterialPicker() {
+        this.$refs.fileBrowser.closeImportMaterialPicker();
+      },
+      async useMaterial({ path, dir }) {
+        let filename, downloadPath = null;
+        const resultData = (await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'allPage',
+              actionId: 'useMaterial',
+              actionData: {
+                path,
+                fromDir: dir,
+                toDir: this.material.dir
+              },
+            }
+          }
+        })).data.appData.resultData;
+        filename = resultData.filename;
+        downloadPath = resultData.downloadPath;
+
+        this.isFileDrawerShow = false;
+        this.editHandlerWhenUseMaterial(filename, downloadPath);
+        
+      },
+      editHandlerWhenUseMaterial(filename, downloadPath) {
+        if (this.materialType === 'pdf') {
+          // pdf 操作使用通道
+          this.editor.insertValue(`\n[jh-pdf-viewer src="${downloadPath}"/]\n`);
+          return;
+        }
+        const fileSubbfix = filename.lastIndexOf(".") > -1 ? filename.substring(filename.lastIndexOf('.') + 1).toLowerCase() : '';
+        if (['png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', '.psd', 'svg', 'tiff'].indexOf(fileSubbfix) !== -1) {
+          this.editor.insertValue(`\n![${filename}](/<$ ctx.app.config.appId $>/upload${downloadPath})`);
+          return;
+        }
+        if (['mp3', 'wav', 'wmv'].indexOf(fileSubbfix) !== -1) {
+          this.editor.insertValue(`\n<audio controls="" preload="none"><source src="/<$ ctx.app.config.appId $>/upload${downloadPath}"></audio>`)
+          return;
+        }
+        if (['avi', 'mpg', 'mpeg', 'mov', 'rm', 'ram', 'swf', 'flv', 'mp4', 'wma', 'rmvb', 'mkv'].indexOf(fileSubbfix) !== -1) {
+          this.editor.insertValue(`\n<video controls="" preload="none"><source src="/<$ ctx.app.config.appId $>/upload${downloadPath}"></video>`)
+          return;
+        }
+
+        // 下载链接
+        this.editor.insertValue(`\n[${filename}](/<$ ctx.app.config.appId $>/upload${downloadPath})`);
       },
 
       async addNotice(item) {
@@ -741,6 +844,12 @@
 <style scoped>
   .v-btn.filter-btn:not(.v-btn--round).v-size--default {
     height: auto;
+  }
+  .v-dialog--fullscreen .v-sheet {
+    height: auto;
+    position: relative;
+    background: #fff;
+    display: block;
   }
 </style>
 {% endblock %}

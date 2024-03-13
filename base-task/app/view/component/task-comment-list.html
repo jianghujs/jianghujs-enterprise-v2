@@ -34,7 +34,7 @@
 
   </div>
 </template>
-<script src="https://cdn.jsdelivr.net/npm/dayjs@1.8.17/plugin/relativeTime.js"></script>
+<script src="/<$ ctx.app.config.appId $>/public/lib/dayjs/relativeTime.js"></script>
 
 <script type="module">
   Vue.component("task-comment-list", {
@@ -50,11 +50,11 @@
       isInputExpanded: false,
       username: userInfo.username
     }),
-    mounted() {
+    created() {
       dayjs.extend(dayjs_plugin_relativeTime);
     },
     filters: {
-      timeAgo: (time) => dayjs(time).fromNow(),
+      timeAgo: (time) => time ? dayjs(time).fromNow() : '',
     },
     computed: {
       // 倒序评论列表

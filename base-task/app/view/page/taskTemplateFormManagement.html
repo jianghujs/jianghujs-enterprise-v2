@@ -157,7 +157,7 @@
       },
 
       async updateTaskTemplate() {
-        await window.jhMask.show();
+        
         await window.vtoast.loading({ message: "更新模板", timer: -1 });
 
         await window.jianghuAxios({
@@ -175,7 +175,7 @@
           },
         });
 
-        await window.jhMask.hide();
+        
         await window.vtoast.success("更新模板成功");
       },
     },
