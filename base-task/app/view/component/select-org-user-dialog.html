@@ -84,6 +84,11 @@
         type: Array,
         default: () => [],
       },
+      // 显示类型，按组织结构显示还是直接显示，org: 按组织结构显示，user: 直接显示
+      showType: {
+        type: String,
+        default: "org",
+      },
     },
     data: () => ({
       userList: [],
@@ -182,6 +187,16 @@
           });
         }
 
+        if (this.showType === "user") {
+          this.treeData = data.map((item) => ({
+            id: item.userId,
+            userId: item.userId,
+            name: item.username,
+            disabled: item.disabled,
+          }));
+          return;
+        }
+       
         const treeData = [];
 
         data.forEach((item, index) => {

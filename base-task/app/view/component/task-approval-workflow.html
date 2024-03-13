@@ -72,6 +72,7 @@
     </v-timeline>
     <select-org-user-dialog
       :show.sync="isDialogShown"
+      :show-type="showType"
       :selected-ids.sync="selectedIds"
       :selected-origin-items="selectedItems"
       @confirm="doUiAction('addPerson', $event)"
@@ -83,6 +84,11 @@
   Vue.component("task-approval-workflow", {
     template: "#task-approval-workflow",
     props: {
+      // 显示类型，按组织结构显示还是直接显示，org: 按组织结构显示，user: 直接显示
+      showType: {
+        type: String,
+        default: "org",
+      },
       approvalPersonList: {
         type: Array,
         default: () => [],
