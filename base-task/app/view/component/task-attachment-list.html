@@ -1,25 +1,16 @@
 <template id="task-attachment-list">
   <div class="task-attachment-list">
-    <input
-      type="file"
-      id="file-upload"
-      ref="fileInput"
-      style="display: none"
-      @change="handleFileUpload"
-    />
-    <label for="file-upload">
-      <v-btn
-        v-if="!readonly"
-        color="primary"
-        outlined
-        small
-        @click="startUploadFile"
-      >
-        <!-- 添加icon -->
-        <v-icon size="14">mdi-plus</v-icon>
-        添加</v-btn
-      >
-    </label>
+    <v-btn
+      v-if="!readonly"
+      color="primary"
+      outlined
+      small
+      @click="startUploadFile"
+    >
+      <!-- 添加icon -->
+      <v-icon size="14">mdi-plus</v-icon>
+      添加</v-btn
+    >
 
     <v-list dense>
       <template v-for="(item, index) in files" :key="index">
@@ -46,7 +37,7 @@
     <div>
       <viewer ref="viewer" :images="previewFileUrl" class="images clearfix">
         <template slot-scope="scope">
-          <img style="display: none" :src="previewFileUrl" class="image">
+          <img style="display: none" :src="previewFileUrl" class="image" />
         </template>
       </viewer>
 
@@ -58,27 +49,46 @@
           color="white"
           @click="showOverlay = false"
         >
-        mdi-close-circle
-      </v-icon>
+          mdi-close-circle
+        </v-icon>
         <!-- 视频 -->
-        <video v-if="previewFileType === 'video'" class="mx-auto" :src="previewFileUrl" controls style="max-width: 100%; height: 100vh"></video>
+        <video
+          v-if="previewFileType === 'video'"
+          class="mx-auto"
+          :src="previewFileUrl"
+          controls
+          style="max-width: 100%; height: 100vh"
+        ></video>
         <!-- pdf -->
-        <iframe v-else-if="previewFileType === 'pdf'" :src="'/<$ ctx.app.config.appId $>/public/pdf/web/viewer.html?file=' + previewFileUrl" frameborder="0"
-          style="width: 75vw; height: 100vh; padding: 50px 0 0 0;"></iframe>
+        <iframe
+          v-else-if="previewFileType === 'pdf'"
+          :src="'/<$ ctx.app.config.appId $>/public/pdf/web/viewer.html?file=' + previewFileUrl"
+          frameborder="0"
+          style="width: 75vw; height: 100vh; padding: 50px 0 0 0"
+        ></iframe>
         <!-- wps -->
-        <iframe v-else-if="previewFileType === 'wps'" :src="'https://view.officeapps.live.com/op/view.aspx?src=' + previewFileUrl" frameborder="0"
-              style="width: 75vw; height: 100vh; padding: 50px 0 0 0;"></iframe>
+        <iframe
+          v-else-if="previewFileType === 'wps'"
+          :src="'https://view.officeapps.live.com/op/view.aspx?src=' + previewFileUrl"
+          frameborder="0"
+          style="width: 75vw; height: 100vh; padding: 50px 0 0 0"
+        ></iframe>
       </v-overlay>
     </div>
+
+    <select-file-dialog ref="selectFileDialog" @confirm="handleFileUpload" />
   </div>
 </template>
 
-<link href="/<$ ctx.app.config.appId $>/public/lib/viewerjs/viewer.min.css" rel="stylesheet">
+<link
+  href="/<$ ctx.app.config.appId $>/public/lib/viewerjs/viewer.min.css"
+  rel="stylesheet"
+/>
 <script src="/<$ ctx.app.config.appId $>/public/lib/viewerjs/viewer.min.js"></script>
 <script src="/<$ ctx.app.config.appId $>/public/lib/viewerjs/v-viewer.min.js"></script>
 
 <script type="module">
-  Vue.use(VueViewer.default)
+  Vue.use(VueViewer.default);
 
   Vue.component("task-attachment-list", {
     template: "#task-attachment-list",
@@ -102,28 +112,32 @@
     created() {},
     methods: {
       getFileAvatar(item) {
-        let avatarUrl = "https://example.com/default-avatar.png"
-        const { fileType, downloadBasePath, downloadPath } = item
-        // image, video, pdf, doc判断
-        if (fileType.includes('image')) {
-          avatarUrl = `${window.location.origin}${downloadBasePath}${downloadPath}`
-        }
-        if (fileType.includes('video')) {
-          avatarUrl =  `/<$ ctx.app.config.appId $>/public/img/icon-video.png`
-        }
-        if (fileType.includes('pdf')) {
-          avatarUrl =  `/<$ ctx.app.config.appId $>/public/img/icon-pdf.png`
-        }
+        let avatarUrl = "https://example.com/default-avatar.png";
+        const { downloadBasePath, downloadPath, filename } = item;
 
-        // 检查是否wps支持的文件类型，如doc,docx,xls,xlsx,ppt,pptx
-        if (fileType.includes('doc') || fileType.includes('xls') || fileType.includes('ppt')) {
-          avatarUrl =  `/<$ ctx.app.config.appId $>/public/img/icon-wps.png`
-        }
+        const fileType = this.getFileType(item);
 
+        switch (fileType) {
+          case 'image':
+            avatarUrl = `${window.location.origin}${downloadBasePath}${downloadPath}`;
+            break;
+          case 'video':
+            avatarUrl = `/<$ ctx.app.config.appId $>/public/img/icon-video.png`;
+            break;
+          case 'pdf':
+            avatarUrl = `/<$ ctx.app.config.appId $>/public/img/icon-pdf.png`;
+            break;
+          case 'wps':
+            avatarUrl = `/<$ ctx.app.config.appId $>/public/img/icon-wps.png`;
+            break;
+          default:
+            break;
+        }
+      
         return avatarUrl;
       },
       getFileSize(sizeInBytes) {
-        let units = ["KB", "MB", "GB", "TB"];
+        let units = ["B", "KB", "MB", "GB", "TB"];
         let unitIndex = 0;
         let size = sizeInBytes;
 
@@ -153,56 +167,47 @@
         link.click();
       },
       startUploadFile() {
-        this.$refs.fileInput.click();
+        this.$refs.selectFileDialog.doUiAction("open");
       },
-      async handleFileUpload() {
-        this.selectedFile = this.$refs.fileInput.files;
-        await this.doUploadUpdateItemFile(this.selectedFile[0]);
+      async handleFileUpload(item) {
+        this.files.push(item);
+        this.$emit("update:files", this.files);
       },
-      async doUploadUpdateItemFile(file) {
-        if (file && file.size) {
-          await window.vtoast.loading("文件上传");
-          const result = await window.jianghuAxios.httpUploadByStream({
-            file,
-            fileDirectory: "taskFile",
-            onProgress: (total, loaded) => {
-              let progress = Number(((loaded * 100) / total).toFixed(2));
-              window.vtoast.loading(`文件上传进度${progress}%`);
-              if (progress === 100) {
-                window.vtoast.success("文件上传成功");
-              }
-            },
-          });
+      getFileType(item) {
+        const { downloadPath } = item;
 
-          if (result.data.status === "success") {
-            const item = result.data.appData.resultData;
-            console.log("file:", item);
-            this.files.push(item);
-            this.$emit("update:files", this.files);
-          } else {
-            await window.vtoast.fail("文件上传失败");
-            throw new Error("文件上传失败");
+        const ext = downloadPath.substring(downloadPath.lastIndexOf(".") + 1);
+        if (ext) {
+          if (
+            ["jpg", "jpeg", "png", "gif", "ico", "svg"].includes(
+              ext.toLowerCase()
+            )
+          ) {
+            return "image";
+          }
+          if (["mp4"].includes(ext.toLowerCase())) {
+            return "video";
+          }
+          if (["pdf"].includes(ext.toLowerCase())) {
+            return "pdf";
+          }
+          if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext.toLowerCase())) {
+            return "wps";
           }
         }
       },
       async jumpPreviewPage(item) {
-        const { fileType, downloadBasePath, downloadPath } = item
-        this.previewFileUrl = `${window.location.origin}${downloadBasePath}${downloadPath}`
-        if (fileType.includes('image')) {
-          this.previewFileType = `image`
-          this.$refs.viewer.$viewer.show()
+        const { downloadBasePath, downloadPath } = item;
+        this.previewFileUrl = `${window.location.origin}${downloadBasePath}${downloadPath}`;
+
+        const fileType = this.getFileType(item);
+        this.previewFileType = fileType;
+
+        if (fileType === "image") {
+          this.$refs.viewer.$viewer.show();
         }
-        if (fileType.includes('video')) {
-          this.previewFileType = `video`
-          this.showOverlay = true
-        }
-        if (fileType.includes('pdf')) {
-          this.previewFileType = `pdf`
-          this.showOverlay = true
-        }
-        if (fileType.includes('doc') || fileType.includes('xls') || fileType.includes('ppt')) {
-          this.previewFileType = `wps`
-          this.showOverlay = true
+        if (['video', 'pdf', 'wps'].includes(fileType)) {
+          this.showOverlay = true;
         }
       },
     },
@@ -227,7 +232,8 @@
   .task-attachment-list .v-list-item {
     border: 1px dashed #4caf50;
   }
-  .task-attachment-list .v-list--dense .v-list-item .v-list-item__icon, .v-list-item--dense .v-list-item__icon {
+  .task-attachment-list .v-list--dense .v-list-item .v-list-item__icon,
+  .v-list-item--dense .v-list-item__icon {
     margin-top: auto;
     margin-bottom: auto;
   }

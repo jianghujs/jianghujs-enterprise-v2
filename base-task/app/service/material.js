@@ -112,7 +112,7 @@ class MaterialService extends Service {
     async list() {
         const actionData = this.ctx.request.body.appData.actionData;
         validateUtil.validate(actionDataScheme.list, actionData);
-        let { path, dir = 'materialRepo'  } = actionData;
+        let { path, dir = 'materialRepo' } = actionData;
         const { uploadDir } = this.app.config;
         const materialDir = nodePath.join(uploadDir, dir);
 
@@ -134,7 +134,7 @@ class MaterialService extends Service {
 
         for (let item of items) {
             let isFile = item.isFile(),
-            isDir = item.isDirectory();
+                isDir = item.isDirectory();
 
             if (!isFile && !isDir) {
                 continue;
@@ -243,7 +243,7 @@ class MaterialService extends Service {
         const actionData = this.ctx.request.body.appData.actionData;
         validateUtil.validate(actionDataScheme.delete, actionData);
 
-        const { path, dir = 'materialRepo'  } = actionData;
+        const { path, dir = 'materialRepo' } = actionData;
         const { uploadDir } = this.app.config;
         const materialDir = nodePath.join(uploadDir, dir);
 
@@ -260,9 +260,9 @@ class MaterialService extends Service {
             }
 
             await this.loopCheckDir(materialDir, '_recycle');
-            const filename = path.substring(path.lastIndexOf('/')+1);
+            const filename = path.substring(path.lastIndexOf('/') + 1);
             const recycleFilePath = nodePath.join(materialDir, '_recycle', filename);
-            
+
             // 如果回收站文件存在则先删除回收站文件再移动
             if (await exists(recycleFilePath)) {
                 await rimraf(recycleFilePath);
@@ -277,7 +277,7 @@ class MaterialService extends Service {
             await this.loopCheckDir(materialDir, '_recycle');
             let tempPath = path;
             if (tempPath.endsWith("/")) { tempPath = tempPath.substring(0, path.length - 1); }
-            const dirname = tempPath.substring(tempPath.lastIndexOf('/')+1);
+            const dirname = tempPath.substring(tempPath.lastIndexOf('/') + 1);
             const recycleDirPath = nodePath.join(materialDir, '_recycle', dirname);
 
             // 如果目标文件夹存在则只删除 targetPath
@@ -293,7 +293,7 @@ class MaterialService extends Service {
         const { materialRepoDir } = this.app.config;
         const targetPath = nodePath.join(materialRepoDir, '_recycle', '/');
         await rimraf(targetPath);
-    }  
+    }
 
     async useMaterial() {
         const actionData = this.ctx.request.body.appData.actionData;
@@ -312,25 +312,41 @@ class MaterialService extends Service {
             throw new BizError(errorInfoEnum.material_is_not_file);
         }
         // 创建文件名、创建文件夹
-        const filename = path.substring(this.getPathLastIndexOf(path)+1);
+        const filename = path.substring(this.getPathLastIndexOf(path) + 1);
         let filenameStorage = `${Date.now()}_${filename}`;
         const isFileStorageExists = await exists(toMaterialDir);
         if (!isFileStorageExists) {
             await fileUtil.checkAndPrepareFilePath(toMaterialDir);
         }
-        
-        const articleMaterialPath = nodePath.join(toMaterialDir, filenameStorage);
-        const formExist = nodePath.join(toMaterialDir, filename);
-        // 如果目标路径已存在该文件、不复制，返回原文件名
-        if (!await exists(formExist)) {
-            await copyFile(fromPath, articleMaterialPath);
-        } else {
-            filenameStorage = filename;
+        const stats = fs.statSync(fromPath);
+        const downloadBasePath = nodePath.dirname(fromPath); // 文件所在目录
+        const downloadPath = fromPath.split('upload')[1]; // 文件名
+        const binarySize = stats.size; // 文件大小
+
+        return {
+            filename,
+            downloadBasePath: `/${this.ctx.app.config.appId}/upload`,
+            downloadPath: downloadPath.replace(/\\/g, '/'),
+            binarySize
         }
-        const downloadPath = nodePath.join(`/${toDir}`, filenameStorage);
-        return { filename, downloadPath };
+        
     }
-    
+
+    async getFileInfo(filePath) {
+        return new Promise((resolve, reject) => {
+            fs.stat(filePath, (err, stats) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    const fileType = path.extname(filePath); // 获取文件类型
+                    const fileSize = stats.size; // 获取文件大小（字节）
+
+                    resolve({ fileType, fileSize });
+                }
+            });
+        });
+    }
+
     // 提供 base路径 + 后续衔接的路径循环创建下一级文件夹
     async loopCheckDir(baseDir, pathDir) {
         const dirArr = pathDir.split('/');
@@ -345,6 +361,6 @@ class MaterialService extends Service {
             }
         }
     }
-    
+
 }
 module.exports = MaterialService;
