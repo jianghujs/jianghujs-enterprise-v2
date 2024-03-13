@@ -93,6 +93,13 @@
             />
           </v-col>
         </v-row>
+
+        <v-col cols="12" sm="12" md="12" v-if="updateItem.taskManagerId===userId">
+          <span class="jh-input-label">评论列表
+            <span class="grey--text text-caption">(评论将自动通知审批发起人、当前及之前节点的审批人)</span>
+          </span>
+          <task-comment-list :comments.sync="updateItem.taskCommentList" @confirm="postComment" />
+        </v-col>
       </v-form>
 
       <!-- 抽屉操作按钮 -->
@@ -132,6 +139,7 @@
 
     data: () => ({
       isUpdateDrawerShown: false,
+      userId: window.userInfo.userId,
 
       updateItem: {},
 
@@ -165,7 +173,7 @@
         newItem.taskAuditConfig = JSON.parse(newItem.taskAuditConfig);
         newItem.taskNoticeConfig = JSON.parse(newItem.taskNoticeConfig);
         newItem.taskContent = JSON.parse(newItem.taskContent);
-
+        newItem.taskCommentList = JSON.parse(newItem.taskCommentList || '[]');
         newItem.taskContent.forEach((form) => {
           if (form.component.type === "file") {
             if (!form.component.value) {
@@ -270,6 +278,29 @@
             },
           },
         });
+      },
+      async postComment() {
+        const { id, ...data } = this.updateItem
+        data.taskCommentList = JSON.stringify(data.taskCommentList)
+        await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'allPage',
+              actionId: 'updateTask',
+              actionData: { taskCommentList: data.taskCommentList },
+              where: { id },
+            }
+          }
+        })
+        await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'allPage',
+              actionId: 'addCommentNotice',
+              actionData: data,
+            }
+          }
+        })
       },
     },
   });

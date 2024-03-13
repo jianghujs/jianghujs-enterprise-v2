@@ -25,68 +25,29 @@
             md="12"
             v-for="(item, index) in updateItem.taskContent"
           >
-            <span class="jh-input-label">
-              <span v-if="item.component.required" class="red--text">*</span>
-              {{item.component.label}}</span
-            >
-            <v-menu
-              :close-on-content-click="false"
-              :nudge-right="40"
-              transition="scale-transition"
-              offset-y
-              min-width="auto"
-              v-if="item.component.type === 'date'"
-            >
-              <template v-slot:activator="{ on, attrs }">
-                <v-text-field
-                  class="jh-v-input"
-                  v-model="item.component.value"
-                  dense
-                  single-line
-                  filled
-                  v-bind="attrs"
-                  v-on="on"
-                  readonly
-                  :required="item.component.required"
-                ></v-text-field>
-              </template>
-              <v-date-picker
-                v-model="item.component.value"
-                no-title
-                scrollable
-              ></v-date-picker>
-            </v-menu>
+           
+          <span class="jh-input-label">{{item.component.label}}：</span>
 
             <task-attachment-list
               :files="item.component.value"
               readonly
-              v-else-if="item.component.type === 'file'"
+              v-if="item.component.type === 'file'"
             ></task-attachment-list>
-            <component
-              v-else
-              class="jh-v-input"
-              v-model="item.component.value"
-              dense
-              single-line
-              :items="item.component.items.split(',')"
-              filled
-              readonly
-              :key="index"
-              :required="item.component.required"
-              :is="item.component.tag"
-              :placeholder="`请输入${item.component.label}`"
-            ></component>
+            <span v-else class="font-weight-bold">{{item.component.value}}</span>
           </v-col>
           <v-col cols="12"
           sm="12"
           md="12">
-            <p class="font-weight-bold text-body-1 ma-0 px-4 mt-4">审批流信息
+            <!-- <p class="font-weight-bold text-body-1 ma-0 px-4 mt-4">审批流信息
               <span class="grey--text text-caption">(审批操作按人员顺序执行)</span>
               
-            </p>
+            </p> -->
             <v-row class="ma-0 pa-0">
               <v-col cols="12" :md="isAudited ? 12 : 8">
-                <span class="jh-input-label grey--text">审批列表</span>
+                <span class="jh-input-label">审批列表
+
+                  <span class="grey--text text-caption">(审批操作按人员顺序执行)</span>
+                </span>
 
                 <v-data-table hide-default-footer :headers="auditHeaders" :items="updateItem.taskAuditConfig">
                   <template v-slot:item.status="{ item }">
@@ -121,8 +82,10 @@
         </v-col>
 
         <v-col cols="12" sm="12" md="12">
-          <span class="jh-input-label">评论</span>
-          <task-comment-list :comments.sync="updateItem.taskCommentList" @confirm="postComment" />
+          <span class="jh-input-label">评论列表
+            <span class="grey--text text-caption">(评论将自动通知审批发起人、当前及之前节点的审批人)</span>
+          </span>
+          <task-comment-list :readonly="updateItem.taskManagerId!=userId" :comments.sync="updateItem.taskCommentList" @confirm="postComment" />
         </v-col>
       </v-row>
       
@@ -150,6 +113,7 @@
 
     data: () => ({
       isUpdateDrawerShown: false,
+      userId: window.userInfo.userId,
 
       updateItem: {
       },
@@ -310,6 +274,16 @@
               actionId: 'updateTask',
               actionData: { taskCommentList: data.taskCommentList },
               where: { id },
+            }
+          }
+        })
+
+        await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'allPage',
+              actionId: 'addCommentNotice',
+              actionData: data,
             }
           }
         })

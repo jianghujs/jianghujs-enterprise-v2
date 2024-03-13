@@ -1,7 +1,7 @@
 <template id="task-comment-list">
   <div>
     <!-- 评论框 -->
-    <div class="d-flex">
+    <div class="d-flex" v-if="!readonly">
       <v-avatar color="primary" size="25" class="mr-2">
         <span class="white--text font-weight-bold">{{username[0]}}</span>
       </v-avatar>
@@ -43,6 +43,11 @@
       comments: {
         type: Array,
         default: () => [],
+      },
+      // 是否只读
+      readonly: {
+        type: Boolean,
+        default: false,
       },
     },
     data: () => ({
