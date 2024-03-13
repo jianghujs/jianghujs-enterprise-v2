@@ -8,7 +8,7 @@
                 <v-col cols="12" sm="4" md="4" xl="2" class="pa-0">
                   <div class="d-flex align-center py-0">
                       <!-- 新增按钮 -->
-                      <v-btn color="success" small @click="doUiAction('startCreateItem')">新增</v-btn> 
+                      <v-btn color="success" small @click="doUiAction('startCreateItem')">分配员工</v-btn> 
                       <v-checkbox
                         v-model="isContainSub"
                         label="包含子部门"
@@ -44,10 +44,10 @@
                             <!-- pc端 -->
                             <template v-if="!isMobile">
                             <span role="button" class="success--text font-weight-medium font-size-2 mr-2" @click="doUiAction('startUpdateItem', item)">
-                                <v-icon size="16" class="success--text">mdi-note-edit-outline</v-icon>修改
+                                <v-icon size="16" class="success--text">mdi-note-edit-outline</v-icon>修改员工信息
                             </span>
                             <span role="button" class="red--text text--accent-2 font-weight-medium font-size-2" @click="doUiAction('deleteItem', item)">
-                                <v-icon size="16" class="red--text text--accent-2">mdi-trash-can-outline</v-icon>删除
+                                <v-icon size="16" class="red--text text--accent-2">mdi-trash-can-outline</v-icon>移除员工
                             </span>
                             </template>
                             <!-- 手机端 -->
@@ -60,10 +60,10 @@
                             </template>
                             <v-list dense>
                                 <v-list-item @click="doUiAction('startUpdateItem', item)">
-                                <v-list-item-title>编辑</v-list-item-title>
+                                <v-list-item-title>修改员工信息</v-list-item-title>
                                 </v-list-item>
                                 <v-list-item @click="doUiAction('deleteItem', item)">
-                                <v-list-item-title>删除</v-list-item-title>
+                                <v-list-item-title>移除员工</v-list-item-title>
                                 </v-list-item>
                             </v-list>
                             </v-menu>
@@ -113,16 +113,18 @@
             <!--抽屉表单主体-->
             <v-row class="mt-0 px-4">
               <v-col cols="12" sm="12" md="6">
-                  <span class="jh-input-label">组织<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                  <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.groupId" :rules="validationRules.requireRules" disabled></v-text-field>
+                  <span class="jh-input-label">员工组织</span>
+                  <!-- <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.groupId" :rules="validationRules.requireRules" readonly></v-text-field> -->
+                  <v-autocomplete class="jh-v-input" dense single-line filled v-model="createItem.groupId" :items="constantObj.groupList" item-text="groupAllName" item-value="groupId" readonly></v-autocomplete>
               </v-col>
               <v-col cols="12" sm="12" md="6">
-                  <span class="jh-input-label">选择用户<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                  <v-autocomplete class="jh-v-input" dense single-line filled v-model="createItem.userId" :items="constantObj.userList" :rules="validationRules.requireRules" ></v-autocomplete>
+                  <span class="jh-input-label">员工姓名<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                  <v-autocomplete class="jh-v-input" dense single-line filled v-model="createItem.userId" :items="constantObj.userList"></v-autocomplete>
               </v-col>
               <v-col cols="12" sm="12" md="12">
-                  <span class="jh-input-label">选择职务<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                  <v-autocomplete class="jh-v-input" dense single-line filled v-model="createItem.roleId" :items="roleList" item-value="roleId" item-text="roleName" multiple>
+                  <span class="jh-input-label">员工职务<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                  <v-autocomplete class="jh-v-input" dense single-line filled v-model="createItem.roleId" :items="constantObj.roleList?.filter(item=> item.roleId == '无职务' || item.roleId.includes(createItem.groupId+'|'))"
+                     item-value="roleId" item-text="roleName" multiple :rules="validationRules.requireRules">
                     <template v-slot:selection="data">
                       <v-chip
                         small
@@ -186,22 +188,24 @@
     <v-form ref="updateForm" lazy-validation>
         <!-- 抽屉标题 -->
         <v-row no-gutters>
-        <span class="text-h7 font-weight-bold pa-4">修改信息</span>
+        <span class="text-h7 font-weight-bold pa-4">修改员工信息</span>
         </v-row>
         <v-divider class="jh-divider"></v-divider>
         <!--抽屉表单主体-->
         <v-row class="mt-0 px-4">
-        <v-col cols="12" sm="12" md="6">
-            <span class="jh-input-label">组织<span class="red--text text--accent-2 ml-1">*必填</span></span>
-            <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.groupId" :rules="validationRules.requireRules" disabled></v-text-field>
+          <v-col cols="12" sm="12" md="6">
+            <span class="jh-input-label">员工姓名</span>
+            <v-autocomplete class="jh-v-input" dense single-line filled v-model="updateItem.userId" :items="constantObj.userList" readonly></v-autocomplete>
         </v-col>
         <v-col cols="12" sm="12" md="6">
-            <span class="jh-input-label">选择用户<span class="red--text text--accent-2 ml-1">*必填</span></span>
-            <v-autocomplete class="jh-v-input" dense single-line filled v-model="updateItem.userId" :items="constantObj.userList" :rules="validationRules.requireRules" disabled></v-autocomplete>
+            <span class="jh-input-label">员工组织<span class="red--text text--accent-2 ml-1">*必填</span></span>
+            <v-autocomplete class="jh-v-input" dense single-line filled v-model="updateItem.groupId" :items="filterGroupList" item-text="groupAllName" item-value="groupId" 
+            @change="updateItem.roleId = []" :rules="validationRules.requireRules"></v-autocomplete>
         </v-col>
         <v-col cols="12" sm="12" md="12">
-            <span class="jh-input-label">选择职务<span class="red--text text--accent-2 ml-1">*必填</span></span>
-            <v-autocomplete class="jh-v-input" dense single-line filled v-model="updateItem.roleId" :items="roleList.filter(e => e.roleId != '*')" item-value="roleId" item-text="roleName" multiple>
+            <span class="jh-input-label">员工职务<span class="red--text text--accent-2 ml-1">*必填</span></span>
+            <v-autocomplete class="jh-v-input" dense single-line filled v-model="updateItem.roleId" 
+                :items="filterRoleList" item-value="roleId" item-text="roleName" multiple :rules="validationRules.requireRules">
               <template v-slot:selection="data">
                 <v-chip
                   small
@@ -275,16 +279,6 @@
           type: Array,
           default: () => []
         },
-        roleList: {
-            type: Array,
-            default: () => [
-              {
-                roleId: "无职务",
-                roleName: "无职务",
-                roleType:"正式职务",
-              }
-            ]
-        },
         loading: {
           type: Boolean,
           default: false
@@ -317,6 +311,14 @@
             { text:"7天", days:7 },
             { text:"14天", days:14 },
             { text:"30天", days:30 },
+          ],
+          groupList:[],
+          roleList: [
+            {
+              roleId: "无职务",
+              roleName: "无职务",
+              roleType:"正式职务",
+            }
           ]
         },
         serverSearchInput: {
@@ -365,7 +367,7 @@
               })
               return
             }
-            let role = this.roleList.find(item =>  item.roleId == roleId)
+            let role = this.constantObj.roleList.find(item =>  item.roleId == roleId)
             roleConfig.push({
               roleId:role.roleId,
               roleName:role.roleName,
@@ -379,7 +381,7 @@
           let newRoleConfig = []
           this.updateItem.roleId?.forEach(roleId => {
             let oldRole = this.updateItem.roleConfig.find(item=>item.roleId == roleId)
-            let newRole = this.roleList.find(item =>  item.roleId == roleId)
+            let newRole = this.constantObj.roleList.find(item =>  item.roleId == roleId)
             if(oldRole){
               newRoleConfig.push({
                 roleId: newRole ? newRole.roleId : oldRole.roleId,
@@ -397,6 +399,23 @@
             }
           });
           return newRoleConfig
+        },
+        filterRoleList(){
+          if(this.updateItem.groupId){
+            return [
+            {
+              roleId: "无职务",
+              roleName: "无职务",
+              roleType:"正式职务",
+            },
+            ...this.constantObj.roleList.filter(item => item.roleId.includes(this.updateItem.groupId+'|'))
+            ]
+          }else{
+            return []
+          }
+        },
+        filterGroupList(){
+          return this.constantObj.groupList
         }
       },
       watch: {
@@ -404,14 +423,15 @@
           this.$emit('input', val);
         },
         isContainSub(val){
-          this.$emit('refresh-role-list', this.isContainSub);
-          this.$emit('get-role-data', this.isContainSub);
+          this.$emit('refresh-user-list', this.isContainSub);
         }
       },
       async created() {
       },
-      mounted() {
+      async mounted() {
         this.doUiAction("getUserData")
+        this.doUiAction("getRoleData")
+        this.doUiAction("getGroupData")
       },
       methods: {
         async doUiAction(uiActionId, uiActionData) {
@@ -421,6 +441,12 @@
               break;
             case 'getUserData':
               await this.getUserData();
+              break;
+            case 'getRoleData':
+              await this.getRoleData();
+              break;
+            case 'getGroupData':
+              await this.getGroupData();
               break;
             case 'startCreateItem':
               await this.prepareCreateFormData();
@@ -463,8 +489,9 @@
          * 获取表格数据
          */
          async getTableData() {
-          this.$emit('refresh-role-list', this.isContainSub);
+          this.$emit('refresh-user-list', this.isContainSub);
         },
+        // 获取全部人员
         async getUserData() {
             this.isAppLoading = true;
             const rows = (await window.jianghuAxios({
@@ -482,6 +509,37 @@
             })).data.appData.resultData.rows
             this.constantObj.userList = rows.map(e => ({text: e.username, value: e.userId}));
             this.isAppLoading = false;
+        },
+        async getRoleData() {
+          const rows = (await window.jianghuAxios({
+            data: {
+              appData: {
+                pageId: 'groupUserManagement',
+                actionId: 'selectRoleList',
+                actionData: {},
+                orderBy: [{column: 'operationAt', order: 'desc'}]
+              }
+            }
+          })).data.appData.resultData.rows;
+
+          this.constantObj.roleList = [{
+                  roleId: "无职务",
+                  roleName: "无职务",
+                  roleType:"正式职务",
+                }, ...rows];
+        },
+        async getGroupData() {
+          const rows = (await window.jianghuAxios({
+            data: {
+              appData: {
+                pageId: 'groupUserManagement',
+                actionId: 'getGroupList',
+                actionData: {},
+                orderBy: [{column: 'groupId', order: 'asc'}]
+              }
+            }
+          })).data.appData.resultData.rows;
+          this.constantObj.groupList = rows
         },
         // ---------- 新增数据 uiAction >>>>>>>>>> --------
         async prepareCreateFormData() {
@@ -576,7 +634,7 @@
         },
 
         async prepareDoUpdateItem() {
-            const {id, ...data} = this.updateItem;
+            const data = this.updateItem;
             this.updateActionData = {...data,roleConfig: this.updateRoleConfig.map(item => {
               return {
                 ...item,

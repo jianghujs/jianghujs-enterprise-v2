@@ -192,7 +192,6 @@
           row.operationAt = dayjs(row.operationAt).format('YYYY-MM-DD HH:mm:ss');
         })
         this.tableData = rows
-        this.$emit('change-group-list', rows.map(e => ({ text: e.groupName, value: e.groupId })));
         this.tableDataTree = this.buildTableTree(rows)
         this.isTableLoading = false;
       },
@@ -203,11 +202,12 @@
         const buildTree = (data) => {
           data.forEach(item => {
             item.name = item.groupName;
+            if(item.groupId == "FS")  item.principalIdList = item.principalId;
             const children = rows.filter(child => {
               const parentPath = item.groupId ? item.groupId : item.groupPath + '-' + item.groupLastId;
               return child.groupPath == parentPath;
             }).map(child=>{
-              child.principalId = child.principalId == null ? item.principalId : item.principalId + ',' + child.principalId
+              child.principalIdList = child.principalId == null ? item.principalIdList : item.principalIdList + ',' + child.principalId
               return child
             })
             if (children.length) {

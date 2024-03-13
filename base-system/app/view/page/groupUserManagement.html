@@ -27,7 +27,7 @@
         <v-row no-gutters>
           <v-col cols="3" md="3" xl="2" class="pr-2">
             <v-card class="rounded-lg" style="overflow: hidden;">
-              <select-group-tree @change-active="changeActiveGroup" @check-principal-auth="setPrincipalAuth" @change-group-list="constantObj.groupList = $event"></select-group-tree>
+              <select-group-tree @change-active="changeActiveGroup" @check-principal-auth="setPrincipalAuth"></select-group-tree>
             </v-card>
           </v-col>
           <v-col cols="9" md="9" xl="10">
@@ -54,9 +54,8 @@
 
               <v-tabs-items v-model="tabActive">
                 <v-tab-item>
-                  <!-- <group-role-page :app-list="constantObj.appList" :role-list="constantObj.roleList" :loading="isAppLoading" v-model="activePageList" :group="activeGroup" @change-role="changeRole" @refresh-role-list="getRoleData"></group-role-page> -->
-                  <group-user :table-data="tableData" :role-list="constantObj.roleList" :loading="isAppLoading" v-model="activePageList" 
-                    :groupId="activeGroup" @refresh-role-list="getTableData" @get-role-data="getRoleData" :isPrincipal="isPrincipal"></group-user>
+                  <group-user :table-data="tableData" :loading="isAppLoading" v-model="activePageList" 
+                    :groupId="activeGroup" @refresh-user-list="getTableData" :isPrincipal="isPrincipal"></group-user>
                 </v-tab-item>
               </v-tabs-items>
             </v-card>
@@ -126,7 +125,6 @@ new Vue({
       roleList: [],
     },
     searchInput: null,
-    isTableLoading: true,
     isAppLoading: true,
     tableDataBackUp: [],
     // 新增数据
@@ -154,7 +152,6 @@ new Vue({
       return this.constantObj.tabList;
     },
     tableData() {
-      // return this.tableDataBackUp.filter(e => (e.groupPath || '').startsWith(this.activeGroupPath || ''));
       return this.tableDataBackUp
     },
   },
@@ -167,9 +164,7 @@ new Vue({
   },
   async created() {
   },
-  mounted() {
-    // this.doUiAction('getTableData');
-    this.activeGroup = localStorage.getItem('activeGroup')
+  async mounted() {
   },
   methods: {
     async doUiAction(uiActionId, uiActionData) {
@@ -186,7 +181,7 @@ new Vue({
       }
     },
     async getTableData(isContainSub) {
-      this.isTableLoading = true;
+      this.isAppLoading = true;
       const where = {};
       const whereIn = {};
       const whereLike = {};
@@ -240,45 +235,12 @@ new Vue({
         list.push(item);
       })
       this.tableDataBackUp = list;
-      this.isTableLoading = false;
-    },
-    async getRoleData(isContainSub) {
-      this.isAppLoading = true;
-      const whereLike = {};
-
-      if(isContainSub){
-        whereLike.roleId = `${this.activeGroup}%|%`;
-      }else{
-        whereLike.roleId = `${this.activeGroup}|%`;
-      }
-      const rows = (await window.jianghuAxios({
-        data: {
-          appData: {
-            pageId: 'groupUserManagement',
-            actionId: 'selectRoleList',
-            actionData: {},
-            whereLike,
-            orderBy: [{column: 'operationAt', order: 'desc'}]
-          }
-        }
-      })).data.appData.resultData.rows;
-
-      rows.forEach(row => {
-        row.operationAt = dayjs(row.operationAt).format('YYYY-MM-DD HH:mm:ss');
-      })
-      this.constantObj.roleList = [{
-              roleId: "无职务",
-              roleName: "无职务",
-              roleType:"正式职务",
-            }, ...rows];
       this.isAppLoading = false;
     },
     changeActiveGroup(item) {
       this.activeGroup = item.groupId ? item.groupId : item.groupPath + '-' + item.groupLastId;
-      localStorage.setItem('activeGroup',this.activeGroup)
       this.activeGroupName = item.groupName;
       this.activeGroupPath = item.groupPath || "FS";
-      this.getRoleData();
       if (this.tabActive == 1) {
         this.getUserGroupRolePage();
         return;
@@ -287,7 +249,7 @@ new Vue({
     },
     setPrincipalAuth(item){
       this.isPrincipal = 
-        _.map(window.userInfo.userGroupRoleList, "groupId").join(',').includes('超级管理员') || item.principalId.includes(window.userInfo.userId)
+        _.map(window.userInfo.userGroupRoleList, "groupId").join(',').includes('超级管理员') || item.principalIdList?.includes(window.userInfo.userId)
     }
   }
 })

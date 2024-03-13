@@ -33,7 +33,7 @@ class UserGroupRoleService extends Service {
 
   async updateUserGroupRole() {
     const { jianghuKnex } = this.app;
-    const { userId, roleId: roleIdList, groupId, roleConfig } = this.ctx.request.body.appData.actionData;
+    const { id, userId, roleId: roleIdList, groupId, roleConfig } = this.ctx.request.body.appData.actionData;
 
     const roleInsertList = [];
     roleConfig.forEach(item => {
@@ -47,7 +47,7 @@ class UserGroupRoleService extends Service {
 
     await jianghuKnex.transaction(async trx => { 
       // 删除旧的
-      await trx('enterprise_user_group_role').where({ userId, groupId }).delete();
+      await trx('enterprise_user_group_role').where({ id }).delete();
       if (roleInsertList.length > 0) { 
         // 插入新的
         await trx('enterprise_user_group_role', this.ctx).insert(roleInsertList);
