@@ -22,52 +22,60 @@ const actionDataScheme = Object.freeze({
 
 
 class NoticeService extends Service {
-  async _sendNotice(data) {
-    const { jianghuKnex, knex } = this.ctx.app;
-    let idSequence = await idGenerateUtil.idPlus({
+  async _sendQiweiMessage(qiweiId, taskTitle, taskDesc, jumpUrl) {
+    return wecomUtil.sendMessage({
+      msgtype: 'textcard',
+      touser: qiweiId,
+      textcard: {
+        title: taskTitle,
+        description: `
+          <div class="gray">${dayjs().format('YYYY年MM月DD日')}</div><div>${taskDesc}</div>
+        `,
+        url: jumpUrl,
+        btntxt: "详情",
+      },
+    });
+  }
+  async _createNotice(jianghuKnex, task) {
+    return jianghuKnex(tableEnum.task).jhInsert({
+      ...task,
+      taskType: '通知',
+      taskCreateAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+    });
+  }
+  async _getIdSequence() {
+    const { knex } = this.ctx.app;
+    return idGenerateUtil.idPlus({
       knex,
       tableName: 'task',
       columnName: 'idSequence',
-    })
-    const { taskTitle, taskDesc, taskContent, allUserList, jumpUrl } = data
+    });
+  }
+  async _sendNotice(data) {
+    const { taskTitle, taskDesc, taskContent, allUserList, jumpUrl, userId } = data
 
+    let idSequence = await this._getIdSequence()
     const taskId = `TZ${idSequence}`
-    const taskBizId = data.taskBizId || taskId
+    let taskBizId = data.taskBizId || taskId
 
-    if (data.userId) {
-      await jianghuKnex(tableEnum.task).jhInsert({
+    if (userId) {
+      await this._createNotice({
         taskBizId,
         taskTitle,
         taskContent,
         taskDesc,
-        taskManagerId: data.userId,
+        taskManagerId: userId,
         idSequence,
-        taskType: '通知',
-        taskCreateAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
         taskId,
       })
     }
 
-    const approvalUser = allUserList.find(item => item.userId === data.userId) || {}
-
+    const approvalUser = allUserList.find(item => item.userId === userId) || {}
     if (approvalUser.qiweiId) {
       try {
-        await wecomUtil.sendMessage({
-          msgtype: 'textcard',
-          touser: approvalUser.qiweiId,
-          textcard: {
-            "title": taskTitle,
-            "description": `
-            <div class="gray">${dayjs().format('YYYY年MM月DD日')}</div><div>${taskDesc}</div>
-          `,
-            "url": jumpUrl,
-            "btntxt": "详情"
-          },
-        })
+        await this._sendQiweiMessage(approvalUser.qiweiId, taskTitle, taskDesc, jumpUrl)
       } catch (error) {
-
       }
-
     }
   }
   // 添加审批通知
@@ -158,15 +166,6 @@ class NoticeService extends Service {
     })
   }
 
-  // 添加公告通知
-  async addAfficheNotice(actionData) {
-    const { ctx } = this
-    const { jianghuKnex, knex } = ctx.app;
-    const { wecom } = ctx.app.config;
-    const { username } = ctx.userInfo;
-    let { rowId, taskMemberIdList, taskManagerId, taskTitle, taskContent, taskType, taskDesc } = actionData;
-
-  }
 
   // 添加消息通知
   async addNotice(actionData) {
@@ -200,11 +199,7 @@ class NoticeService extends Service {
       taskMemberIdList = _.union(taskMemberIdList, [taskManagerId])
     }
 
-    let idSequence = await idGenerateUtil.idPlus({
-      knex,
-      tableName: 'task',
-      columnName: 'idSequence',
-    })
+    let idSequence = await this._getIdSequence()
     idSequence--;
 
     // 判断taskType类型
