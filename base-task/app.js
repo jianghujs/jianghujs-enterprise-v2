@@ -11,7 +11,7 @@ class AppBootHook {
   }
 
   async didReady() {
-    const { wecom } = this.ctx.app.config
+    const { wecom } = this.app.config
     if (wecom) {
       await wecomUtil.initConfig(wecom);
     }
