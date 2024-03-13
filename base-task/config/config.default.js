@@ -39,6 +39,7 @@ module.exports = appInfo => {
         { prefix: `/${appId}/public/`, dir: path.join(eggJianghuDir, 'app/public') },
       ],
     },
+    enableUploadStaticFileAuthorization: true,
 
     view: {
       defaultViewEngine: 'nunjucks',
