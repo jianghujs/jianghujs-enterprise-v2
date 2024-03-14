@@ -23,6 +23,7 @@
         @close-material-picker="doUiAction('closeMaterialPicker')"
         :material-type="materialType"
         :material-dir="material.dir"
+        :path="material.path"
         use-file-btn
         page-id="allPage"
         :operation-option="{delete: true, recycle: true, copy: true, renameFile: true}"
@@ -40,8 +41,8 @@
     </v-card>
   </v-dialog>
 </template>
-{% include 'component/fileBrowser/FileBrowser.html' %} {% include
-'component/importMaterial/FileBrowser.html' %}
+{% include 'component/fileBrowser/FileBrowser.html' %}
+{% include 'component/importMaterial/FileBrowser.html' %}
 
 <script type="module">
   Vue.component("select-file-dialog", {
@@ -51,7 +52,7 @@
       materialType: "",
       material: {
         dir: "taskMaterial",
-        path: "",
+        path: `/${window.userInfo.userId}/`,
       },
     }),
     methods: {
@@ -106,10 +107,12 @@
 
 <style scoped>
 .v-dialog--fullscreen .v-sheet {
-    height: auto;
-    position: relative;
-    background: #fff;
-    display: block;
-  }
-
+  height: auto;
+  position: relative;
+  background: #fff;
+  display: block;
+}
+.v-dialog--fullscreen {
+  top: 50px!important;
+}
 </style>
