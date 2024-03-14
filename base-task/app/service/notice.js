@@ -23,18 +23,24 @@ const actionDataScheme = Object.freeze({
 
 class NoticeService extends Service {
   async _sendQiweiMessage(qiweiId, taskTitle, taskDesc, jumpUrl) {
-    return wecomUtil.sendMessage({
-      msgtype: 'textcard',
-      touser: qiweiId,
-      textcard: {
-        title: taskTitle,
-        description: `
-          <div class="gray">${dayjs().format('YYYY年MM月DD日')}</div><div>${taskDesc}</div>
-        `,
-        url: jumpUrl,
-        btntxt: "详情",
-      },
-    });
+    const { wecom } = this.ctx.app.config
+    if (!wecom) return;
+    
+    try {
+      await wecomUtil.sendMessage({
+        msgtype: 'textcard',
+        touser: qiweiId,
+        textcard: {
+          title: taskTitle,
+          description: `
+            <div class="gray">${dayjs().format('YYYY年MM月DD日')}</div><div>${taskDesc}</div>
+          `,
+          url: jumpUrl,
+          btntxt: "详情",
+        },
+      })
+    } catch (error) {
+    }
   }
   async _createTask(task) {
     const { jianghuKnex } = this.ctx.app;
@@ -74,10 +80,7 @@ class NoticeService extends Service {
 
     const approvalUser = allUserList.find(item => item.userId === userId) || {}
     if (approvalUser.qiweiId) {
-      try {
-        await this._sendQiweiMessage(approvalUser.qiweiId, taskTitle, taskDesc, jumpUrl)
-      } catch (error) {
-      }
+      await this._sendQiweiMessage(approvalUser.qiweiId, taskTitle, taskDesc, jumpUrl)
     }
   }
   // 添加审批通知
