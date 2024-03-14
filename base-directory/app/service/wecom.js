@@ -27,8 +27,9 @@ const actionDataScheme = Object.freeze({
 class WecomService extends Service {
   async getOauthUrl() {
     const { ctx } = this;
-    if (this.isWorkWechatEnv) {
-      const { qyApiConfig } = this.app.config.wechat;
+    const { wechat } = this.app.config;
+    if (this.isWorkWechatEnv && wechat) {
+    const { qyApiConfig } = wechat;
       const redirectUri = qyApiConfig.loginRedirectUri;
       return QyOauthApi.getAuthorizeUrl(qyApiConfig.corpId, redirectUri, "");
     }
