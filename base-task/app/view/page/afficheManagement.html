@@ -42,7 +42,6 @@
 
             <v-spacer></v-spacer>
 
-
             <v-col cols="12" xs="8" sm="4" md="3" class="pa-0">
               <v-text-field color="success" v-model="searchInput" prefix="搜索：" class="jh-v-input" dense filled single-line></v-text-field>
             </v-col>
@@ -239,7 +238,7 @@
         <view-notice-detail-drawer ref="noticeDetail" />
         <view-ticket-drawer ref="ticketDetail" />
 
-        
+
         <select-file-dialog ref="selectFileDialog" @confirm="editHandlerWhenUseMaterial" />
 
       </div>
@@ -264,20 +263,18 @@
 
 <div id="app"></div>
 
-{% endblock %} {% block vueScript %} {% include
-'common/jianghuJs/fixedTableHeightV4.html' %} {% include
-'component/view-journal-detail-drawer.html' %} {% include
-'component/view-notice-detail-drawer.html' %} {% include
-'component/view-task-detail-drawer.html' %} {% include
-'component/ticket/view-ticket-drawer.html' %} {% include 'common/constant.html'
-%}
+{% endblock %}
+{% block vueScript %}
+{% include 'common/jianghuJs/fixedTableHeightV4.html' %}
+{% include 'component/view-journal-detail-drawer.html' %}
+{% include 'component/view-notice-detail-drawer.html' %}
+{% include 'component/view-task-detail-drawer.html' %}
+{% include 'component/ticket/view-ticket-drawer.html' %}
+{% include 'common/constant.html' %}
 {% include 'component/select-org-user-dialog.html' %}
 {% include 'component/select-file-dialog.html' %}
 
-<link
-  rel="stylesheet"
-  href="/<$ ctx.app.config.appId $>/public/plugins/editor.md/css/editormd.min.css"
-/>
+<link rel="stylesheet" href="/<$ ctx.app.config.appId $>/public/plugins/editor.md/css/editormd.min.css" />
 <script src="/<$ ctx.app.config.appId $>/public/lib/jquery/jquery.min.js"></script>
 <script src="/<$ ctx.app.config.appId $>/public/plugins/editor.md/editormd.js"></script>
 
@@ -345,13 +342,6 @@
       isMoreMenuShown: false,
 
       isDialogShown: false,
-
-      isFileDrawerShow: false,
-      materialType: '',
-      material: {
-        dir: 'taskMaterial',
-        path: ''
-      },
     }),
     watch: {
       isHelpPageDrawerShown(val) {
@@ -360,7 +350,7 @@
         }
       },
     },
-    async created() {},
+    async created() { },
     mounted() {
       this.doUiAction("initPageData");
     },
@@ -400,8 +390,10 @@
           case "addPerson":
             await this.addPerson(uiActionData);
             break;
-          case 'viewItem':
-            window.open(`/<$ ctx.app.config.appId $>/page/afficheViewer?taskId=${uiActionData.item.taskId}`)
+          case "viewItem":
+            window.open(
+              `/<$ ctx.app.config.appId $>/page/afficheViewer?taskId=${uiActionData.item.taskId}`
+            );
             break;
           default:
             console.error("[doUiAction] uiActionId not find", { uiActionId });
@@ -428,9 +420,9 @@
             },
           })
         ).data.appData.resultData.rows;
-        rows.forEach(item=> {
-          item.taskMemberIdList = (item.taskMemberIdList || '').split(',')
-        })
+        rows.forEach((item) => {
+          item.taskMemberIdList = (item.taskMemberIdList || "").split(",");
+        });
 
         this.tableData = rows;
         this.isTableLoading = false;
@@ -445,7 +437,7 @@
           taskType: "公告",
           taskStatus: "草稿",
         };
-        this.actionKey = 'createItem'
+        this.actionKey = "createItem";
         // this.createItem = {}
       },
 
@@ -506,7 +498,7 @@
         });
         await window.vtoast.success("新增数据成功");
 
-        if (this.createActionData.taskStatus === '已发送') {
+        if (this.createActionData.taskStatus === "已发送") {
           await this.addNotice({
             ...this.createActionData,
             rowId: result.data.appData.resultData.rows[0],
@@ -521,7 +513,7 @@
       // ---------- <<<<<<<<<<< 新增数据 uiAction ---------
       async prepareUpdateFormData({ item }) {
         this.updateItem = item;
-        this.actionKey = 'updateItem'
+        this.actionKey = "updateItem";
       },
       async openUpdateDrawer() {
         this.isUpdateDrawerShown = true;
@@ -544,14 +536,20 @@
       },
 
       prepareDoUpdateItem({ taskStatus }) {
-        const { id, taskNoticeConfig, taskMemberIdList, taskContent, taskTitle } = this.updateItem;
-        
+        const {
+          id,
+          taskNoticeConfig,
+          taskMemberIdList,
+          taskContent,
+          taskTitle,
+        } = this.updateItem;
+
         this.updateActionData = {
           taskNoticeConfig: JSON.stringify(taskNoticeConfig),
           taskStatus,
           taskTitle,
           taskContent,
-          taskMemberIdList: taskMemberIdList.join(',')
+          taskMemberIdList: taskMemberIdList.join(","),
         };
         this.updateId = id;
       },
@@ -564,13 +562,13 @@
               pageId: "noticeManagement",
               actionId: "updateItem",
               actionData: this.updateActionData,
-              where: { id: this.updateId }
+              where: { id: this.updateId },
             },
           },
         });
         await window.vtoast.success("更新草稿成功");
 
-        if (this.updateActionData.taskStatus === '已发送') {
+        if (this.updateActionData.taskStatus === "已发送") {
           this.addNotice({
             ...this.updateActionData,
             rowId: this.updateId,
@@ -634,8 +632,7 @@
           if (document.getElementById("editorMdContainer")) {
             document.getElementById(
               "editorMdContainer"
-            ).innerHTML = `<textarea style=\"display:none;\">${
-              that[that.actionKey][key] || ""
+            ).innerHTML = `<textarea style=\"display:none;\">${that[that.actionKey][key] || ""
             }</textarea>`;
             that.editor = editormd("editorMdContainer", {
               // width  : "100%",
@@ -678,7 +675,6 @@
               },
               // 如果没有图标，则可以这样直接插入内容，可以是字符串或HTML标签
               toolbarIconTexts: {
-               
                 toggle:
                   "<i class='fa fa-expand' name='toggle' unselectable='on' style='display: inline-block;'></i><span class='ml-1'>收缩</span>",
                 articleQuery:
@@ -688,7 +684,7 @@
                 imageUpload: function (cm, icon, cursor, selection) {
                   onImageUpload();
                 },
-              
+
                 toggle: function (cm, icon, cursor, selection) {
                   cm.replaceSelection(
                     `\n[jh-toggle title=\"折叠容器\" default-open=\"true\"]\n折叠内容\n[/jh-toggle]\n`
@@ -697,13 +693,13 @@
                 articleQuery: function (cm, icon, cursor, selection) {
                   cm.replaceSelection(
                     "\n[jh-article-query]\n" +
-                      "{\n" +
-                      ' "where": "",\n' +
-                      ' "queryType": "order",\n' +
-                      ' "orderBy": "order by articleId asc",\n' +
-                      ' "limit": 20\n' +
-                      "}" +
-                      "\n[/jh-article-query]\n"
+                    "{\n" +
+                    ' "where": "",\n' +
+                    ' "queryType": "order",\n' +
+                    ' "orderBy": "order by articleId asc",\n' +
+                    ' "limit": 20\n' +
+                    "}" +
+                    "\n[/jh-article-query]\n"
                   );
                 },
               },
@@ -730,32 +726,70 @@
         });
       },
       async openImageUploadDrawer() {
-        this.materialType = 'image';
-        this.$refs.selectFileDialog.doUiAction('open')
+        this.materialType = "image";
+        this.$refs.selectFileDialog.doUiAction("open");
       },
-     
-      editHandlerWhenUseMaterial({filename, downloadPath}) {
-        if (this.materialType === 'pdf') {
+
+      editHandlerWhenUseMaterial({ filename, downloadPath }) {
+        if (this.materialType === "pdf") {
           // pdf 操作使用通道
           this.editor.insertValue(`\n[jh-pdf-viewer src="${downloadPath}"/]\n`);
           return;
         }
-        const fileSubbfix = filename.lastIndexOf(".") > -1 ? filename.substring(filename.lastIndexOf('.') + 1).toLowerCase() : '';
-        if (['png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', '.psd', 'svg', 'tiff'].indexOf(fileSubbfix) !== -1) {
-          this.editor.insertValue(`\n![${filename}](/<$ ctx.app.config.appId $>/upload${downloadPath})`);
+        const fileSubbfix =
+          filename.lastIndexOf(".") > -1
+            ? filename.substring(filename.lastIndexOf(".") + 1).toLowerCase()
+            : "";
+        if (
+          [
+            "png",
+            "jpg",
+            "jpeg",
+            "bmp",
+            "gif",
+            "webp",
+            ".psd",
+            "svg",
+            "tiff",
+          ].indexOf(fileSubbfix) !== -1
+        ) {
+          this.editor.insertValue(
+            `\n![${filename}](/<$ ctx.app.config.appId $>/upload${downloadPath})`
+          );
           return;
         }
-        if (['mp3', 'wav', 'wmv'].indexOf(fileSubbfix) !== -1) {
-          this.editor.insertValue(`\n<audio controls="" preload="none"><source src="/<$ ctx.app.config.appId $>/upload${downloadPath}"></audio>`)
+        if (["mp3", "wav", "wmv"].indexOf(fileSubbfix) !== -1) {
+          this.editor.insertValue(
+            `\n<audio controls="" preload="none"><source src="/<$ ctx.app.config.appId $>/upload${downloadPath}"></audio>`
+          );
           return;
         }
-        if (['avi', 'mpg', 'mpeg', 'mov', 'rm', 'ram', 'swf', 'flv', 'mp4', 'wma', 'rmvb', 'mkv'].indexOf(fileSubbfix) !== -1) {
-          this.editor.insertValue(`\n<video controls="" preload="none"><source src="/<$ ctx.app.config.appId $>/upload${downloadPath}"></video>`)
+        if (
+          [
+            "avi",
+            "mpg",
+            "mpeg",
+            "mov",
+            "rm",
+            "ram",
+            "swf",
+            "flv",
+            "mp4",
+            "wma",
+            "rmvb",
+            "mkv",
+          ].indexOf(fileSubbfix) !== -1
+        ) {
+          this.editor.insertValue(
+            `\n<video controls="" preload="none"><source src="/<$ ctx.app.config.appId $>/upload${downloadPath}"></video>`
+          );
           return;
         }
 
         // 下载链接
-        this.editor.insertValue(`\n[${filename}](/<$ ctx.app.config.appId $>/upload${downloadPath})`);
+        this.editor.insertValue(
+          `\n[${filename}](/<$ ctx.app.config.appId $>/upload${downloadPath})`
+        );
       },
 
       async addNotice(item) {
@@ -777,6 +811,7 @@
   .v-btn.filter-btn:not(.v-btn--round).v-size--default {
     height: auto;
   }
+
   .v-dialog--fullscreen .v-sheet {
     height: auto;
     position: relative;

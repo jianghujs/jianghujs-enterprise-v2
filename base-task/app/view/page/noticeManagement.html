@@ -179,11 +179,6 @@
         <view-ticket-drawer ref="ticketDetail" />
         <view-affiche-drawer ref="afficheDrawer" />
 
-        <select-org-user-dialog
-        :show.sync="isDialogShown"
-        :selected-ids.sync="createItem.taskMemberIdList"
-        @confirm="doUiAction('addPerson', $event)"
-      ></select-org-user-dialog>
       </div>
 
       <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
@@ -206,11 +201,12 @@
 
 <div id="app"></div>
 
-{% endblock %} {% block vueScript %} {% include
-'common/jianghuJs/fixedTableHeightV4.html' %} {% include
-'component/view-journal-detail-drawer.html' %} {% include
-'component/view-notice-detail-drawer.html' %} {% include
-'component/view-task-detail-drawer.html' %}
+{% endblock %}
+{% block vueScript %}
+{% include 'common/jianghuJs/fixedTableHeightV4.html' %}
+{% include 'component/view-journal-detail-drawer.html' %}
+{% include 'component/view-notice-detail-drawer.html' %}
+{% include 'component/view-task-detail-drawer.html' %}
 {% include 'component/ticket/view-ticket-drawer.html' %}
 {% include 'component/view-affiche-drawer.html' %}
 {% include 'common/constant.html'%}
@@ -322,9 +318,6 @@
             await this.confirmDeleteDialog();
             await this.deleteAllTask(uiActionData);
             await this.getTableData();
-            break;
-          case "addPerson":
-            await this.addPerson(uiActionData);
             break;
           default:
             console.error("[doUiAction] uiActionId not find", { uiActionId });
@@ -497,118 +490,7 @@
         }
       },
       // ---------- <<<<<<<<<<<<< 初始化页面时参数处理 ----------
-      async addPerson(selectedItems) {
-        this.isDialogShown = false;
-        this.createItem.taskNoticeConfig = JSON.stringify(selectedItems);
-      },
-
-      initEditorMd(that, key, { image: onImageUpload, pdf: onPdfUpload }) {
-        that.$nextTick(() => {
-          if (document.getElementById("editorMdContainer")) {
-            document.getElementById(
-              "editorMdContainer"
-            ).innerHTML = `<textarea style=\"display:none;\">${
-              that.createItem[key] || ""
-            }</textarea>`;
-            that.editor = editormd("editorMdContainer", {
-              // width  : "100%",
-              // height : "100%",
-              watch: false,
-              saveHTMLToTextarea: true, // 保存 HTML 到 Textarea
-              htmlDecode: "style,script,iframe|on*",
-              path: "/<$ ctx.app.config.appId $>/public/plugins/editor.md/lib/",
-              toolbarIcons: Object.freeze([
-                "undo",
-                "redo",
-                "|",
-                "watch",
-                "preview",
-                "|",
-                "h1",
-                "h2",
-                "h3",
-                "h4",
-                "h5",
-                "bold",
-                "del",
-                "italic",
-                "quote",
-                "mark",
-                "imageUpload",
-                "list-ul",
-                "list-ol",
-                "hr",
-                "link",
-                "|",
-                "pdfViewer",
-                "toggle",
-                "articleQuery",
-              ]),
-              toolbarIconsClass: {
-                audioUpload: "fa-file-audio-o",
-                videoUpload: "fa-youtube-play",
-                attachmentUpload: "fa-upload",
-                imageUpload: "fa-image",
-              },
-              // 如果没有图标，则可以这样直接插入内容，可以是字符串或HTML标签
-              toolbarIconTexts: {
-                pdfViewer:
-                  "<i class='fa fa-file-pdf-o' name='toggle' unselectable='on' style='display: inline-block;'></i><span class='ml-1'>PDF</span>",
-                toggle:
-                  "<i class='fa fa-expand' name='toggle' unselectable='on' style='display: inline-block;'></i><span class='ml-1'>收缩</span>",
-                articleQuery:
-                  "<i class='fa fa-table' name='toggle' unselectable='on' style='display: inline-block;'></i><span class='ml-1'>列表</span>",
-              },
-              toolbarHandlers: {
-                imageUpload: function (cm, icon, cursor, selection) {
-                  onImageUpload();
-                },
-                pdfViewer: function (cm, icon, cursor, selection) {
-                  onPdfUpload();
-                  // cm.replaceSelection(`\n[jh-pdf-viewer src="xxx"/]\n`);
-                },
-                toggle: function (cm, icon, cursor, selection) {
-                  cm.replaceSelection(
-                    `\n[jh-toggle title=\"折叠容器\" default-open=\"true\"]\n折叠内容\n[/jh-toggle]\n`
-                  );
-                },
-                articleQuery: function (cm, icon, cursor, selection) {
-                  cm.replaceSelection(
-                    "\n[jh-article-query]\n" +
-                      "{\n" +
-                      ' "where": "",\n' +
-                      ' "queryType": "order",\n' +
-                      ' "orderBy": "order by articleId asc",\n' +
-                      ' "limit": 20\n' +
-                      "}" +
-                      "\n[/jh-article-query]\n"
-                  );
-                },
-              },
-              lang: {
-                toolbar: {
-                  pdfViewer: "pdf 页面预览",
-                  toggle: "展开收起",
-                  column: "横向排列", // 自定义按钮的提示文本，即title属性
-                  articleQuery: "数据列表",
-                },
-              },
-              onchange: function () {
-                that.mdChanged = true;
-                that.createItem[key] = this.getMarkdown();
-                // that.createItem[`${key}ForSeo`] = this.getPreviewedHTML2();
-              },
-            });
-          } else {
-            requestAnimationFrame(() => {
-              this.initEditorMd(that, key, {
-                image: onImageUpload,
-                pdf: onPdfUpload,
-              });
-            });
-          }
-        });
-      },
+     
     },
   });
 </script>
