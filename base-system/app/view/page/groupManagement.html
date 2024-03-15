@@ -81,6 +81,11 @@ SQL END!-->
           <template v-slot:append="{ item, open }">
             <template v-if="item.groupId != '超级管理员'">
               <template v-if="constantObj.userGroupRoleList.includes('超级管理员') && item.groupId">
+                <span role="button" class="grey--text font-weight-medium font-size-2 mr-2">
+                  <v-icon size="16" class="grey--text">mdi-account-details-outline</v-icon>部门主管
+                </span>
+              </template>
+              <template v-if="constantObj.userGroupRoleList.includes('超级管理员') && item.groupId">
                 <span role="button" class="blue--text font-weight-medium font-size-2 mr-2" @click.stop="doUiAction('startSetPrincipal', item)">
                   <v-icon size="16" class="blue--text">mdi-account-details-outline</v-icon>设置组织负责人
                 </span>
