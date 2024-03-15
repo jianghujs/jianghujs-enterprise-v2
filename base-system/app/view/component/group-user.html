@@ -73,7 +73,7 @@
                       </template>
                       <!-- 应用类型 -->
                       <template v-slot:item.role-name="{ item }">
-                        <v-chip class="mr-2" v-for="(roleItem, roleIndex) in item.roleName.split(',').filter(item=>item!='无职务')" text-color="white" color="orange" small label>
+                        <v-chip class="mr-2" v-for="(roleItem, roleIndex) in item.roleName.split(',').filter(item=>item!='无角色')" text-color="white" color="orange" small label>
                           {{roleItem}}
                         </v-chip>
                       </template>
@@ -124,14 +124,14 @@
                   <v-autocomplete class="jh-v-input" dense single-line filled v-model="createItem.userId" :items="constantObj.userList"></v-autocomplete>
               </v-col>
               <v-col cols="12" sm="12" md="12">
-                  <span class="jh-input-label">员工职务<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                  <v-autocomplete class="jh-v-input" dense single-line filled v-model="createItem.roleId" :items="constantObj.roleList?.filter(item=> item.roleId == '无职务' || item.roleId.includes(createItem.groupId+'|'))"
+                  <span class="jh-input-label">员工角色<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                  <v-autocomplete class="jh-v-input" dense single-line filled v-model="createItem.roleId" :items="constantObj.roleList?.filter(item=> item.roleId == '无角色' || item.roleId.includes(createItem.groupId+'|'))"
                      item-value="roleId" item-text="roleName" multiple :rules="validationRules.requireRules">
                     <template v-slot:selection="data">
                       <v-chip
                         small
                         class="ma-1"
-                        :color="data.item.roleType == '临时职务' ? 'orange' : 'success'"
+                        :color="data.item.roleType == '临时角色' ? 'orange' : 'success'"
                         outlined
                       >
                         【{{data.item.roleType[0]}}】
@@ -144,7 +144,7 @@
                       <v-chip
                         small
                         class="ma-1"
-                        :color="data.item.roleType == '临时职务' ? 'orange' : 'success'"
+                        :color="data.item.roleType == '临时角色' ? 'orange' : 'success'"
                         text-color="white"
                       >
                         {{data.item.roleType[0]}}
@@ -155,13 +155,13 @@
                     </template>
                   </v-autocomplete>
               </v-col>
-              <template v-if="createRoleConfig.filter(item => item.roleType == '临时职务')?.length > 0">
+              <template v-if="createRoleConfig.filter(item => item.roleType == '临时角色')?.length > 0">
                 <v-col cols="12" sm="12" md="12">
-                  <span class="jh-input-label">设置临时职务期限</span>
+                  <span class="jh-input-label">设置临时角色期限</span>
                   <v-card outlined>
                       <v-data-table
                         :headers="roleCreateHeaders"
-                        :items="createRoleConfig.filter(i => i.roleType == '临时职务')"
+                        :items="createRoleConfig.filter(i => i.roleType == '临时角色')"
                       >
                       <template v-slot:item.role-deadline-1="{ item }">
                         <v-autocomplete class="jh-v-input" dense single-line filled v-model="item.roleDeadline" :items="constantObj.roleDeadlineItem" item-value="days" item-text="text">
@@ -205,14 +205,14 @@
             @change="updateItem.roleId = []" :rules="validationRules.requireRules"></v-autocomplete>
         </v-col>
         <v-col cols="12" sm="12" md="12">
-            <span class="jh-input-label">员工职务<span class="red--text text--accent-2 ml-1">*必填</span></span>
+            <span class="jh-input-label">员工角色<span class="red--text text--accent-2 ml-1">*必填</span></span>
             <v-autocomplete class="jh-v-input" dense single-line filled v-model="updateItem.roleId" 
                 :items="filterRoleList" item-value="roleId" item-text="roleName" multiple :rules="validationRules.requireRules">
               <template v-slot:selection="data">
                 <v-chip
                   small
                   class="ma-1"
-                  :color="data.item.roleType == '临时职务' ? 'orange' : 'success'"
+                  :color="data.item.roleType == '临时角色' ? 'orange' : 'success'"
                   outlined
                 >
                   【{{data.item.roleType[0]}}】
@@ -225,7 +225,7 @@
                 <v-chip
                   small
                   class="ma-1"
-                  :color="data.item.roleType == '临时职务' ? 'orange' : 'success'"
+                  :color="data.item.roleType == '临时角色' ? 'orange' : 'success'"
                   text-color="white"
                 >
                   {{data.item.roleType[0]}}
@@ -236,13 +236,13 @@
               </template>
             </v-autocomplete>
         </v-col>
-        <template v-if="updateRoleConfig.filter(item => item.roleType == '临时职务')?.length > 0">
+        <template v-if="updateRoleConfig.filter(item => item.roleType == '临时角色')?.length > 0">
           <v-col cols="12" sm="12" md="12">
-            <span class="jh-input-label">设置临时职务期限</span>
+            <span class="jh-input-label">设置临时角色期限</span>
             <v-card outlined>
                 <v-data-table
                   :headers="roleUpdateHeaders"
-                  :items="updateRoleConfig.filter(i => i.roleType == '临时职务')"
+                  :items="updateRoleConfig.filter(i => i.roleType == '临时角色')"
                 >
                 <template v-slot:item.role-deadline-2="{ item }">
                   <v-menu class="jh-v-input" transition="scale-transition" offset-y min-width="auto">
@@ -317,9 +317,9 @@
           groupList:[],
           roleList: [
             {
-              roleId: "无职务",
-              roleName: "无职务",
-              roleType:"正式职务",
+              roleId: "无角色",
+              roleName: "无角色",
+              roleType:"正式角色",
             }
           ]
         },
@@ -330,16 +330,16 @@
             {text: "账号", value: "userId", width:100},
             {text: "用户", value: "username", width:100},
             {text: "所在组织", value: "groupAllName", width:280},
-            {text: "职务", value: "role-name", width:380},
+            {text: "角色", value: "role-name", width:380},
             {text: '操作', value: 'action', align: 'center', sortable: false, width: window.innerWidth < 500 ? 80 : 200, class: 'fixed', cellClass: 'fixed'},
         ],
         roleCreateHeaders:[
-            {text: "职务", value: "roleName", width:180},
+            {text: "角色", value: "roleName", width:180},
             {text: "类型", value: "roleType", width:180},
             {text: "期限", value: "role-deadline-1", width:180},
         ],
         roleUpdateHeaders:[
-            {text: "职务", value: "roleName", width:180},
+            {text: "角色", value: "roleName", width:180},
             {text: "类型", value: "roleType", width:180},
             {text: "到期日期", value: "role-deadline-2", width:180}
         ],
@@ -360,11 +360,11 @@
         createRoleConfig(){
           let roleConfig = []
           this.createItem.roleId?.forEach(roleId => {
-            if(roleId == "无职务"){
+            if(roleId == "无角色"){
               roleConfig.push({
                 roleId: null,
-                roleName:"无职务",
-                roleType:"正式职务",
+                roleName:"无角色",
+                roleType:"正式角色",
                 roleDeadline: -1
               })
               return
@@ -374,7 +374,7 @@
               roleId:role.roleId,
               roleName:role.roleName,
               roleType:role.roleType,
-              roleDeadline: role.roleType == '临时职务' ? 7 : -1
+              roleDeadline: role.roleType == '临时角色' ? 7 : -1
             })
           });
           return roleConfig
@@ -396,7 +396,7 @@
                 roleId: newRole.roleId,
                 roleName: newRole.roleName,
                 roleType: newRole.roleType,
-                roleDeadline: newRole.roleType == '临时职务' ? dayjs().add(7, 'day').format('YYYY-MM-DD') : -1
+                roleDeadline: newRole.roleType == '临时角色' ? dayjs().add(7, 'day').format('YYYY-MM-DD') : -1
               })
             }
           });
@@ -406,9 +406,9 @@
           if(this.updateItem.groupId){
             return [
             {
-              roleId: "无职务",
-              roleName: "无职务",
-              roleType:"正式职务",
+              roleId: "无角色",
+              roleName: "无角色",
+              roleType:"正式角色",
             },
             ...this.constantObj.roleList.filter(item => item.roleId.includes(this.updateItem.groupId+'|'))
             ]
@@ -525,9 +525,9 @@
           })).data.appData.resultData.rows;
 
           this.constantObj.roleList = [{
-                  roleId: "无职务",
-                  roleName: "无职务",
-                  roleType:"正式职务",
+                  roleId: "无角色",
+                  roleName: "无角色",
+                  roleType:"正式角色",
                 }, ...rows];
         },
         async getGroupData() {
@@ -576,7 +576,7 @@
 
         async doCreateItem() {
             await window.jhMask.show();
-            await window.vtoast.loading("新增用户职务");
+            await window.vtoast.loading("新增用户角色");
             const groupUserIdList = this.tableData.map(v => v.userId);
             const username = this.constantObj.userList.find(v => v.value == this.createActionData.userId)?.text;
             await window.jianghuAxios({
@@ -601,7 +601,7 @@
                 }
             })
             await window.jhMask.hide();
-            await window.vtoast.success("新增用户职务成功");
+            await window.vtoast.success("新增用户角色成功");
         },
         async closeCreateDrawer() {
             this.isCreateDrawerShown = false;
@@ -613,7 +613,7 @@
         async prepareUpdateFormData(funObj) {
             this.updateItem = _.pick(funObj, ['id', 'groupId', 'userId', 'roleId','roleConfig']);
             if(this.updateItem.roleId){
-              this.updateItem.roleId = this.updateItem.roleId.map(item => item || "无职务")
+              this.updateItem.roleId = this.updateItem.roleId.map(item => item || "无角色")
             }
         },
 
@@ -640,14 +640,14 @@
             this.updateActionData = {...data,roleConfig: this.updateRoleConfig.map(item => {
               return {
                 ...item,
-                roleId: item.roleId == "无职务" ? null : item.roleId
+                roleId: item.roleId == "无角色" ? null : item.roleId
               }
             })};
         },
 
         async doUpdateItem() {
             await window.jhMask.show();
-            await window.vtoast.loading("修改用户职务");
+            await window.vtoast.loading("修改用户角色");
             await window.jianghuAxios({
                 data: {
                 appData: {
@@ -664,7 +664,7 @@
             })
 
             await window.jhMask.hide();
-            await window.vtoast.success("修改用户职务成功");
+            await window.vtoast.success("修改用户角色成功");
         },
 
         async closeUpdateDrawer() {
