@@ -10,7 +10,7 @@
           <v-row>
             <v-col cols="12" xs="12" sm="12" md="4" xl="3">
               <div class="pt-3 text-h7 font-weight-bold">
-                我收到的
+                我提交的
                 <!-- 帮助页按钮 -->
                 <v-icon
                   @click="isHelpPageDrawerShown = true"
@@ -28,28 +28,6 @@
             <!-- 搜索条件表单 >>>>>>>> -->
             <v-col cols="12" xs="12" sm="12" md="8" xl="9">
               <v-row class="jh-backend-form-container justify-end ma-0 pb-xs-2">
-                <v-col
-                cols="12"
-                xs="6"
-                sm="6"
-                md="4"
-                xl="3"
-                class="pa-xs-0 pb-2 pl-1 pl-xs-1"
-              >
-                <v-autocomplete
-                  clearable
-                  v-model="serverSearchInput.taskManagerId"
-                  color="success"
-                  prefix="发送人："
-                  class="jh-v-input bg-white"
-                  item-text="username"
-                  item-id="userId"
-                  :items="userList"
-                  dense
-                  filled
-                  single-line
-                ></v-autocomplete>
-              </v-col>
                 <v-col
                   cols="12"
                   xs="6"
@@ -127,7 +105,7 @@
             <v-row class="ma-0 pa-4">
               <v-spacer></v-spacer>
               <!-- 搜索过滤 -->
-          
+
               <v-col cols="12" xs="8" sm="4" md="3" xl="2" class="pa-0">
                 <v-text-field
                   color="success"
@@ -156,8 +134,9 @@
             >
               <!-- 表格操作按钮 -->
               <template v-slot:item.action="{ item }">
-                <template>
-                
+                <template
+                  v-if="item.taskStatus === '进行中'"
+                >
                   <span
                     role="button"
                     class="success--text font-weight-medium font-size-2 mr-2"
@@ -165,10 +144,29 @@
                   >
                     <v-icon size="16" class="success--text"
                       >mdi-note-edit-outline</v-icon
+                    >修改
+                  </span>
+                  <span
+                    role="button"
+                    class="success--text font-weight-medium font-size-2"
+                    @click="doUiAction('deleteItem', item)"
+                  >
+                    <v-icon size="16" class="success--text"
+                      >mdi-trash-can-outline</v-icon
+                    >撤销
+                  </span>
+                </template>
+                <template v-else>
+                  <span
+                    role="button"
+                    class="success--text font-weight-medium font-size-2 mr-2"
+                    @click="doUiAction('viewTicketDetail', {item})"
+                  >
+                    <v-icon size="16" class="success--text"
+                      >mdi-note-edit-outline</v-icon
                     >查看详情
                   </span>
                 </template>
-                
               </template>
               <!-- 没有数据 -->
               <template v-slot:loading>
@@ -188,7 +186,9 @@
             </v-data-table>
           </v-card>
 
-          <view-journal-drawer ref="viewTicketDrawer" @success="doUiAction('getTableData')"/>
+          <update-journal-drawer ref="updateTicketDrawer" @success="doUiAction('getTableData')"/>
+          <view-ticket-drawer ref="viewTicketDrawer"/>
+        
         </div>
 
         <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
@@ -243,7 +243,10 @@
 {% include 'common/constant.html' %}
 {% include 'component/task-attachment-list.html' %}
 {% include 'component/task-approval-workflow.html' %}
-{% include 'component/journal/view-journal-drawer.html' %}
+{% include 'component/journal/update-journal-drawer.html' %}
+{% include 'component/ticket/view-ticket-drawer.html' %}
+{% include 'component/select-org-user-dialog.html' %}
+{% include 'component/select-file-dialog.html' %}
 
 <script type="module">
   new Vue({
@@ -272,20 +275,21 @@
       // 下拉选项
       constantObj: constantObj,
 
-
+      currentSceneId: null,
       serverSearchInput: {
         taskType: "日志",
+        taskManagerId: window.userInfo.userId,
+        taskEndAt: null,
+        taskLevel: null,
         taskStatus: null,
-        taskNoticeConfig: `%${window.userInfo.userId}%`,
       },
       searchInput: null,
       isTableLoading: true,
       tableData: [],
       headers: [
-        { text: "日志ID", value: "taskId", width: 120 },
+      { text: "日志ID", value: "taskId", width: 120 },
         { text: "日志名称", value: "taskTitle", width: 250 },
-        { text: "发送人", value: "username", width: 120 },
-        { text: "发送时间", value: "taskCreateAt", width: 120 },
+        { text: "发起时间", value: "taskCreateAt", width: 120 },
         { text: "操作者", value: "operationByUser", width: 120 },
         { text: "操作时间", value: "operationAt", width: 250 },
         {
@@ -299,6 +303,18 @@
         },
       ],
 
+      isCreateDrawerShown: false,
+      createItem: {},
+      createActionData: {},
+      isUpdateDrawerShown: false,
+      updateItem: {},
+      updateItemId: null,
+      updateActionData: {},
+      deleteItem: {},
+      deleteItemId: null,
+
+      isTaskStartAtMenuShown: false,
+      isTaskEndAtMenuShown: false,
       userList: [],
 
       taskTemplateList: [],
@@ -319,14 +335,26 @@
       async doUiAction(uiActionId, uiActionData) {
         switch (uiActionId) {
           case "initPageData":
-            await Promise.all([this.getTableData(), this.getUserList(), this.getTaskTemplateList()]);
+            await Promise.all([this.getTableData(), this.getTaskTemplateList()]);
             break;
           case "getTableData":
             await this.getTableData();
             break;
-          case "startUpdateItem":
+          case "viewTicketDetail":
             this.$refs.viewTicketDrawer.doUiAction("open", uiActionData);
             break;
+          case "startUpdateItem":
+            this.$refs.updateTicketDrawer.doUiAction("open", uiActionData);
+            break;
+          case "deleteItem":
+            await this.prepareDeleteFormData(uiActionData);
+            await this.confirmDeleteItemDialog();
+            await this.prepareDoDeleteItem();
+            await this.doDeleteItem();
+            await this.clearDeleteItem();
+            await this.getTableData();
+            break;
+            
           default:
             console.error("[doUiAction] uiActionId not find", { uiActionId });
             break;
@@ -335,16 +363,16 @@
       /**
        * 获取表格数据
        */
-      async getTableData(params = {}) {
+      async getTableData() {
         this.isTableLoading = true;
 
-        const whereData = _.pickBy({...this.serverSearchInput, ...params}, _.identity);
+        const whereData = _.pickBy(this.serverSearchInput, _.identity);
 
-        let rows = (
+        const rows = (
           await window.jianghuAxios({
             data: {
               appData: {
-                pageId: "ticketManagement",
+                pageId: "ticketSubmitManagement",
                 actionId: "selectItemList",
                 actionData: {},
                 whereLike: whereData,
@@ -354,25 +382,49 @@
           })
         ).data.appData.resultData.rows;
 
-
         this.tableData = rows;
         this.isTableLoading = false;
       },
-      async getUserList() {
-        const rows = (
-          await window.jianghuAxios({
-            data: {
-              appData: {
-                pageId: "allPage",
-                actionId: "getUserList",
-                actionData: {},
-              },
-            },
-          })
-        ).data.appData.resultData.rows;
-        this.userList = rows;
-      },
 
+      // ---------- 删除数据 uiAction >>>>>>>>>>>> --------
+      async prepareDeleteFormData(funObj) {
+        this.deleteItem = _.cloneDeep(funObj);
+      },
+      async confirmDeleteItemDialog() {
+        if (
+          (await window.confirmDialog({
+            title: "撤销",
+            content: "确定撤销吗？",
+          })) === false
+        ) {
+          throw new Error("[confirmDeleteItemDialog] 否");
+        }
+      },
+      async prepareDoDeleteItem() {
+        const { id } = this.deleteItem;
+        this.deleteItemId = id;
+      },
+      async doDeleteItem() {
+        await window.vtoast.loading("撤销数据");
+        await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: "ticketSubmitManagement",
+              actionId: "updateItem",
+              actionData: {
+                taskStatus: "已撤销",
+              },
+              where: { id: this.deleteItemId },
+            },
+          },
+        });
+        await window.vtoast.success("撤销数据成功");
+      },
+      async clearDeleteItem() {
+        this.deleteItem = {};
+        this.deleteItemId = null;
+      },
+      // ---------- <<<<<<<<<<< 删除数据 uiAction ---------
 
       // ---------- 日志模板 >>>>>>>>>>>>> ----------
       async getTaskTemplateList() {
@@ -391,7 +443,6 @@
 
         this.taskTemplateList = rows;
       },
-     
 
       // ---------- <<<<<<<<<<<<< 日志模板 ----------
     },

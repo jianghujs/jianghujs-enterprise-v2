@@ -10,7 +10,7 @@
           <v-row>
             <v-col cols="12" xs="12" sm="12" md="4" xl="3">
               <div class="pt-3 text-h7 font-weight-bold">
-                模板配置
+                日志模板配置
                 <!-- 帮助页按钮 -->
                 <v-icon
                   @click="isHelpPageDrawerShown = true"
@@ -187,19 +187,10 @@
                   </v-stepper-step>
 
                   <v-divider></v-divider>
+
                   <v-stepper-step
                     :complete="stepNum > 2"
                     step="2"
-                    editable
-                  >
-                    审批流程
-                  </v-stepper-step>
-
-                  <v-divider></v-divider>
-
-                  <v-stepper-step
-                    :complete="stepNum > 3"
-                    step="3"
                     editable
                   >
                     表单配置
@@ -287,17 +278,6 @@
                   </v-stepper-content>
                   <v-stepper-content step="2">
                     <v-col cols="12" sm="12" md="12">
-                      <span class="jh-input-label">审批流程</span>
-                      <task-approval-workflow
-                        :approval-person-list.sync="createItem.taskTemplatePersonList"
-                        :notice-person-list.sync="createItem.taskTemplateNoticePersonList"
-                      />
-
-                  </v-stepper-content>
-
-                  </v-col>
-                  <v-stepper-content step="3">
-                    <v-col cols="12" sm="12" md="12">
                       <span class="jh-input-label">审批表单配置</span>
                       <form-item-list-generator
                         :select-canva-id="selectCanvaId"
@@ -305,7 +285,6 @@
                         @change="createItem.taskTemplateForm=$event"
                       />
                     </v-col>
-
 
                   </v-stepper-content>
                 </v-stepper-items>
@@ -371,19 +350,10 @@
                   </v-stepper-step>
 
                   <v-divider></v-divider>
+
                   <v-stepper-step
                     :complete="stepNum > 2"
                     step="2"
-                    editable
-                  >
-                    审批流程
-                  </v-stepper-step>
-
-                  <v-divider></v-divider>
-
-                  <v-stepper-step
-                    :complete="stepNum > 3"
-                    step="3"
                     editable
                   >
                     表单配置
@@ -469,17 +439,6 @@
                     </v-form>
                   </v-stepper-content>
                   <v-stepper-content step="2">
-                    <v-col cols="12" sm="12" md="12">
-                      <span class="jh-input-label">审批流程</span>
-                      <task-approval-workflow
-                        :approval-person-list.sync="updateItem.taskTemplatePersonList"
-                        :notice-person-list.sync="updateItem.taskTemplateNoticePersonList"
-                      />
-
-                  </v-stepper-content>
-
-                  </v-col>
-                  <v-stepper-content step="3">
                     <v-col cols="12" sm="12" md="12">
                       <span class="jh-input-label">审批表单配置</span>
                       <form-item-list-generator
@@ -613,7 +572,7 @@
       constantObj: window.constantObj,
       currentSceneId: null,
       serverSearchInput: {
-        taskTemplateType: '审批'
+        taskTemplateType: '日志'
       },
       searchInput: null,
       isTableLoading: true,
@@ -782,7 +741,7 @@
         const { id, ...data } = this.createItem;
 
         data.taskTemplateCreateAt = dayjs().format("YYYY-MM-DD HH:mm:ss");
-        data.taskTemplateType = '审批';
+        data.taskTemplateType = '日志';
 
         ["taskTemplatePersonList", "taskTemplateNoticePersonList"].forEach(
           (key) => {

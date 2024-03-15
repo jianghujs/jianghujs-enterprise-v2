@@ -10,7 +10,7 @@
           <v-row>
             <v-col cols="12" xs="12" sm="12" md="4" xl="3">
               <div class="pt-3 text-h7 font-weight-bold">
-                发起申请
+                新建日志
                 <!-- 帮助页按钮 -->
                 <v-icon
                   @click="isHelpPageDrawerShown = true"
@@ -73,7 +73,7 @@
           </div>
           <!-- <<<<<<<<<<<<< 页面内容 -->
 
-          <create-ticket-drawer ref="createTicketDrawer" />
+          <create-journal-drawer ref="createTicketDrawer" />
 
      
         </div>
@@ -126,8 +126,7 @@
 {% include 'common/jianghuJs/fixedTableHeightV4.html' %}
 {% include 'common/excelUtil.html' %}
 {% include 'component/task-attachment-list.html' %}
-{% include 'component/ticket/create-ticket-drawer.html' %}
-{% include 'component/task-approval-workflow.html' %}
+{% include 'component/journal/create-journal-drawer.html' %}
 {% include 'component/select-org-user-dialog.html' %}
 {% include 'component/select-file-dialog.html' %}
 
@@ -185,7 +184,7 @@
                 pageId: 'ticketStartApply',
                 actionId: 'getTaskTemplateList',
                 actionData: {},
-                where: {taskTemplateType: '审批'},
+                where: {taskTemplateType: '日志'},
                 orderBy: [{ column: 'id', order: 'asc' }],
               },
             },
