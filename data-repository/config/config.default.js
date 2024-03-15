@@ -12,7 +12,7 @@ module.exports = appInfo => {
   const appId = 'data-repository';
 
   return {
-    triggerPrefix: 'fs',
+    triggerPrefix: 'jh',
     appId,
     appTitle: '数据中心',
     appLogo: `${appId}/public/img/logo.png`,
