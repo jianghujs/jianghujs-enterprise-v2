@@ -81,21 +81,25 @@ SQL END!-->
           <template v-slot:append="{ item, open }">
             <template v-if="item.groupId != '超级管理员'">
               <template v-if="constantObj.userGroupRoleList.includes('超级管理员') && item.groupId">
-                <span role="button" class="grey--text font-weight-medium font-size-2 mr-2">
-                  <v-icon size="16" class="grey--text">mdi-account-details-outline</v-icon>部门主管
-                </span>
+                <v-autocomplete style="width: 170px; display: inline-block;" 
+                  prefix="主管:" v-model="item.headId" 
+                  class="jh-v-input" dense filled single-line 
+                  :items="constantObj.userList" 
+                  @change="doUiAction('updateHeadId', item)"
+                  item-text="username" 
+                  item-value="userId"></v-autocomplete>
               </template>
               <template v-if="constantObj.userGroupRoleList.includes('超级管理员') && item.groupId">
                 <span role="button" class="blue--text font-weight-medium font-size-2 mr-2" @click.stop="doUiAction('startSetPrincipal', item)">
-                  <v-icon size="16" class="blue--text">mdi-account-details-outline</v-icon>设置组织负责人
+                  <v-icon size="16" class="blue--text">mdi-account-details-outline</v-icon>组织管理者
                 </span>
               </template>
               <template v-if="constantObj.userGroupRoleList.includes('超级管理员') || (item.principalIdList?.split(',') || []).includes(userInfo.userId)">
                 <span role="button" class="success--text font-weight-medium font-size-2 mr-2" @click.stop="doUiAction('startCreateItem', item)">
-                  <v-icon size="16" class="success--text">mdi-plus</v-icon>新增下属组织
+                  <v-icon size="16" class="success--text">mdi-plus</v-icon>下属组织
                 </span>
                 <span role="button" class="orange--text font-weight-medium font-size-2 mr-2" @click.stop="doUiAction('startUpdateItem', item)">
-                  <v-icon size="16" class="orange--text">mdi-note-edit-outline</v-icon>修改组织信息
+                  <v-icon size="16" class="orange--text">mdi-note-edit-outline</v-icon>组织信息
                 </span>
                 <span role="button" class="red--text font-weight-medium font-size-2 mr-2" @click.stop="doUiAction('deleteItem', item)">
                   <v-icon size="16" class="red--text">mdi-trash-can-outline</v-icon>删除组织
@@ -261,7 +265,8 @@ new Vue({
     // 下拉选项
     constantObj: {
       gender: [{"value": null, "text": "全部"}, {"value": "male", "text": "男"}, {"value": "female", "text": "女"}],
-      userGroupRoleList: []
+      userGroupRoleList: [],
+      userList: [],
     },
     serverSearchInput: {
       gender: null
@@ -352,6 +357,9 @@ new Vue({
           await this.doSetPrincipal();
           await this.closeSetPrincipalDialog();
           await this.getTableData();
+          break;
+        case 'updateHeadId':
+          await this.updateHeadId(uiActionData);
           break;
         default:
           console.error("[doUiAction] uiActionId not find", {uiActionId});
@@ -539,6 +547,25 @@ new Vue({
       this.updateActionData = null;
     },
     // ---------- <<<<<<<<<<< 修改数据 uiAction ---------
+
+    async updateHeadId(item){
+      await window.vtoast.loading("修改主管");
+      const {groupId, headId} = item;
+      if (!groupId) {
+        return;
+      }
+      await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'groupManagement',
+            actionId: 'updateItem',
+            actionData: {headId},
+            where: {groupId}
+          }
+        }
+      })
+      await window.vtoast.success("修改主管");
+    },
     // ---------- 删除数据 uiAction >>>>>>>>>>>> --------
     async prepareDeleteFormData(funObj) {
       this.deleteItem = _.cloneDeep(funObj);
