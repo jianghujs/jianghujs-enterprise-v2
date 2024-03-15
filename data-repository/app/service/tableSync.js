@@ -304,8 +304,8 @@ class UtilService extends Service {
       // 如果目标表存在则不用创建
       if (targetTableDDL !== exceptTargetTableDDL) {
         await targetKnex.raw(`DROP TABLE IF EXISTS ${targetDatabase}.${targetTable};`);
-        // const excuteTargetTableDDL = sourceTableDDL.replace(`CREATE TABLE \`${sourceTable}\``, `CREATE TABLE \`${targetDatabase}\`.\`${targetTable}\``).replace(/AUTO_INCREMENT=\d+ ?/, '');
-        const excuteTargetTableDDL = exceptTargetTableDDL
+        const excuteTargetTableDDL = exceptTargetTableDDL.replace(`CREATE TABLE \`${targetTable}\``, `CREATE TABLE \`${targetDatabase}\`.\`${targetTable}\``).replace(/AUTO_INCREMENT=\d+ ?/, '');
+        // const excuteTargetTableDDL = exceptTargetTableDDL
         await targetKnex.raw(excuteTargetTableDDL);
         if (outsideMode) {
           const syncDesc = '【表覆盖】结构不一致; 由于外部库，未触发覆盖仓库表逻辑;';

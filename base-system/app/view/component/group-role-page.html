@@ -151,9 +151,7 @@
       searchInput: null,
 
       isCreateDrawerShown: false,
-      createItem: {
-        roleType: "正式角色",
-      },
+      createItem: {},
       createActionData: {},
       deleteItem: {},
       deleteItemId: null,
@@ -229,7 +227,9 @@
       },
       // ---------- 新增数据 uiAction >>>>>>>>>> --------
       async prepareCreateFormData() {
-        this.createItem = {};
+        this.createItem = {
+          roleType: "正式角色",
+        };
       },
 
       async openCreateDrawer() {
