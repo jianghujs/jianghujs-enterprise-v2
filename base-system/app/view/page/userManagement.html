@@ -180,10 +180,10 @@
                 <span class="jh-input-label">用户名<span class="red--text text--accent-2 ml-1">*必填</span></span>
                 <v-text-field class="jh-v-input" dense filled single-line v-model="createItem.username" :rules="validationRules.requireRules"></v-text-field>
               </v-col>
-              <v-col cols="12" sm="12" md="4">
+              <!-- <v-col cols="12" sm="12" md="4">
                 <span class="jh-input-label">企微ID<span class="red--text text--accent-2 ml-1">*必填</span></span>
                 <v-text-field class="jh-v-input" dense filled single-line v-model="createItem.qiweiId" :rules="validationRules.requireRules"></v-text-field>
-              </v-col>
+              </v-col> -->
               <v-col cols="12" sm="12" md="4">
                 <span class="jh-input-label">所在组织<span class="red--text text--accent-2 ml-1">*必填</span></span>
                 <v-autocomplete class="jh-v-input" dense filled single-line clearable v-model="createItem.groupId" :items="constantObj.groupList" item-text="groupAllName" item-value="groupId" :rules="validationRules.requireRules"></v-autocomplete>
