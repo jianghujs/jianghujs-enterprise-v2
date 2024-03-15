@@ -13,7 +13,7 @@
         </div>
       </v-col>
       <v-col cols="12" class="jh-fixed-table-height overflow-y-auto" 
-        style="padding-bottom: 50px; min-width: 350px;">
+        style="padding-bottom: 50px; min-width: 260px;">
         <!-- <v-list nav dense class="pa-0">
           <v-list-item-group
             mandatory
@@ -53,7 +53,7 @@
             @update:active="onTreeChange"
             :active="selectedItem"
           >
-            <template v-slot:append="{ item, open }">
+            <!-- <template v-slot:append="{ item, open }">
               <v-chip
                   color="orange"
                   small
@@ -62,7 +62,7 @@
                 >
                 <span>{{item.groupId ? item.groupId : item.groupPath + '-' + item.groupLastId}}</span>
               </v-chip>
-            </template>
+            </template> -->
           </v-treeview>
         </v-list>
       </v-col>

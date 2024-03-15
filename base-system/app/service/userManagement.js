@@ -39,6 +39,18 @@ const appDataSchema = Object.freeze({
 
 class UserManagementService extends Service {
 
+  async getNextIdByTableAndField({ table, field }) {
+    const knex = this.app.knex;
+    const rows = await knex(table).max(`${field} as maxValue`);
+    let maxValue = null;
+    if (rows.length > 0 && rows[0].maxValue) {
+      maxValue = parseInt(rows[0].maxValue) + 1;
+    } else {
+      maxValue = 10001;
+    }
+    return maxValue;
+  }
+
   async addUser() {
     const { jianghuKnex } = this.app;
     const actionData = this.ctx.request.body.appData.actionData;
@@ -46,15 +58,9 @@ class UserManagementService extends Service {
     const { clearTextPassword, roleConfig, groupId } = actionData;
     const md5Salt = idGenerateUtil.randomString(12);
     const password = md5(`${clearTextPassword}_${md5Salt}`);
-    const maxUserId = await jianghuKnex('_user').where("userId", "<>", "F10001").max('userId as maxUserId').first()
-    // 避开F10001
-    const nextId = (parseInt(maxUserId.maxUserId.toString().substring(1)) + 1)
-    const userId = "F" + (nextId == 10001 ? 10002 : nextId).toString().padStart(5,"0")
-    const userExistCountResult = await jianghuKnex('_user', this.ctx).where({ userId }).count('*', {as: 'count'});
-    const userExistCount = userExistCountResult[0].count;
-    if (userExistCount > 0) {
-      throw new BizError(errorInfoEnum.user_id_exist);
-    }
+
+    const idSequence = await this.getNextIdByTableAndField({ table: '_user', field: 'idSequence' });
+    const userId = `W${idSequence}`;
     const insertParams = _.pick(actionData, ['username', 'userStatus', 'qiweiId', 'phoneNumber', 'email']);
     const roleInsertList = [];
 
@@ -70,7 +76,7 @@ class UserManagementService extends Service {
     if (roleInsertList.length > 0) {
       await jianghuKnex('enterprise_user_group_role', this.ctx).insert(roleInsertList);
     }
-    await jianghuKnex('_user', this.ctx).jhInsert({ ...insertParams, userId, password, clearTextPassword, md5Salt });
+    await jianghuKnex('_user', this.ctx).jhInsert({ ...insertParams, idSequence, userId, password, clearTextPassword, md5Salt });
     await this.service.app.buildUserApp(userId);
     return {};
   }
