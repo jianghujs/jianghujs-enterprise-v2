@@ -19,28 +19,10 @@
 
       <!--抽屉表单-->
       <v-row class="ma-0">
-
         <v-col cols="12" sm="12" md="4" xl="3">
           <span class="jh-input-label"><span class="red--text">*</span>任务名称</span>
           <v-text-field :rules="requireRules" class="jh-v-input " dense filled single-line
             v-model="detail.taskTitle"></v-text-field>
-        </v-col>
-        <v-col cols="12" sm="12" md="4" xl="3">
-          <span class="jh-input-label">任务标签</span>
-          <v-combobox v-model="detail.taskTag" :items="[]" multiple chips deletable-chips class="jh-v-input " dense
-            filled single-line small hide-actions hide-controls hide-details>
-            <template v-slot:selection="data">
-              <v-chip small>{{data.item}}</v-chip>
-            </template>
-          </v-combobox>
-        </v-col>
-
-        <v-col cols="12" sm="12" md="12" xl="12">
-          <span class="jh-input-label">任务内容</span>
-
-          <div id="editorMdContainer" class="mb-0">
-            <textarea placeholder="输入内容" style="display:none;">{{ detail.taskContent }}</textarea>
-          </div>
         </v-col>
 
         <v-col cols="12" sm="12" md="4" xl="3">
@@ -65,6 +47,25 @@
             </template>
             <v-date-picker v-model="detail.taskEndAt" no-title scrollable></v-date-picker>
           </v-menu>
+        </v-col>
+
+        <v-col cols="12" sm="12" md="12">
+          <span class="jh-input-label">任务内容</span>
+
+          <div id="editorMdContainer">
+            <textarea style="display:none;">{{ detail.taskContent }}</textarea>
+          </div>
+
+        </v-col>
+
+        <v-col cols="12" sm="12" md="4" xl="3">
+          <span class="jh-input-label">任务标签</span>
+          <v-combobox v-model="detail.taskTag" :items="[]" multiple chips deletable-chips class="jh-v-input " dense
+            filled single-line small hide-actions hide-controls hide-details>
+            <template v-slot:selection="data">
+              <v-chip small>{{data.item}}</v-chip>
+            </template>
+          </v-combobox>
         </v-col>
 
         <v-col cols="12" sm="12" md="4" xl="3">
