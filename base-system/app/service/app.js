@@ -398,6 +398,33 @@ class AppService extends Service {
 
   }
 
+  async buildSupperAdminUserApp() {
+    const { jianghuKnex } = this.app;
+    const supperAdminUserList = await jianghuKnex('enterprise_user_group_role').where({ groupId: '超级管理员' }).select();
+    const userList = supperAdminUserList.map(e => e.userId);
+    // 检查 enterprise_user_app 内是否有对应的关系数据
+    const userAppList = await jianghuKnex('enterprise_user_app').whereIn('userId', userList).select();
+    const appList = await jianghuKnex('enterprise_app').select();
+    const appIdList = appList.map(e => e.appId);
+
+    for (const appId of appIdList) {
+      for (const userId of userList) {
+        if (!userAppList.some(e => e.appId == appId && e.userId == userId)) {
+          await jianghuKnex('enterprise_user_app').insert({
+            userId: userId,
+            appId: appId,
+            source: '超级管理员',
+          });
+        }
+      }
+    }
+    // 判断是否有非这些id的user关系数据
+    const idList = userAppList.filter(e => !appIdList.includes(e.appId)).map(e => e.id);
+    if (idList.length > 0) {
+      await jianghuKnex('enterprise_user_app').whereIn('id', idList).delete();
+    }
+  }
+
   async removeRelationByExpire() {
     const { jianghuKnex, logger } = this.app;
     let today = dayjs().format('YYYY-MM-DD')
