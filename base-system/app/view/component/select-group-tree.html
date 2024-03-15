@@ -102,6 +102,10 @@
         type: Boolean,
         default: false,
       },
+      hideAdmin: {
+        type: Boolean,
+        default: false,
+      },
     },
     vuetify: new Vuetify(),
     data: () => ({
@@ -177,7 +181,7 @@
        */
       async getTableData() {
         this.isTableLoading = true;
-        const rows = (await window.jianghuAxios({
+        let rows = (await window.jianghuAxios({
           data: {
             appData: {
               pageId: 'allPage',
@@ -191,6 +195,9 @@
         rows.forEach(row => {
           row.operationAt = dayjs(row.operationAt).format('YYYY-MM-DD HH:mm:ss');
         })
+        if (this.hideAdmin) {
+          rows = rows.filter(row => row.groupId !== '超级管理员');
+        }
         this.tableData = rows
         this.tableDataTree = this.buildTableTree(rows)
         this.isTableLoading = false;

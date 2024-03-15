@@ -10,9 +10,11 @@
                       <!-- 新增按钮 -->
                       <v-btn color="success" small @click="doUiAction('startCreateItem')">分配员工</v-btn> 
                       <v-checkbox
+                        v-if="groupId != '超级管理员'"
                         v-model="isContainSub"
                         label="包含子部门"
-                        class="ml-2"
+                        class="ml-2 mt-0"
+                        hide-details
                       ></v-checkbox>
                   </div>
                 </v-col>

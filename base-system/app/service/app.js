@@ -113,7 +113,15 @@ class AppService extends Service {
       if (!app.appDatabase) {
         continue;
       }
-      const pageList = await jianghuKnex(`${app.appDatabase}._page`).select();
+      let pageList = [];
+      try {
+        pageList = await jianghuKnex(`${app.appDatabase}._page`).select();
+      } catch (error) {
+        if (error.code == 'ER_NO_SUCH_TABLE') {
+          logger.error(`[schedule/appPageList.js]______`, { 'enterprise_app.appDatabase不存在': app.appDatabase });
+          continue;
+        }
+      }
       const pageListFilter = pageList
         .filter(e => !['help', 'login', 'manual'].includes(e.pageId))
         .filter(e => e.pageName !== '通知/待办');
@@ -258,7 +266,7 @@ class AppService extends Service {
     const { jianghuKnex, logger } = this.app;
     const source = "通用权限";
 
-    const commonAuthListConfig = await jianghuKnex('_constant').where({ constantKey: 'commonAuthList' }).select().first();
+    const commonAuthListConfig = await jianghuKnex('_constant').where({ constantKey: 'commonAuthList' }).select().first() || {constantValue: "[]"};
     const commonAuthList = JSON.parse(commonAuthListConfig.constantValue);
     commonAuthList.forEach(commonAuth => {
       commonAuth.page = commonAuth.pageIdList.join(',');
