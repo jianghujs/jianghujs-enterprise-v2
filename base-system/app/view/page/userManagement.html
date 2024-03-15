@@ -189,13 +189,13 @@
                 <v-autocomplete class="jh-v-input" dense filled single-line clearable v-model="createItem.groupId" :items="constantObj.groupList" item-text="groupAllName" item-value="groupId" :rules="validationRules.requireRules"></v-autocomplete>
               </v-col>
               <v-col cols="12" sm="12" md="4">
-                <span class="jh-input-label">职务<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                <span class="jh-input-label">角色<span class="red--text text--accent-2 ml-1">*必填</span></span>
                 <v-autocomplete class="jh-v-input" dense filled single-line clearable v-model="createItem.roleId" :items="filterRoleList" item-text="roleName" item-value="roleId" :rules="validationRules.requireRules">
                   <template v-slot:selection="data">
                     <v-chip
                       small
                       class="ma-1"
-                      :color="data.item.roleType == '临时职务' ? 'orange' : 'success'"
+                      :color="data.item.roleType == '临时角色' ? 'orange' : 'success'"
                       outlined
                     >
                       【{{data.item.roleType[0]}}】
@@ -208,7 +208,7 @@
                     <v-chip
                       small
                       class="ma-1"
-                      :color="data.item.roleType == '临时职务' ? 'orange' : 'success'"
+                      :color="data.item.roleType == '临时角色' ? 'orange' : 'success'"
                       text-color="white"
                     >
                       {{data.item.roleType[0]}}
@@ -237,14 +237,14 @@
                 <v-text-field class="jh-v-input" dense filled single-line v-model="createItem.email"></v-text-field>
               </v-col>
             </v-row>
-            <v-row class="mt-0 px-4" v-if="createRoleConfig.filter(item => item.roleType == '临时职务')?.length > 0">
+            <v-row class="mt-0 px-4" v-if="createRoleConfig.filter(item => item.roleType == '临时角色')?.length > 0">
               <template >
                 <v-col cols="12" sm="12" md="12">
-                  <span class="jh-input-label">设置临时职务期限</span>
+                  <span class="jh-input-label">设置临时角色期限</span>
                   <v-card outlined>
                       <v-data-table
                         :headers="roleCreateHeaders"
-                        :items="createRoleConfig.filter(i => i.roleType == '临时职务')"
+                        :items="createRoleConfig.filter(i => i.roleType == '临时角色')"
                       >
                       <template v-slot:item.role-deadline-1="{ item }">
                         <v-autocomplete class="jh-v-input" dense single-line filled v-model="item.roleDeadline" :items="constantObj.roleDeadlineItem" item-value="days" item-text="text">
@@ -427,7 +427,7 @@ new Vue({
       {text: "用户名", value: "username", width: 130},
       {text: "用户状态", value: "userStatus", width: 90},
       {text: "所属组织", value: "groupAllName", width: 380},
-      {text: "职务", value: "roleName", width: 150},
+      {text: "角色", value: "roleName", width: 150},
       {text: "手机号码", value: "phoneNumber", width: 180},
       {text: "邮箱", value: "email", width: 180},
       // {text: "初始密码", value: "clearTextPassword", width: 120},
@@ -437,10 +437,10 @@ new Vue({
     ],
     drawerHeaders:[
       {text: "应用名", value: "appName", width: 180},
-      {text: "部门职务", value: "groupRoleName"},
+      {text: "部门角色", value: "groupRoleName"},
     ],
     roleCreateHeaders:[
-        {text: "职务", value: "roleName", width:180},
+        {text: "角色", value: "roleName", width:180},
         {text: "类型", value: "roleType", width:180},
         {text: "期限", value: "role-deadline-1", width:180},
     ],
@@ -470,9 +470,9 @@ new Vue({
       if(this.createItem.groupId){
         return [
         {
-          roleId: "无职务",
-          roleName: "无职务",
-          roleType:"正式职务",
+          roleId: "无角色",
+          roleName: "无角色",
+          roleType:"正式角色",
         },
         ...this.constantObj.roleList.filter(item => item.roleId.includes(this.createItem.groupId+'|'))
         ]
@@ -485,11 +485,11 @@ new Vue({
       if(!this.createItem.roleId){
         return []
       }
-      if(this.createItem.roleId == "无职务"){
+      if(this.createItem.roleId == "无角色"){
         roleConfig.push({
           roleId: null,
-          roleName:"无职务",
-          roleType:"正式职务",
+          roleName:"无角色",
+          roleType:"正式角色",
           roleDeadline: -1
         })
       }else{
@@ -498,7 +498,7 @@ new Vue({
           roleId:role.roleId,
           roleName:role.roleName,
           roleType:role.roleType,
-          roleDeadline: role.roleType == '临时职务' ? 7 : -1
+          roleDeadline: role.roleType == '临时角色' ? 7 : -1
         })
       }
       return roleConfig

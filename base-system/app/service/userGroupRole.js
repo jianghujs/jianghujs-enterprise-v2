@@ -41,7 +41,7 @@ class UserGroupRoleService extends Service {
         userId,
         roleId: item.roleId,
         groupId,
-        roleDeadline: item.roleType == "临时职务" ? item.roleDeadline : -1
+        roleDeadline: item.roleType == "临时角色" ? item.roleDeadline : -1
       })
     })
 

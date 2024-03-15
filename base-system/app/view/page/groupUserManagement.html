@@ -220,7 +220,7 @@ new Vue({
         item.groupAllName = groupBy[key][0].groupAllName;
         item.roleName = groupBy[key].map(e => {
           let roleName = e.roleDeadline == -1 ? e.roleName : e.roleName +' 【'+ e.roleDeadline +'】'
-          return (roleName  || '无职务')
+          return (roleName  || '无角色')
         }).join(',');
         item.roleId = groupBy[key].map(e => e.roleId);
         item.roleConfig = groupBy[key].map(e => {

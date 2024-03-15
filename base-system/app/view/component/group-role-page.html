@@ -12,7 +12,7 @@
             </v-tab>
             <div @click="doUiAction('startCreateItem')" class="v-tab pa-0" style="justify-content:flex-end">
               <div>
-                <span style="font-weight: 600px;">新增职务</span>
+                <span style="font-weight: 600px;">新增角色</span>
                 <v-icon>mdi-plus-box-outline</v-icon>
               </div>
             </div>
@@ -67,7 +67,7 @@
         <v-form ref="createForm" lazy-validation>
           <!-- 抽屉标题 -->
           <v-row no-gutters>
-            <span class="text-h7 font-weight-bold pa-4">添加职务</span>
+            <span class="text-h7 font-weight-bold pa-4">添加角色</span>
           </v-row>
           <v-divider class="jh-divider"></v-divider>
           <!-- 抽屉表单 -->
@@ -75,17 +75,17 @@
             <!-- <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.xxxId" :rules="validationRules.requireRules"></v-text-field> -->
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">职务</span><span style="color: red;margin-left: 2px;">*</span>
+              <span class="jh-input-label">角色</span><span style="color: red;margin-left: 2px;">*</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.roleName"></v-text-field>
             </v-col>
 
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">职务类型</span><span style="color: red;margin-left: 2px;">*</span>
+              <span class="jh-input-label">角色类型</span><span style="color: red;margin-left: 2px;">*</span>
               <v-select class="jh-v-input" dense single-line filled v-model="createItem.roleType" :items="constantObj.roleType"></v-select>
             </v-col>
              
             <v-col cols="12" sm="12" md="4">
-              <span class="jh-input-label">职务描述</span>
+              <span class="jh-input-label">角色描述</span>
               <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.roleDesc"></v-text-field>
             </v-col>
              
@@ -144,7 +144,7 @@
       },
       // 下拉选项
       constantObj: {
-        roleType:["正式职务","临时职务"]
+        roleType:["正式角色","临时角色"]
       },
       serverSearchInput: {
       },
@@ -276,7 +276,7 @@
         this.deleteItem = _.cloneDeep(funObj);
       },
       async confirmDeleteItemDialog() {
-        if (await window.confirmDialog({title: "删除职务", content: "确定删除职务吗？"}) === false) {
+        if (await window.confirmDialog({title: "删除角色", content: "确定删除角色吗？"}) === false) {
           throw new Error("[confirmDeleteItemDialog] 否");
         }
       },
@@ -285,7 +285,7 @@
         this.deleteItemId = id;
       },
       async doDeleteItem() {
-        await window.vtoast.loading("删除职务数据");
+        await window.vtoast.loading("删除角色数据");
         await window.jianghuAxios({
           data: {
             appData: {
@@ -298,7 +298,7 @@
             }
           }
         });
-        await window.vtoast.success("删除职务数据成功");
+        await window.vtoast.success("删除角色数据成功");
       },
       async clearDeleteItem() {
         this.deleteItem = {};
