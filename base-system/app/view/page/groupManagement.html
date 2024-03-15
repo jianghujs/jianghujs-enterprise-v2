@@ -401,7 +401,7 @@ new Vue({
       const buildTree = (data) => {
         data.forEach(item => {
           item.name = item.groupName;
-          if(item.groupId == "FS")  item.principalIdList = item.principalId;
+          item.principalIdList = item.principalId;
           const children = rows.filter(child => {
             const parentPath = item.groupId ? item.groupId : item.groupPath + '-' + item.groupLastId;
             return child.groupPath == parentPath
@@ -410,9 +410,7 @@ new Vue({
             return child
           })
           if (children.length) {
-            if( item.groupId == "FS" || _.countBy(item.groupId)['-'] <= 1){
-                this.openIdList.push(item.groupId);
-              }
+            this.openIdList.push(item.groupId);
             item.children = children;
             buildTree(children);
           }
