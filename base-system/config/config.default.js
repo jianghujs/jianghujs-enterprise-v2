@@ -27,6 +27,12 @@ module.exports = appInfo => {
     primaryColor: "#4caf50",
     primaryColorA80: "#EEF7EE",
 
+    enterpriseConfig: {
+      dataRepositoryTable: 'jh_enterprise_v2_data_repository',
+      directoryTable: 'jh_enterprise_v2_directory',
+      systemAppId: 'system',
+    },
+
     static: {
       dynamic: true,
       preload: false,

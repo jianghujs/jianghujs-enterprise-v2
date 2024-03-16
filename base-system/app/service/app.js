@@ -10,7 +10,7 @@ const _ = require('lodash');
 const Knex = require('knex');
 const dayjs = require('dayjs');
 
-const getJhIdViewSql = (appList, tableName) => {
+const getJhIdViewSql = (appList, tableName, dataRepositoryTable) => {
 
   // 检查 appList 中是否存在非空的 jhId
   if (!appList.some(({ appJhId }) => !!appJhId)) {
@@ -22,7 +22,7 @@ const getJhIdViewSql = (appList, tableName) => {
       whereClause = ` WHERE appId = '{APPID}'`;
     }
     // 如果所有的 jhId 都是空，生成一个简单的 SELECT 查询
-    return `SELECT * FROM jh_enterprise_v2_data_repository.${tableName}${whereClause.replace('{APPID}', appList[0].appId)}`;
+    return `SELECT * FROM ${dataRepositoryTable}.${tableName}${whereClause.replace('{APPID}', appList[0].appId)}`;
   }
 
   // 否则，生成一个 CROSS JOIN 查询
@@ -47,19 +47,19 @@ const getJhIdViewSql = (appList, tableName) => {
     let userAppWhereClause = appIdList.length > 1 ? ` WHERE appId IN ('${appIdList.join("','")}')` : ` WHERE appId = '${appIdList[0]}'`;
     if (tableName != 'enterprise_view02_user_app') {
       userAppWhereClause += ` union all 
-      SELECT jhId_values.jhId, jh_enterprise_v2_data_repository.${tableName}.* 
+      SELECT jhId_values.jhId, ${dataRepositoryTable}.${tableName}.* 
           FROM (${jhIdValuesSql}) AS jhId_values 
-          CROSS JOIN jh_enterprise_v2_data_repository.${tableName} where appId = '*'
+          CROSS JOIN ${dataRepositoryTable}.${tableName} where appId = '*'
       `;
     }
     ifClasus += ' ELSE NULL END AS jhId';
-    return `SELECT ${ifClasus}, jh_enterprise_v2_data_repository.${tableName}.* 
-            FROM jh_enterprise_v2_data_repository.${tableName}${userAppWhereClause}`;
+    return `SELECT ${ifClasus}, ${dataRepositoryTable}.${tableName}.* 
+            FROM ${dataRepositoryTable}.${tableName}${userAppWhereClause}`;
   }
 
-  return `SELECT jhId_values.jhId, jh_enterprise_v2_data_repository.${tableName}.* 
+  return `SELECT jhId_values.jhId, ${dataRepositoryTable}.${tableName}.* 
           FROM (${jhIdValuesSql}) AS jhId_values 
-          CROSS JOIN jh_enterprise_v2_data_repository.${tableName}`;
+          CROSS JOIN ${dataRepositoryTable}.${tableName}`;
 }
 
 /**
@@ -139,9 +139,13 @@ class AppService extends Service {
     const actionData = this.ctx.request.body.appData.actionData;
     const { knex, logger } = this.app;
     const appWhere = _.pick(actionData, ['id']);
+    const { systemAppId, dataRepositoryTable, directoryTable } = this.app.config.enterpriseConfig;
+    if (!systemAppId || !dataRepositoryTable || !directoryTable) {
+      throw new Error('enterpriseConfig 未设置');
+    }
 
     const appListAll = await knex('enterprise_app').where(appWhere).select();
-    const appListForUserGroupRole = appListAll.filter((app) => app.appId != 'system');
+    const appListForUserGroupRole = appListAll.filter((app) => app.appId != systemAppId);
     const databaseList = _.compact(_.uniqBy(appListForUserGroupRole.map((app) => app.appDatabase)));
     for (const database of databaseList) {
       const appListByDatabase = appListForUserGroupRole.filter((app) => app.appDatabase == database);
@@ -172,32 +176,32 @@ class AppService extends Service {
         // currentKnex.raw(`DROP VIEW IF EXISTS _dr__member;`),
       ];
       const createViewSql = [
-        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _group AS ${getJhIdViewSql(appListByDatabase, 'enterprise_group')};`),
-        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _role AS ${getJhIdViewSql(appListByDatabase, 'enterprise_role')};`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _group AS ${getJhIdViewSql(appListByDatabase, 'enterprise_group', dataRepositoryTable)};`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _role AS ${getJhIdViewSql(appListByDatabase, 'enterprise_role', dataRepositoryTable)};`),
 
-        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role AS ${getJhIdViewSql(appListByDatabase, 'enterprise_user_group_role')};`),
-        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role_page AS ${getJhIdViewSql(appListByDatabase, 'enterprise_user_group_role_page')};`),
-        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role_resource AS ${getJhIdViewSql(appListByDatabase, 'enterprise_user_group_role_resource')};`),
-        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _directory_user_session AS ${getJhIdViewSql(appListByDatabase, 'enterprise_directory_user_session')};`),
-        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view01_user AS ${getJhIdViewSql(appListByDatabase, 'enterprise_view01_user')};`),
-        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view02_user_app AS ${getJhIdViewSql(appListByDatabase, 'enterprise_view02_user_app')};`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role AS ${getJhIdViewSql(appListByDatabase, 'enterprise_user_group_role', dataRepositoryTable)};`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role_page AS ${getJhIdViewSql(appListByDatabase, 'enterprise_user_group_role_page', dataRepositoryTable)};`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _user_group_role_resource AS ${getJhIdViewSql(appListByDatabase, 'enterprise_user_group_role_resource', dataRepositoryTable)};`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _directory_user_session AS ${getJhIdViewSql(appListByDatabase, 'enterprise_directory_user_session', dataRepositoryTable)};`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view01_user AS ${getJhIdViewSql(appListByDatabase, 'enterprise_view01_user', dataRepositoryTable)};`),
+        currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view02_user_app AS ${getJhIdViewSql(appListByDatabase, 'enterprise_view02_user_app', dataRepositoryTable)};`),
       ];
       if (appIdList.includes('directory')) {
         // 替换 createViewSql 的最后一个
         createViewSql.pop();
-        createViewSql.push(currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view02_user_app AS SELECT * FROM jh_enterprise_v2_data_repository.enterprise_view02_user_app`));
+        createViewSql.push(currentKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _view02_user_app AS SELECT * FROM ${dataRepositoryTable}.enterprise_view02_user_app`));
       }
       await Promise.all(deleteViewSql);
       await Promise.all(createViewSql);
       await currentKnex.destroy();
     }
     // 补一个system的 _user_session
-    const systemApp = appListAll.find((app) => app.appId == 'system');
+    const systemApp = appListAll.find((app) => app.appId == systemAppId);
     knex.client.config.connection.database = systemApp.appDatabase;
     const systemKnex = Knex(knex.client.config);
     await systemKnex.raw(`DROP VIEW IF EXISTS _enterprise_user_session;`);
     await systemKnex.raw(`DROP VIEW IF EXISTS _directory_user_session;`);
-    await systemKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _directory_user_session AS ${getJhIdViewSql(['system'], 'enterprise_directory_user_session')};`);
+    await systemKnex.raw(`CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW _directory_user_session AS ${getJhIdViewSql([systemAppId], 'enterprise_directory_user_session', dataRepositoryTable)};`);
     await systemKnex.destroy();
 
 
@@ -205,6 +209,7 @@ class AppService extends Service {
     const appListForTask = appListAll;
     // const appListForTask = appListAll.filter((app) => app.appId != 'task');
     const taskApp = appListAll.find((app) => app.appId == 'task');
+    if (!taskApp) return;
     for (const app of appListForTask) {
       const { appDatabase, appId } = app;
       if (!appDatabase) continue;
@@ -236,10 +241,10 @@ class AppService extends Service {
         .filter((pageId) => row.appPageList.findIndex((page) => page.pageId == pageId) > -1)
         .map((pageId) => row.appPageList.find((page) => page.pageId == pageId));
     });
-    const directoryList = await jianghuKnex('jh_enterprise_v2_directory.directory').select();
+    const directoryList = await jianghuKnex(`${directoryTable}.directory`).select();
     const directoryListFilter = directoryList.filter(d => d.appGroupItemSort && d.appGroupItemSort >= 0);
     const appGroupItemSortMap = Object.fromEntries(directoryListFilter.map(obj => [obj.appId, obj.appGroupItemSort]));
-    await jianghuKnex('jh_enterprise_v2_directory.directory').where({ description: '生成' }).delete();
+    await jianghuKnex(`${directoryTable}.directory`).where({ description: '生成' }).delete();
     for (const app of appList) {
       const { appPageDirectoryList, appId, appType, appUrl } = app;
       const directoryList = appPageDirectoryList.map((page) => {
@@ -257,8 +262,35 @@ class AppService extends Service {
         }
       });
       if (directoryList.length > 0) {
-        await jianghuKnex('jh_enterprise_v2_directory.directory').insert(directoryList);
+        await jianghuKnex(`${directoryTable}.directory`).insert(directoryList);
       }
+    }
+  }
+  
+  async buildSupperAdminUserApp() {
+    const { jianghuKnex } = this.app;
+    const supperAdminUserList = await jianghuKnex('enterprise_user_group_role').where({ groupId: '超级管理员' }).select();
+    const userList = supperAdminUserList.map(e => e.userId);
+    // 检查 enterprise_user_app 内是否有对应的关系数据
+    const userAppList = await jianghuKnex('enterprise_user_app').whereIn('userId', userList).select();
+    const appList = await jianghuKnex('enterprise_app').select();
+    const appIdList = appList.map(e => e.appId);
+
+    for (const appId of appIdList) {
+      for (const userId of userList) {
+        if (!userAppList.some(e => e.appId == appId && e.userId == userId)) {
+          await jianghuKnex('enterprise_user_app').insert({
+            userId: userId,
+            appId: appId,
+            source: '超级管理员',
+          });
+        }
+      }
+    }
+    // 判断是否有非这些id的user关系数据
+    const idList = userAppList.filter(e => !appIdList.includes(e.appId)).map(e => e.id);
+    if (idList.length > 0) {
+      await jianghuKnex('enterprise_user_app').whereIn('id', idList).delete();
     }
   }
 
@@ -396,33 +428,6 @@ class AppService extends Service {
       await jianghuKnex('enterprise_user_app').whereIn('id', deleteUserAppIdList).delete();
     }
 
-  }
-
-  async buildSupperAdminUserApp() {
-    const { jianghuKnex } = this.app;
-    const supperAdminUserList = await jianghuKnex('enterprise_user_group_role').where({ groupId: '超级管理员' }).select();
-    const userList = supperAdminUserList.map(e => e.userId);
-    // 检查 enterprise_user_app 内是否有对应的关系数据
-    const userAppList = await jianghuKnex('enterprise_user_app').whereIn('userId', userList).select();
-    const appList = await jianghuKnex('enterprise_app').select();
-    const appIdList = appList.map(e => e.appId);
-
-    for (const appId of appIdList) {
-      for (const userId of userList) {
-        if (!userAppList.some(e => e.appId == appId && e.userId == userId)) {
-          await jianghuKnex('enterprise_user_app').insert({
-            userId: userId,
-            appId: appId,
-            source: '超级管理员',
-          });
-        }
-      }
-    }
-    // 判断是否有非这些id的user关系数据
-    const idList = userAppList.filter(e => !appIdList.includes(e.appId)).map(e => e.id);
-    if (idList.length > 0) {
-      await jianghuKnex('enterprise_user_app').whereIn('id', idList).delete();
-    }
   }
 
   async removeRelationByExpire() {
