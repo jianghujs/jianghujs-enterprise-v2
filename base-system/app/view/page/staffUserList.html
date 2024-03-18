@@ -301,7 +301,7 @@
               mobile-breakpoint="0"
               :loading="isAddTableLoading"
               checkbox-color="success"
-              item-key="staffId"
+              item-key="employeeId"
               show-select
               v-model="selectStaffIdList"
               :class="{'zebraLine': isTableZebraLineShown }"
@@ -354,7 +354,7 @@
               mobile-breakpoint="0"
               :loading="isAddTableLoading"
               checkbox-color="success"
-              item-key="staffId"
+              item-key="employeeId"
               show-select
               v-model="selectStaffIdList"
               :class="{'zebraLine': isTableZebraLineShown }"
@@ -517,9 +517,9 @@
       addAppSearchInput: null,
       addSearchInput: null,
       staffHeaders: [
-        // {value: "staffId", text: "员工ID", width: 100, required: true, fixed: "left", class: "fixed", align: "left fixed"},
-        { value: "staffId", text: "员工ID", width: 80 },
-        { value: "name", text: "老师名", width: 90 },
+        // {value: "employeeId", text: "员工ID", width: 100, required: true, fixed: "left", class: "fixed", align: "left fixed"},
+        { value: "employeeId", text: "员工ID", width: 80 },
+        { value: "employeeName", text: "员工名", width: 90 },
         { value: "staffRecordNumber", text: "员工记录编号", width: 90 },
         { value: "gender", text: "性别", width: 60 },
         { value: "contactNumber", text: "联系方式", width: 130 },
@@ -564,12 +564,12 @@
       },
       noAccountStaffList() {
         return this.staffList.filter(item => {
-          return ["在职", '待入职'].includes(item.entryStatus) && !this.tableDataFromBackend.some(v => v.userId === item.staffId);
+          return ["在职", '待入职'].includes(item.entryStatus) && !this.tableDataFromBackend.some(v => v.userId === item.employeeId);
         });
       },
       bannedAccountStaffList() {
         return this.staffList.filter(item => {
-          return item.entryStatus === '已离职' && this.tableDataFromBackend.some(e => e.userId == item.staffId && e.userStatus === 'active');
+          return item.entryStatus === '已离职' && this.tableDataFromBackend.some(e => e.userId == item.employeeId && e.userStatus === 'active');
         });
       },
     },
@@ -705,7 +705,7 @@
               pageId: 'staffUserList',
               actionId: 'selectItemList',
               actionData: {},
-              orderBy: [{ column: 'operationAt', order: 'desc' }]
+              orderBy: [{ column: 'id', order: 'desc' }]
             }
           }
         });
@@ -721,8 +721,8 @@
 
       async showCreateStaffDailog({ item }) {
         this.insertItemData = {
-          userId: item.staffId,
-          username: item.name,
+          userId: item.employeeId,
+          username: item.employeeName,
           clearTextPassword: '123456',
         }
         this.insertItemDialog = true;
@@ -821,8 +821,8 @@
         await window.vtoast.loading("批量-创建用户");
         const userList = selectStaffIdList.map(v => {
           return { 
-            userId: v.staffId,
-            username: v.name, 
+            userId: v.employeeId,
+            username: v.employeeName, 
             userStatus: 'active'
           }
         });
@@ -988,10 +988,10 @@
         this.dialogSaveInfoAction = 'batchDeleteStaffUser';
       },
       async prepareBatchDeleteSelect() {
-        this.deleteUserIdList = this.selectStaffIdList.map(e => e.staffId);
+        this.deleteUserIdList = this.selectStaffIdList.map(e => e.employeeId);
       },
       async prepareDeleteSelect({item}) {
-        this.deleteUserIdList = [item.staffId];
+        this.deleteUserIdList = [item.employeeId];
       },
       async doDisableStaffUser() {
         await window.vtoast.loading("禁用用户");

@@ -55,7 +55,7 @@ class UserManagementService extends Service {
     const { jianghuKnex } = this.app;
     const actionData = this.ctx.request.body.appData.actionData;
     validateUtil.validate(appDataSchema.addUser, actionData);
-    const { clearTextPassword, roleConfig, groupId } = actionData;
+    const { clearTextPassword, roleConfig=[], groupId } = actionData;
     const md5Salt = idGenerateUtil.randomString(12);
     const password = md5(`${clearTextPassword}_${md5Salt}`);
 
