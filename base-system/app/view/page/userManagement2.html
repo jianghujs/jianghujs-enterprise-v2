@@ -25,7 +25,7 @@
           <v-card class="rounded-lg">
             <v-row class="ma-0 pa-4">
               <v-col cols="12" sm="6" md="6" xl="6" class="pa-0">
-                <v-btn color="success" class="mr-1" @click="doUiAction('startAddApp', null)" small outlined>批量增加APP权限</v-btn>
+                <!-- <v-btn color="success" class="mr-1" @click="doUiAction('startAddApp', null)" small outlined>批量增加APP权限</v-btn> -->
                 <v-btn color="success" class="mr-1" @click="exportExcel" small>账户密码导出</v-btn>
                 <v-btn color="success" class="mr-1 mt-2 mt-sm-0" @click="doUiAction('startCreateItem', null)" small>同步新增员工</v-btn>
                 <v-btn color="error" class="mr-1 mt-2 mt-sm-0" @click="doUiAction('startDeleteItem', null)" small>同步离职员工</v-btn>
@@ -410,7 +410,7 @@
         </div>
 
         <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
-        <v-navigation-drawer v-model="isHelpPageDrawerShown" v-click-outside="drawerClickOutside" fixed temporary
+        <v-navigation-drawer v-if="isHelpPageDrawerShown" v-model="isHelpPageDrawerShown" v-click-outside="drawerClickOutside" fixed temporary
           right width="80%" class="elevation-24">
           <iframe style="border: 0" :src="`/${appInfo.appId}/pageDoc#2.studentList.md`" width="100%"
             height="100%"></iframe>
@@ -491,9 +491,11 @@
         { text: "用户ID", value: "userId", align: "start", sortable: true, width: 80, class: 'fixed', cellClass: 'fixed' },
         { text: "用户名", value: "username", align: "start", sortable: true, width: 90 },
         { text: "用户状态", value: "userStatus", align: "start", sortable: true, width: 80 },
+        {text: "组织角色", value: "groupRoleList", width: 380},
+        {text: "部门职位", value: "hrOrgRoleList", width: 280},
+        {text: "手机号码", value: "phoneNumber", width: 180},
+        {text: "邮箱", value: "email", width: 180},
         { text: "明文密码", value: "clearTextPassword", align: "start", sortable: true, width: 80 },
-        { text: "操作人", value: "operationByUser", align: "start", sortable: true, width: 90 },
-        { text: "操作时间", value: "operationAt", align: "start", sortable: true, width: 150 },
 
         { text: '操作', value: 'action', align: 'center', sortable: false, width: window.innerWidth < 500 ? 60 : 350, class: 'fixed', cellClass: 'fixed' },
       ],
@@ -520,7 +522,6 @@
         // {value: "employeeId", text: "员工ID", width: 100, required: true, fixed: "left", class: "fixed", align: "left fixed"},
         { value: "employeeId", text: "员工ID", width: 80 },
         { value: "employeeName", text: "员工名", width: 90 },
-        { value: "staffRecordNumber", text: "员工记录编号", width: 90 },
         { value: "gender", text: "性别", width: 60 },
         { value: "contactNumber", text: "联系方式", width: 130 },
         // { value: "educationBackground", text: "教育背景", width: 150 },
@@ -532,8 +533,8 @@
         // { value: "contractStartDate", text: "合同开始日期", width: 150 },
         // { value: "contractExpiryDate", text: "合同截止日期", width: 150 },
         // { value: "lastDateOfService", text: "工作截止日期", width: 150 },
-        // { value: "teacherStatus", text: "老师状态", width: 150 },
-        { value: "entryStatus", text: "老师状态", width: 80 },
+        // { value: "teacherStatus", text: "员工状态", width: 150 },
+        { value: "entryStatus", text: "员工状态", width: 80 },
         { value: "remarks", text: "备注", width: 250 },
         { text: '操作', value: 'action', align: 'center', sortable: false, width: 100, class: 'fixed', cellClass: 'fixed' },
 
@@ -679,7 +680,7 @@
         const result = await window.jianghuAxios({
           data: {
             appData: {
-              pageId: 'staffUserList',
+              pageId: 'userManagement2',
               actionId: 'selectAppList',
               actionData: {},
               where: {},
@@ -702,7 +703,7 @@
         const result = await window.jianghuAxios({
           data: {
             appData: {
-              pageId: 'staffUserList',
+              pageId: 'userManagement2',
               actionId: 'selectItemList',
               actionData: {},
               orderBy: [{ column: 'id', order: 'desc' }]
@@ -749,7 +750,7 @@
         const result = await window.jianghuAxios({
           data: {
             appData: {
-              pageId: 'staffUserList',
+              pageId: 'userManagement2',
               actionId: 'selectStaffList',
               actionData: {},
               whereIn: { entryStatus: ["在职", '待入职', '已离职'] },
@@ -776,7 +777,7 @@
         await window.jianghuAxios({
           data: {
             appData: {
-              pageId: 'staffUserList',
+              pageId: 'userManagement2',
               actionId: 'batchStaffUserAddApp',
               actionData: {
                 userIdList: this.selectStaffIdListOfAddApp.map(e => e.userId),
@@ -801,7 +802,7 @@
         await window.jianghuAxios({
           data: {
             appData: {
-              pageId: 'staffUserList',
+              pageId: 'userManagement2',
               actionId: 'insertItem',
               actionData: actionData
             }
@@ -829,7 +830,7 @@
         await window.jianghuAxios({
           data: {
             appData: {
-              pageId: 'staffUserList',
+              pageId: 'userManagement2',
               actionId: 'batchCreateStaffUser',
               actionData: {
                 userList
@@ -847,7 +848,7 @@
         await window.jianghuAxios({
           data: {
             appData: {
-              pageId: 'staffUserList',
+              pageId: 'userManagement2',
               actionId: 'insertItem',
               actionData: actionData
             }
@@ -889,7 +890,7 @@
         await window.jianghuAxios({
           data: {
             appData: {
-              pageId: 'staffUserList',
+              pageId: 'userManagement2',
               actionId: 'updateItem',
               actionData: { username: actionData.username },
               where: { userId }
@@ -912,7 +913,7 @@
         await window.jianghuAxios({
           data: {
             appData: {
-              pageId: 'staffUserList',
+              pageId: 'userManagement2',
               actionId: 'updateItem',
               actionData: { userStatus: 'active' },
               where: { userId }
@@ -935,7 +936,7 @@
         await window.jianghuAxios({
           data: {
             appData: {
-              pageId: 'staffUserList',
+              pageId: 'userManagement2',
               actionId: 'updateItem',
               actionData: { userStatus: 'banned' },
               where: { userId }
@@ -964,7 +965,7 @@
         await window.jianghuAxios({
           data: {
             appData: {
-              pageId: 'staffUserList',
+              pageId: 'userManagement2',
               actionId: 'resetUserPassword',
               actionData: { userId, clearTextPassword },
             }
@@ -998,7 +999,7 @@
         await window.jianghuAxios({
           data: {
             appData: {
-              pageId: 'staffUserList',
+              pageId: 'userManagement2',
               actionId: 'updateItem',
               actionData: { userStatus: 'banned' },
               whereIn: { userId: this.deleteUserIdList }
