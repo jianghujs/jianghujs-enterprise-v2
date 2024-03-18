@@ -93,12 +93,12 @@ class UserManagementService extends Service {
 
     const userListInsert = [];
     userList.forEach(user => {
-      const {userId, username } = user;
+      const {userId, username, phoneNumber } = user;
       if (!userId || !username) { return; }
       const md5Salt = idGenerateUtil.randomString(12);
       const clearTextPassword = idGenerateUtil.randomString(6);
       const password = md5(`${clearTextPassword}_${md5Salt}`);
-      userListInsert.push({ userId, username, clearTextPassword, md5Salt, password });
+      userListInsert.push({ userId, username, phoneNumber, clearTextPassword, md5Salt, password });
     })
     if (userListInsert.length > 0) {
       await jianghuKnex('_user', this.ctx).jhInsert(userListInsert);
