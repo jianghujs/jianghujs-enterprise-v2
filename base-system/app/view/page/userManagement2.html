@@ -280,7 +280,7 @@
             <v-row class="ma-0 pa-4">
 
               <v-col cols="12" xs="4" sm="4" md="4" xl="4" class="pa-0 pr-0 pr-sm-2">
-                <v-btn small color="success" @click="doUiAction('batchCreateStaffUser', {})" :disabled="!selectStaffIdList.length" outlined>批量-创建用户</v-btn>
+                <v-btn small color="success" @click="doUiAction('batchAddUser', {})" :disabled="!selectStaffIdList.length" outlined>批量-创建用户</v-btn>
                 <!-- <span class="body-2">共{{ noAccountStaffList.length }}条记录</span> -->
               </v-col>
 
@@ -489,7 +489,7 @@
       tableDataFromBackend: [],
       headers: [
         { text: "用户ID", value: "userId", align: "start", sortable: true, width: 80, class: 'fixed', cellClass: 'fixed' },
-        { text: "用户名", value: "username", align: "start", sortable: true, width: 90 },
+        { text: "用户名", value: "username", align: "start", sortable: true, width: 100 },
         { text: "用户状态", value: "userStatus", align: "start", sortable: true, width: 80 },
         {text: "组织角色", value: "groupRoleList", width: 380},
         {text: "部门职位", value: "hrOrgRoleList", width: 280},
@@ -612,8 +612,8 @@
             await this.getTableData();
             await this.closeUserAppDrawerShow();
             break;
-          case 'batchCreateStaffUser':
-            await this.batchCreateStaffUser();
+          case 'batchAddUser':
+            await this.batchAddUser();
             await this.getTableData();
             await this.closeDrawerShow();
             break;
@@ -812,7 +812,7 @@
       },
 
 
-      async batchCreateStaffUser() {
+      async batchAddUser() {
         const selectStaffIdList = this.selectStaffIdList;
         if (selectStaffIdList.length < 1) {
           await window.vtoast.fail("请选择要创建的账户");
@@ -824,14 +824,14 @@
           return { 
             userId: v.employeeId,
             username: v.employeeName, 
-            userStatus: 'active'
+            phoneNumber: v.contactNumber,
           }
         });
         await window.jianghuAxios({
           data: {
             appData: {
               pageId: 'userManagement2',
-              actionId: 'batchCreateStaffUser',
+              actionId: 'batchAddUser',
               actionData: {
                 userList
               }

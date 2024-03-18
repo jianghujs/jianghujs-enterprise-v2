@@ -76,11 +76,12 @@ SQL END!-->
           >
 
           <template v-slot:label="{ item }">
-            {{item.groupName + ' (' + item.groupId + ')'}}
+            <!-- {{item.groupName + ' (' + item.groupId + ')'}} -->
+            {{item.groupName}}
           </template>
           <template v-slot:append="{ item, open }">
             <template v-if="item.groupId != '超级管理员'">
-              <template v-if="constantObj.userGroupRoleList.includes('超级管理员') && item.groupId">
+              <!-- <template v-if="constantObj.userGroupRoleList.includes('超级管理员') && item.groupId">
                 <v-autocomplete style="width: 170px; display: inline-block;" 
                   prefix="主管:" v-model="item.headId" 
                   class="jh-v-input" dense filled single-line 
@@ -88,7 +89,7 @@ SQL END!-->
                   @change="doUiAction('updateHeadId', item)"
                   item-text="username" 
                   item-value="userId"></v-autocomplete>
-              </template>
+              </template> -->
               <template v-if="constantObj.userGroupRoleList.includes('超级管理员') && item.groupId">
                 <span role="button" class="blue--text font-weight-medium font-size-2 mr-2" @click.stop="doUiAction('startSetPrincipal', item)">
                   <v-icon size="16" class="blue--text">mdi-account-details-outline</v-icon>组织管理者
