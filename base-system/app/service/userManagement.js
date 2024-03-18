@@ -59,8 +59,12 @@ class UserManagementService extends Service {
     const md5Salt = idGenerateUtil.randomString(12);
     const password = md5(`${clearTextPassword}_${md5Salt}`);
 
-    const idSequence = await this.getNextIdByTableAndField({ table: '_user', field: 'idSequence' });
-    const userId = `W${idSequence}`;
+    let idSequence = null;
+    let userId = actionData.userId;
+    if (!userId) {
+      idSequence = await this.getNextIdByTableAndField({ table: '_user', field: 'idSequence' });
+      userId = `W${idSequence}`;
+    }
     const insertParams = _.pick(actionData, ['username', 'userStatus', 'qiweiId', 'phoneNumber', 'email']);
     const roleInsertList = [];
 
