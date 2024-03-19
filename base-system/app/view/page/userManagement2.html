@@ -76,19 +76,19 @@
                 <!-- pc端 -->
                 <template v-if="!isMobile">
                   <span role="button" class="success--text font-weight-medium font-size-2 mr-2" @click="doUiAction('startUpdateItem', {item})">
-                    <v-icon size="16" class="success--text">mdi-note-edit-outline</v-icon>修改
+                    <v-icon size="16" class="success--text">mdi-note-edit-outline</v-icon>修改信息
                   </span>
                   <span role="button" class="success--text font-weight-medium font-size-2 mr-2" @click="doUiAction('startResetPassword', {item})">
                     <v-icon size="16" class="success--text">mdi-note-edit-outline</v-icon>修改密码
                   </span>
-                  <span role="button" class="success--text font-weight-medium font-size-2 mr-2" @click="jump(`/${appInfo.appId}/page/appManagementOfOneUser?id=${item.userId}&title=${item.username}`)">
-                    <v-icon size="16" class="success--text">mdi-note-edit-outline</v-icon>用户的APP管理
-                  </span>
+                  <span role="button" class="success--text font-weight-medium font-size-2 mr-2" @click="doUiAction('openAppDrawer', item.userId)">
+                    <v-icon size="16" class="success--text">mdi-account-supervisor</v-icon>APP查看
+                  </span> 
                   <span role="button" v-if="item.userStatus != 'active'" class="success--text font-weight-medium font-size-2" @click="doUiAction('activeUserStatus', {item})">
                     <v-icon size="16" class="success--text">mdi-note-edit-outline</v-icon>激活用户
                   </span>
                   <span role="button" v-if="item.userStatus == 'active'" class="red--text text--accent-2 font-weight-medium font-size-2" @click="doUiAction('bannedUserStatus', {item})">
-                    <v-icon size="16" class="red--text text--accent-2">mdi-trash-can-outline</v-icon>禁用用户
+                    <v-icon size="16" class="red--text text--accent-2">mdi-trash-can-outline</v-icon>禁用
                   </span>
                 </template>
                 <!-- 手机端 -->
@@ -152,6 +152,15 @@
                 <v-col v-if="currentClickButton.action === 'add'" cols="12" sm="12" md="4" xl="3">
                   <span class="jh-input-label">初始密码</span>
                   <v-text-field class="jh-v-input" dense filled single-line label="初始密码" v-model="editItem.clearTextPassword" :rules="requireRules"></v-text-field>
+                </v-col>
+
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">手机号码</span>
+                  <v-text-field class="jh-v-input" dense filled single-line v-model="editItem.phoneNumber"></v-text-field>
+                </v-col>
+                <v-col cols="12" sm="12" md="4">
+                  <span class="jh-input-label">邮箱</span>
+                  <v-text-field class="jh-v-input" dense filled single-line v-model="editItem.email"></v-text-field>
                 </v-col>
               </v-row>
               <v-row class="justify-end mx-0 px-4 py-8">
@@ -360,7 +369,7 @@
               :class="{'zebraLine': isTableZebraLineShown }"
               class="jh-fixed-table-height elevation-0 mt-0 mb-xs-4">
               <template v-slot:item.action="{ item }">
-                <v-btn small color="success" @click="doUiAction('disableStaff', { item })">禁用用户</v-btn>
+                <v-btn small color="success" @click="doUiAction('disableStaff', { item })">禁用</v-btn>
               </template>
             </v-data-table>
 
@@ -409,6 +418,38 @@
           </v-dialog>
         </div>
 
+        <!-- 抽屉：打开APP管理 >>>>>>>>>>>>> -->
+        <v-navigation-drawer v-model="isAppDrawerShown"  fixed temporary right width="80%" class="elevation-24">
+          <!-- 抽屉标题 -->
+          <v-row no-gutters>
+            <span class="text-h7 font-weight-bold pa-4">查看用户的APP列表</span>
+          </v-row>
+          <v-divider class="jh-divider"></v-divider>
+          <v-row class="mt-0 px-4">
+            <v-col class="mt-0 px-4">
+              <v-data-table
+                :headers="drawerHeaders"
+                :items="constantObj.appList"
+                :footer-props="{ itemsPerPageOptions: [15, 50, -1], itemsPerPageText: '每页', itemsPerPageAllText: '所有'}"
+                :items-per-page="15"
+                item-key="userId"
+                class="elevation-0"
+                >
+                <!-- 表格分页 -->
+                <template v-slot:footer.page-text="pagination">
+                  <span>{{ pagination.pageStart }}-{{ pagination.pageStop }}</span>
+                  <span class="ml-1">共{{ pagination.itemsLength }}条</span>
+                </template>
+              </v-data-table>
+            </v-col>
+          </v-row>
+          <!--抽屉关闭按钮-->
+          <v-btn elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn" @click="isAppDrawerShown = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-navigation-drawer>
+        <!-- 抽屉：<<<<<<<<<<< 打开APP管理 -->
+        
         <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
         <v-navigation-drawer v-if="isHelpPageDrawerShown" v-model="isHelpPageDrawerShown" v-click-outside="drawerClickOutside" fixed temporary
           right width="80%" class="elevation-24">
@@ -497,7 +538,7 @@
         {text: "邮箱", value: "email", width: 180},
         { text: "明文密码", value: "clearTextPassword", align: "start", sortable: true, width: 80 },
 
-        { text: '操作', value: 'action', align: 'center', sortable: false, width: window.innerWidth < 500 ? 60 : 350, class: 'fixed', cellClass: 'fixed' },
+        { text: '操作', value: 'action', align: 'center', sortable: false, width: window.innerWidth < 500 ? 60 : 300, class: 'fixed', cellClass: 'fixed' },
       ],
       appHeaders: [
         { text: "用户ID", value: "userId", align: "start", sortable: true, width: 80 },
@@ -548,6 +589,13 @@
       // 批量离职禁用用户
       isDeleteDrawerShow: false,
       deleteSearchInput: null,
+
+      isAppDrawerShown: false,
+
+      drawerHeaders:[
+        {text: "应用名", value: "appName", width: 180},
+        {text: "组织角色（待实现）", value: "groupRoleName"},
+      ],
     },
     computed: {
       isMobile() {
@@ -671,6 +719,10 @@
           case 'copyPassword':
             await this.copyPassword(uiActionData);
             break;
+          case 'openAppDrawer':
+            await this.prepareAppData(uiActionData)
+            await this.openAppDrawer();
+            break;
           default:
             console.error("[doUiAction] uiActionId not find", { uiActionId });
             break;
@@ -706,7 +758,7 @@
               pageId: 'userManagement2',
               actionId: 'selectItemList',
               actionData: {},
-              orderBy: [{ column: 'id', order: 'desc' }]
+              orderBy: [{column: 'userId', order: 'asc'}]
             }
           }
         });
@@ -885,14 +937,15 @@
        */
       async doUpdateItem() {
         this.isEditDrawerPermanent = false;
-        const { id, userId, clearTextPassword, ...actionData } = this.computedEditItem;
+        const { id, userId } = this.computedEditItem;
+        const { username, phoneNumber, email } = this.computedEditItem;
         await window.vtoast.loading("修改用户");
         await window.jianghuAxios({
           data: {
             appData: {
               pageId: 'userManagement2',
               actionId: 'updateItem',
-              actionData: { username: actionData.username },
+              actionData: { username, phoneNumber, email },
               where: { userId }
             }
           }
@@ -977,6 +1030,41 @@
       copyPassword({ item }) {
         navigator.clipboard.writeText(item.clearTextPassword);
         window.vtoast.success("复制密码成功！")
+      },
+
+      async prepareAppData(userId){
+        const rows = (await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'userManagement',
+              actionId: 'getAppList',
+              actionData: {},
+              where: {
+                userId: userId
+              },
+              orderBy: [{column: 'operationAt', order: 'desc'}]
+            }
+          }
+        })).data.appData.resultData.rows;
+        const groupBy = _.groupBy(rows, 'appId');
+        const list = []
+
+        Object.keys(groupBy).forEach(key => {
+          const item = {};
+          item.appId = groupBy[key][0].appId;
+          item.appName = groupBy[key][0].appName;
+          item.userId = groupBy[key][0].userId;
+          item.username = groupBy[key][0].username;
+          list.push(item);
+        })
+
+        this.constantObj.appList = list
+      },
+      async openAppDrawer(){
+        this.isAppDrawerShown = true
+      },
+      async closeAppDrawer(){
+        this.isAppDrawerShown = false
       },
 
       jump(url) {

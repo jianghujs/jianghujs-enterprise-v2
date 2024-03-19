@@ -68,9 +68,9 @@
                   <span role="button" class="success--text font-weight-medium font-size-2 mr-2" @click="doUiAction('startUpdateItem', item)">
                     <v-icon size="16" class="success--text">mdi-note-edit-outline</v-icon>修改信息
                   </span>
-                  <!-- <span role="button" class="success--text font-weight-medium font-size-2 mr-2" @click="doUiAction('startResetPassword', item)">
+                  <span role="button" class="success--text font-weight-medium font-size-2 mr-2" @click="doUiAction('startResetPassword', item)">
                     <v-icon size="16" class="success--text">mdi mdi-lock-reset</v-icon>修改密码
-                  </span> -->
+                  </span>
                   <span
                     role="button" class="success--text font-weight-medium font-size-2 mr-2"
                     @click="doUiAction('openAppDrawer', item.userId)">
@@ -97,9 +97,9 @@
                     <v-list-item @click="doUiAction('startUpdateItem', item)">
                       <v-list-item-title>修改信息</v-list-item-title>
                     </v-list-item>
-                    <!-- <v-list-item @click="doUiAction('startResetPassword', item)">
+                    <v-list-item @click="doUiAction('startResetPassword', item)">
                       <v-list-item-title>修改密码</v-list-item-title>
-                    </v-list-item> -->
+                    </v-list-item>
                     <v-list-item @click="doUiAction('openAppDrawer', item.userId)">
                       <v-list-item-title>APP管理</v-list-item-title>
                     </v-list-item>
@@ -288,17 +288,17 @@
                 <span class="jh-input-label">用户名<span class="red--text text--accent-2 ml-1">*必填</span></span>
                 <v-text-field class="jh-v-input" dense filled single-line v-model="updateItem.username" :rules="validationRules.requireRules"></v-text-field>
               </v-col>
-              <v-col cols="12" sm="12" md="4">
+              <!-- <v-col cols="12" sm="12" md="4">
                 <span class="jh-input-label">企微ID<span class="red--text text--accent-2 ml-1">*必填</span></span>
                 <v-text-field class="jh-v-input" dense filled single-line v-model="updateItem.qiweiId" :rules="validationRules.requireRules"></v-text-field>
-              </v-col>
+              </v-col> -->
               <!-- <v-col cols="12" sm="12" md="4">
                 <span class="jh-input-label">用户状态<span class="red--text text--accent-2 ml-1">*必填</span></span>
                 <v-select class="jh-v-input" dense filled single-line clearable v-model="updateItem.userStatus" :items="constantObj.userStatus" :rules="validationRules.requireRules"></v-select>
               </v-col> -->
               <v-col cols="12" sm="12" md="4">
-                <span class="jh-input-label">手机号码<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-text-field class="jh-v-input" dense filled single-line v-model="updateItem.phoneNumber" :rules="validationRules.requireRules"></v-text-field>
+                <span class="jh-input-label">手机号码</span>
+                <v-text-field class="jh-v-input" dense filled single-line v-model="updateItem.phoneNumber"></v-text-field>
               </v-col>
               <v-col cols="12" sm="12" md="4">
                 <span class="jh-input-label">邮箱</span>
@@ -337,11 +337,6 @@
                 item-key="userId"
                 class="elevation-0"
                 >
-                <template v-slot:item.groupRoleName="{ item }">
-                  <v-chip class="mr-2" v-for="groupRoleNameItem in item.groupRoleName.split(',')" color="success" small label outlined>
-                    {{groupRoleNameItem}}
-                  </v-chip>
-                </template>
                 <!-- 表格分页 -->
                 <template v-slot:footer.page-text="pagination">
                   <span>{{ pagination.pageStart }}-{{ pagination.pageStop }}</span>
@@ -433,11 +428,11 @@ new Vue({
       // {text: "初始密码", value: "clearTextPassword", width: 120},
       // {text: "操作人", value: "operationByUser", width: 100},
       // {text: "操作时间", value: "operationAt", width: 180},
-      {text: '操作', value: 'action', align: 'center', sortable: false, width: window.innerWidth < 500 ? 80 : 250, class: 'fixed', cellClass: 'fixed'},
+      {text: '操作', value: 'action', align: 'center', sortable: false, width: window.innerWidth < 500 ? 80 : 300, class: 'fixed', cellClass: 'fixed'},
     ],
     drawerHeaders:[
       {text: "应用名", value: "appName", width: 180},
-      {text: "部门角色", value: "groupRoleName"},
+      {text: "组织角色（待实现）", value: "groupRoleName"},
     ],
     roleCreateHeaders:[
         {text: "角色", value: "roleName", width:180},
@@ -884,11 +879,8 @@ new Vue({
         const item = {};
         item.appId = groupBy[key][0].appId;
         item.appName = groupBy[key][0].appName;
-        item.groupRoleName = groupBy[key].map(e => {
-          let roleName = e.roleName ? e.roleName  : "通用权限"
-          return e.groupAllName + ' | ' + roleName
-        }).join(',');
-
+        item.userId = groupBy[key][0].userId;
+        item.username = groupBy[key][0].username;
         list.push(item);
       })
 
