@@ -60,6 +60,13 @@
             checkbox-color="success"
             fixed-header
             class="jh-fixed-table-height elevation-0 mt-0 mb-xs-4">
+            <template v-slot:item.clearTextPassword="{ item }">
+              <v-icon small 
+                @click="doUiAction('copyPassword',{item})"
+              >
+              mdi-content-copy
+              </v-icon>
+            </template>
             <!-- 表格行操作按钮 -->
             <template v-slot:item.action="{ item }">
               <template>
@@ -425,14 +432,14 @@ new Vue({
       {text: "部门职位", value: "hrOrgRoleList", width: 280},
       {text: "手机号码", value: "phoneNumber", width: 180},
       {text: "邮箱", value: "email", width: 180},
-      // {text: "初始密码", value: "clearTextPassword", width: 120},
+      {text: "密码", value: "clearTextPassword", align: "start", sortable: true, width: 80 },
       // {text: "操作人", value: "operationByUser", width: 100},
       // {text: "操作时间", value: "operationAt", width: 180},
       {text: '操作', value: 'action', align: 'center', sortable: false, width: window.innerWidth < 500 ? 80 : 300, class: 'fixed', cellClass: 'fixed'},
     ],
     drawerHeaders:[
       {text: "应用名", value: "appName", width: 180},
-      {text: "组织角色（待实现）", value: "groupRoleName"},
+      // {text: "组织角色（待实现）", value: "groupRoleName"},
     ],
     roleCreateHeaders:[
         {text: "角色", value: "roleName", width:180},
@@ -839,8 +846,8 @@ new Vue({
     },
     //   --------------- <<<<<<<<<<<<< 修改密码 uiAction  ---------------
     //   --------------- 复制密码 uiAction >>>>>>>>>>>>>  ---------------
-    async copyPassword(funObj) {
-      await navigator.clipboard.writeText(funObj.clearTextPassword);
+    async copyPassword({ item }) {
+      navigator.clipboard.writeText(item.clearTextPassword);
       return window.vtoast.success("复制密码成功！")
     },
     //   --------------- <<<<<<<<<<<<< 复制密码 uiAction  ---------------

@@ -74,7 +74,7 @@
                   </template>
                   <v-list dense>
                     <v-list-item @click="doUiAction('openUserDrawer', item.appId)">
-                      <v-list-item-title>用户管理</v-list-item-title>
+                      <v-list-item-title>用户列表</v-list-item-title>
                     </v-list-item>
                     <v-list-item @click="doUiAction('startUpdateItem', item)">
                       <v-list-item-title>修改</v-list-item-title>
@@ -205,11 +205,6 @@
                     </span>
                   </th>
                 </template>
-                <template v-slot:item.groupRoleName="{ item }">
-                  <v-chip class="mr-2" v-for="groupRoleNameItem in item.groupRoleName.split(',')" color="success" small label outlined>
-                    {{groupRoleNameItem}}
-                  </v-chip>
-                </template>
               </v-data-table>
             </v-col>
           </v-row>
@@ -282,14 +277,14 @@ new Vue({
       {text: "应用ID", value: "appId"},
       {text: "应用名", value: "appName"},
       {text: "应用类型", value: "appType"},
-      {text: "操作人", value: "operationByUser"},
-      {text: "操作时间", value: "operationAt"},
+      // {text: "操作人", value: "operationByUser"},
+      // {text: "操作时间", value: "operationAt"},
       {text: '操作', value: 'action', align: 'center', sortable: false, width: window.innerWidth < 500 ? 80 : 200, class: 'fixed', cellClass: 'fixed'},
     ],
     userHeaders:[
-      {text: "账号", value: "userId", width: 90},
-      {text: "姓名", value: "username", width: 100},
-      {text: "部门角色", value: "groupRoleName"},
+      {text: "用户ID", value: "userId", width: 90},
+      {text: "用户名", value: "username", width: 100},
+      // {text: "组织角色（待实现）", value: "groupRoleName"},
     ],
     // 新增数据
     isCreateDrawerShown: false,
@@ -565,12 +560,7 @@ new Vue({
       Object.keys(groupBy).forEach(key => {
         const item = {};
         item.username = groupBy[key][0].username;
-        item.groupRoleName = groupBy[key].map(e => {
-          let roleName = e.roleName ? e.roleName  : "通用权限"
-          return e.groupAllName + ' | ' + roleName
-        }).join(',');
         item.userId = groupBy[key][0].userId;
-
         list.push(item);
       })
 
