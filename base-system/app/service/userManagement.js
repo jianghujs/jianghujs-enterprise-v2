@@ -56,11 +56,12 @@ class UserManagementService extends Service {
     const actionData = this.ctx.request.body.appData.actionData;
     validateUtil.validate(appDataSchema.addUser, actionData);
     const { clearTextPassword, roleConfig=[], groupId } = actionData;
+    let { userId } = actionData;
     const md5Salt = idGenerateUtil.randomString(12);
     const password = md5(`${clearTextPassword}_${md5Salt}`);
 
     const idSequence = await this.getNextIdByTableAndField({ table: '_user', field: 'idSequence' });
-    const userId = `W${idSequence}`;
+    userId = userId || `W${idSequence}`;
     const insertParams = _.pick(actionData, ['username', 'userStatus', 'qiweiId', 'phoneNumber', 'email']);
     const roleInsertList = [];
 
@@ -78,6 +79,32 @@ class UserManagementService extends Service {
     }
     await jianghuKnex('_user', this.ctx).jhInsert({ ...insertParams, idSequence, userId, password, clearTextPassword, md5Salt });
     await this.service.app.buildUserApp(userId);
+    return {};
+  }
+
+
+  async batchAddUser() {
+    const { jianghuKnex } = this.app;
+    const actionData = this.ctx.request.body.appData.actionData;
+    const { userList=[] } = actionData;
+
+    let idSequence = await this.getNextIdByTableAndField({ table: '_user', field: 'idSequence' });
+    const userListInsert = [];
+    userList.forEach(user => {
+      const {userId, username, phoneNumber } = user;
+      if (!userId || !username) { return; }
+      const insertParams = _.pick(user, [ 'userId', 'username', 'userType', 'userStatus', ]);
+      const md5Salt = idGenerateUtil.randomString(12);
+      const clearTextPassword = idGenerateUtil.randomString(6);
+      const password = md5(`${clearTextPassword}_${md5Salt}`);
+
+      // 替换 空格、换行、制表符
+      userListInsert.push({ ...insertParams, phoneNumber, userId: userId.replace(/\s+/g, ''), password, clearTextPassword, md5Salt, username: username.replace(/\s+/g, ''), idSequence: idSequence++});
+    })
+    if (userListInsert.length > 0) {
+      await jianghuKnex('_user', this.ctx).jhInsert(userListInsert);
+    }
+    await this.service.app.buildUserApp();
     return {};
   }
 
