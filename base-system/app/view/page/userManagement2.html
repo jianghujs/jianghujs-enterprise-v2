@@ -394,23 +394,35 @@
               <v-container>
                 <v-row>
                   <v-col cols="12">
-                    <v-text-field v-model="insertItemData.userId" label="用户ID(登陆ID)" :disabled="true" required></v-text-field>
+                    <span class="jh-input-label">用户ID[登陆]</span>
+                    <v-text-field dense class="jh-v-input" single-line filled v-model="insertItemData.userId" label="用户ID(登陆ID)" :disabled="true" required></v-text-field>
                   </v-col>
                   <v-col cols="12">
-                    <v-text-field v-model="insertItemData.username" label="用户名" :disabled="true" required></v-text-field>
+                    <span class="jh-input-label">用户名</span>
+                    <v-text-field dense class="jh-v-input" single-line filled v-model="insertItemData.username" label="用户名" :disabled="true" required></v-text-field>
                   </v-col>
+                  <!-- <v-col cols="12">
+                    <span class="jh-input-label">用户类型</span>
+                    <v-select dense class="jh-v-input" single-line filled v-model="insertItemData.userType" label="用户类型" :items="constantObj.userType" :disabled="true" required></v-select>
+                  </v-col> -->
                   <v-col cols="12">
-                    <v-text-field v-model="insertItemData.clearTextPassword" label="密码" required></v-text-field>
+                    <span class="jh-input-label">密码<span class="red--text text--accent-2 ml-1">*必填</span></span>
+                    <v-text-field dense class="jh-v-input" single-line filled v-model="insertItemData.clearTextPassword" label="密码" required>
+                      <!-- 最后添加后缀icon change 刷新密码 -->
+                      <template v-slot:append-outer>
+                        <v-icon @click="insertItemData.clearTextPassword = Math.random().toString(36).slice(-8)">mdi-refresh</v-icon>
+                      </template>
+                    </v-text-field>
                   </v-col>
                 </v-row>
               </v-container>
             </v-card-text>
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn color="blue darken-1" text @click="insertItemDialog = false">
+              <v-btn  text @click="insertItemDialog = false">
                 取消
               </v-btn>
-              <v-btn color="blue darken-1" text @click="doUiAction('doCreateStaff', {})">
+              <v-btn color="success darken-1" text @click="doUiAction('doCreateStaff', {})">
                 创建用户
               </v-btn>
             </v-card-actions>
@@ -776,7 +788,8 @@
         this.insertItemData = {
           userId: item.employeeId,
           username: item.employeeName,
-          clearTextPassword: '123456',
+          clearTextPassword: Math.random().toString(36).slice(-8),
+          phoneNumber: item.contactNumber,
         }
         this.insertItemDialog = true;
       },
