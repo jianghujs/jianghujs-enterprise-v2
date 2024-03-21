@@ -385,7 +385,7 @@ class UtilService extends Service {
     const NEWColumnList = columnListSelect.map(item => `NEW.\`${item.COLUMN_NAME}\``);
     const updateColumnList = columnListSelect.map(item => `\`${item.COLUMN_NAME}\`=NEW.\`${item.COLUMN_NAME}\``);
 
-    const INSERTTriggerName = `${syncTriggerPrefix}_${targetTable}_INSERT`;
+    const INSERTTriggerName = `${syncTriggerPrefix}_${targetTable}_INSERT`.slice(-64);
     const INSERTTriggerContentSql = `BEGIN
             INSERT INTO \`${targetDatabase}\`.\`${targetTable}\`
             (${columnList.join(',')})
@@ -405,7 +405,7 @@ class UtilService extends Service {
       logger.info(`[${targetTable}]`, 'insert触发器已存在; 无需覆盖');
     }
 
-    const UPDATETriggerName = `${syncTriggerPrefix}_${targetTable}_UPDATE`;
+    const UPDATETriggerName = `${syncTriggerPrefix}_${targetTable}_UPDATE`.slice(-64);
     const UPDATETriggerContentSql = `BEGIN
             UPDATE \`${targetDatabase}\`.\`${targetTable}\`
             SET ${updateColumnList.join(',')}
@@ -424,7 +424,7 @@ class UtilService extends Service {
       logger.info(`[${targetTable}]`, 'update触发器已存在; 无需覆盖');
     }
 
-    const DELETETriggerName = `${syncTriggerPrefix}_${targetTable}_DELETE`;
+    const DELETETriggerName = `${syncTriggerPrefix}_${targetTable}_DELETE`.slice(-64);
     const DELETETriggerContentSql = `BEGIN
             DELETE FROM \`${targetDatabase}\`.\`${targetTable}\` WHERE id = OLD.id;
         END`;
@@ -467,7 +467,7 @@ class UtilService extends Service {
         TRIGGER_SCHEMA: sourceDatabase,
         TRIGGER_NAME: triggerName, EVENT_MANIPULATION: triggerEvent,
       } = trigger;
-      const tableSyncConfigExist = tableSyncConfigList.find(item => triggerName === `${syncTriggerPrefix}_${item.targetTable}_${triggerEvent}`);
+      const tableSyncConfigExist = tableSyncConfigList.find(item => triggerName === `${syncTriggerPrefix}_${item.targetTable}_${triggerEvent}`.slice(-64) || triggerName === `${syncTriggerPrefix}_${item.targetTable}_${triggerEvent}`);
       if (!tableSyncConfigExist) {
         await jianghuKnex.raw(`DROP TRIGGER IF EXISTS ${sourceDatabase}.${triggerName};`);
         logger.warn(`[${triggerName}]`, '无用的mysql trigger, 执行删除逻辑;');
