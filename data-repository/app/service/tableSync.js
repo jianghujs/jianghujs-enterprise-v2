@@ -361,10 +361,11 @@ class UtilService extends Service {
     const triggerList = await jianghuKnex('information_schema.triggers')
       .whereNotIn('TRIGGER_SCHEMA', ['sys'])
       .where('TRIGGER_NAME', 'like', `${syncTriggerPrefix}_%`)
-      .select('TRIGGER_NAME as triggerName', 'ACTION_STATEMENT as triggerContent');
-    const allTriggerContentMap = Object.fromEntries(triggerList.map(obj => [obj.triggerName, obj.triggerContent]));
+      .select('TRIGGER_NAME as triggerName', 'ACTION_STATEMENT as triggerContent', 'TRIGGER_SCHEMA as database');
 
     for (const tableSyncConfig of tableSyncTriggerList) {
+      // 精准查询某个数据库内的触发器、不同的数据库内触发器名字可能相同
+      const allTriggerContentMap = Object.fromEntries(triggerList.filter(e => e.database === tableSyncConfig.sourceDatabase).map(obj => [obj.triggerName, obj.triggerContent]));
       await this.createMysqlTriggerForSourceTable({tableSyncConfig, allTriggerContentMap, syncTriggerPrefix});
     }
 
@@ -453,7 +454,9 @@ class UtilService extends Service {
       // 过滤 knex 连接失败的外部表同步配置
       .filter(o => !o.sourceDatabase.startsWith('{') || outsideKnexMap[o.sourceDatabase])
       .filter(x => x.enableMysqlTrigger !== '关闭')
-      .filter(x => allTableMap[`${x.sourceDatabase}.${x.sourceTable}`].tableType === 'BASE TABLE');
+      .filter(x => {
+        return allTableMap[`${x.sourceDatabase}.${x.sourceTable}`] && allTableMap[`${x.sourceDatabase}.${x.sourceTable}`].tableType === 'BASE TABLE'
+      });
     tableSyncConfigList = await this.tableExistCheck({tableSyncConfigList, allTableMap});
     tableSyncConfigList.forEach(o => o.targetTable = o.targetTable);
 
