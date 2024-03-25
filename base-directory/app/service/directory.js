@@ -70,7 +70,7 @@ class DirectoryService extends Service {
 
           if (!page.link) {
             const appItem = appList.find(app => app.appId === page.appId);
-            let url = appItem.appUrl;
+            let url = appItem?.appUrl || '';
             if (page.pageId) {
               url += `/page/${page.pageId}`;
             }
