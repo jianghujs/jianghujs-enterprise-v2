@@ -218,11 +218,11 @@ Vue.component("directory-draggable-editor", {
       // 获取每个 app 有哪些页面没有在内
       const notInAppPageList = {};
       _.forEach(appObj, (value, key) => {
-        notInAppPageList[key] = this.appList.find((app) => {
-          return app.appId === key;
-        }).appPageList.filter((page) => {
+        const app = this.appList.find((app) => app.appId === key);
+        if (!app) { return; }
+        notInAppPageList[key] = app.appPageList.filter((page) => {
           return !value.includes(page.pageId);
-        })
+        });
       })
       return notInAppPageList;
     }
