@@ -28,6 +28,8 @@ class UserGroupRoleService extends Service {
     if (roleInsertList.length > 0) {
       await jianghuKnex('enterprise_user_group_role', this.ctx).insert(roleInsertList);
     }
+    // Tip: 临时代码， commonAuthList待废弃
+    this.service.app.buildUserGroupRolePageByCommonAuth();
     this.service.app.buildUserApp(userId);
   }
 
@@ -53,12 +55,16 @@ class UserGroupRoleService extends Service {
         await trx('enterprise_user_group_role', this.ctx).insert(roleInsertList);
       }
     })
+    // Tip: 临时代码， commonAuthList待废弃
+    this.service.app.buildUserGroupRolePageByCommonAuth();
     this.service.app.buildUserApp(userId);
   }
   async deleteUserGroupRole() {
     const { jianghuKnex } = this.app;
     const { userId, groupId } = this.ctx.request.body.appData.actionData;
     await jianghuKnex('enterprise_user_group_role').where({ userId, groupId }).delete();
+    // Tip: 临时代码， commonAuthList待废弃
+    this.service.app.buildUserGroupRolePageByCommonAuth();
     this.service.app.buildUserApp(userId);
   }
 

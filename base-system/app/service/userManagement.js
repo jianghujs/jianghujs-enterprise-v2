@@ -78,7 +78,8 @@ class UserManagementService extends Service {
       await jianghuKnex('enterprise_user_group_role', this.ctx).insert(roleInsertList);
     }
     await jianghuKnex('_user', this.ctx).jhInsert({ ...insertParams, idSequence, userId, password, clearTextPassword, md5Salt });
-    await this.service.app.buildUserApp(userId);
+    this.service.app.buildUserGroupRolePageByCommonAuth();
+    this.service.app.buildUserApp(userId);
     return {};
   }
 
