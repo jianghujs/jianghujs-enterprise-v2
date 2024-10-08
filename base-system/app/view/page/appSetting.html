@@ -1,69 +1,100 @@
+{% block htmlHead %}
+{% endblock %}
+
 {% extends 'template/jhTemplateV4.html'%}
-
 {% block vueTemplate %}
-
 <script type="text/html" id="app-template">
 <div>
-  <v-app mobile-breakpoint="sm">
-    <jh-menu />
-    <v-main class="mt-15">
-      <!-- 头部内容 >>>>>>>>>>>>> -->
-      <div class="jh-page-second-bar px-8">
-        <v-row class="align-center">
-          <v-col cols="12" xs="12" sm="12" md="4" xl="3">
-            <div class="py-4 text-body-1 font-weight-bold">App管理
-              <!-- 帮助页按钮 -->
-              <span role="button" class="success--text font-weight-regular jh-font-size-13 ml-2" @click="isHelpPageDrawerShown = true">
-                <v-icon size="13" class="success--text">mdi-help-circle-outline</v-icon>帮助
-              </span>
-            </div>
+<v-app mobile-breakpoint="sm">
+  <jh-menu />
+  <v-main class="mt-13">
+    <!-- 头部内容 >>>>>>>>>>>>> -->
+    <div class="jh-page-second-bar px-3 px-sm-8">
+      <v-row class="align-center" no-gutters>
+        <v-col cols="12" sm="12" md="4" xl="3" :cols="12" :sm="6" :md="4" >
+          <div class="py-4 text-body-1 font-weight-bold align-center d-flex align-center">应用设置
+            <!-- 帮助页按钮 -->
+            <v-icon size="15" class="black--text ml-1" @click="isHelpPageDrawerShown = true">mdi-help-circle</v-icon>
+          </div>
+        </v-col>
+          <!-- 自定义搜索内容 -->
+          <v-spacer ></v-spacer>
+      </v-row>
+    </div>
+    <!-- <<<<<<<<<<<<< 头部内容 -->
+    <!-- 页面内容 >>>>>>>>>>>>> -->
+    <div class="jh-page-body-container px-sm-8">
+      <v-row class="pa-0 ma-0">
+        <v-col class="pa-0"  :clos="12">
+          <!-- 表格顶部栏 -->
+          <v-card  class="rounded-lg elevation-0">
+            <v-row class="ma-0 pb-3 pa-0 px-3 px-md-0" align="center">
+              <v-btn color="success" class="mr-2" @click="doUiAction('updateAppPageDirectoryList')" small :outlined="true">
+            批量保存
+          </v-btn>
+              <v-btn color="success" class="mr-2" @click="doUiAction('updateAppUserGroupRole')" small :outlined="true">
+            更新权限
+          </v-btn>
+              <v-spacer ></v-spacer>
+              <v-col cols="12" sm="6" md="4" class="pa-0">
+            <v-text-field prefix="筛选" v-model="searchInput" class="jh-v-input" dense filled single-line></v-text-field>
           </v-col>
-        </v-row>
-      </div>
-      <!-- <<<<<<<<<<<<< 头部内容 -->
-      
-      <div class="jh-page-body-container px-8">
-        <!-- 页面内容 >>>>>>>>>>>>> -->
-        <v-card class="rounded-lg">
-          <v-row class="ma-0 pa-4">
-            <!--新增按钮-->
-            <v-btn color="success" class="elevation-0 mr-2" @click="doUiAction('updateAppPageDirectoryList')" small>保存</v-btn>
-            <!-- <v-btn color="success" class="elevation-0 mr-2" @click="doUiAction('startCreateItem')" small>新增</v-btn> -->
-            <v-btn color="success" class="elevation-0 mr-2" @click="doUiAction('updateAppUserGroupRole')" small>更新应用的权限表为System View</v-btn>
-            <v-spacer></v-spacer>
-            <!--搜索过滤-->
-            <v-col cols="12" xs="8" sm="4" md="3" xl="2" class="pa-0">
-              <v-text-field color="success" v-model="searchInput" prefix="搜索：" class="jh-v-input" dense filled single-line></v-text-field>
-            </v-col>
-          </v-row>
-          <!--表格-->
-          <v-data-table
-            :headers="headers"
-            :items="tableData"
-            :search="searchInput"
-            :footer-props="{ itemsPerPageOptions: [20, 50, -1], itemsPerPageText: '每页', itemsPerPageAllText: '所有'}"
-            :items-per-page="-1"
-            mobile-breakpoint="0"
-            :loading="isTableLoading"
-            :class="{'zebraLine': isTableZebraLineShown }"
-            checkbox-color="success"
-            fixed-header
-            class="jh-fixed-table-height elevation-0 mt-0 mb-xs-4">
-            <!-- 表格行操作按钮 -->
-            <template v-slot:item.action="{ item }">
-              <template>
+            </v-row>
+            <!-- 表格 -->
+            <v-data-table
+              :headers="headers"
+              :items="tableDataComputed"
+              :search="searchInput"
+              :footer-props="{ itemsPerPageOptions: [20, 50, 200, -1], itemsPerPageText: '每页', itemsPerPageAllText: '所有'}"
+              :items-per-page="-1"
+              mobile-breakpoint="0"
+              :loading="isTableLoading"
+              checkbox-color="success"
+              :class="{'zebraLine': true }"
+              fixed-header
+              class="jh-fixed-table-height elevation-0 mt-0 mb-xs-4"
+            >
+
+              <!-- 表格插槽 -->
+              
+
+              <!-- 自定义渲染列 -->
+              <template v-slot:item.appPageDirectoryList="{item, index}">
+                
+            <div class="py-1">
+              <v-autocomplete v-model="item.appPageDirectoryList" :items="item.appPageList" item-text="pageName" item-value="pageId" :class="{ 'jh-v-input-change': !_.isEqual(item.appPageDirectoryListCopy, item.appPageDirectoryList) }" class="jh-v-input" multiple dense filled single-line></v-autocomplete>
+              <!-- 全选按钮 -->
+              <div class="d-flex justify-space-between pt-1">
+                <div class="">
+                  <v-btn color="success" x-small @click="item.appPageDirectoryList = item.appPageList.map(e => e.pageId)">全选</v-btn>
+                  <v-btn x-small @click="item.appPageDirectoryList = []">全取消</v-btn>
+                </div>
+                <v-btn x-small color="success" @click="doUiAction('syncAppPageList', item)" outlined>
+                  <v-icon x-small>mdi-sync</v-icon>重新同步页面列表
+                </v-btn>
+              </div>
+            </div>
+          
+              </template>
+              <template v-slot:item.appType="{item, index}">
+                
+            <v-text-field v-model="item.appType" :class="{ 'jh-v-input-change': item.appTypeCopy !== item.appType }" class="jh-v-input" dense filled single-line></v-text-field>
+          
+              </template>
+              <template v-slot:item.appUrl="{item, index}">
+                
+            <v-text-field class="jh-v-input" dense single-line filled :class="{ 'jh-v-input-change': item.appUrlCopy !== item.appUrl }" v-model="item.appUrl"></v-text-field>
+          
+              </template>
+              <!-- 表格操作按钮 -->
+              <template v-slot:item.action="{ item }">
                 <!-- pc端 -->
                 <template v-if="!isMobile">
-                  <!-- <span
-                    role="button" class="success--text font-weight-medium font-size-2 mr-2"
-                    @click="doUiAction('jump', `/${appInfo.appId}/page/userManagementOfOneApp?id=${item.appId}&title=${item.appName}`)">
-                    <v-icon size="16" class="success--text">mdi-account-supervisor</v-icon>用户管理
-                  </span>  -->
-                  <span role="button" class="success--text font-weight-medium font-size-2 mr-2" @click="doUiAction('startUpdateItem', item)">
-                    <v-icon size="16" class="success--text">mdi-note-edit-outline</v-icon>修改
+                  <span role="button" class="success--text font-weight-medium font-size-2 mr-2" @click="doUiAction('startUpdateItem', item)" >
+                    <v-icon size="16" class="success--text">mdi-note-edit-outline</v-icon>编辑
                   </span>
-                  <span role="button" class="red--text text--accent-2 font-weight-medium font-size-2" @click="doUiAction('deleteItem', item)">
-                    <v-icon size="16" class="red--text text--accent-2">mdi-trash-can-outline</v-icon>删除
+                  <span role="button" class="error--text font-weight-medium font-size-2 mr-2" @click="doUiAction('deleteItem', item)" >
+                    <v-icon size="16" class="error--text">mdi-trash-can-outline</v-icon>删除
                   </span>
                 </template>
                 <!-- 手机端 -->
@@ -71,234 +102,221 @@
                   <template v-slot:activator="{ on, attrs }">
                     <span role="button" class="success--text font-weight-medium font-size-2"
                       v-bind="attrs" v-on="on">
-                      操作<v-icon size="14" class="success--text">mdi-chevron-down</v-icon>
+                      <v-icon size="20" class="success--text">mdi-chevron-down</v-icon>操作
                     </span>
                   </template>
                   <v-list dense>
-                    <!-- <v-list-item @click="doUiAction('jump', `/${appInfo.appId}/page/userManagementOfOneApp?id=${item.appId}&title=${item.appName}`)">
-                      <v-list-item-title>用户管理</v-list-item-title>
-                    </v-list-item> -->
-                    <v-list-item @click="doUiAction('startUpdateItem', item)">
-                      <v-list-item-title>修改</v-list-item-title>
+                    <v-list-item @click="doUiAction('startUpdateItem', item)" >
+                      <v-list-item-title>编辑</v-list-item-title>
                     </v-list-item>
-                    <v-list-item @click="doUiAction('deleteItem', item)">
+                    <v-list-item @click="doUiAction('deleteItem', item)" >
                       <v-list-item-title>删除</v-list-item-title>
                     </v-list-item>
                   </v-list>
                 </v-menu>
               </template>
+              <!-- 没有数据 -->
+              <template v-slot:loading>
+                <div class="jh-no-data">数据加载中</div>
+              </template>
+              <template v-slot:no-data>
+                <div class="jh-no-data">暂无数据</div>
+              </template>
+              <template v-slot:no-results>
+                <div class="jh-no-data">暂无数据</div>
+              </template>
+              <!-- 表格分页 -->
+              <template v-slot:footer.page-text="pagination">
+                <span>{{pagination.pageStart}}-{{pagination.pageStop}}</span>
+                <span class="ml-1">共{{pagination.itemsLength}}条</span>
+              </template>
+            </v-data-table>
+          </v-card>
+        </v-col>
+      </v-row>
+    </div>
+    <!-- <<<<<<<<<<<<< 页面内容 -->
+    <!-- 编辑 >>>>>>>>>>>>> -->
+    <v-navigation-drawer v-if="isUpdateDrawerShown" v-model="isUpdateDrawerShown" :permanent="isUpdateDrawerShown" fixed temporary right width="90%" class="elevation-24" >
+      <v-form ref="updateForm" lazy-validation>
+        
+        <!-- 抽屉标题 -->
+        <v-row class="jh-drawer-header px-4" no-gutters align="center">
+          <span class="text-h7 font-weight-bold py-4">编辑</span>
+          <v-spacer ></v-spacer>
+          <div class="jh-drawer-action-btn-group">
+            <v-btn class="elevation-0 grey lighten-4" @click="closeUpdateDrawerCheck" small>取消</v-btn>
+            <!-- 抽屉操作按钮 -->
+            <template v-if="true">
+              <v-btn color="success" small @click="doUiAction('updateItem')">
+              编辑
+            </v-btn>
             </template>
-            <!-- 应用类型 -->
-            <!-- <template v-slot:item.appId="{ item }">
-              <v-icon color="success" small @click="copyText('/<$ appic $>')">mdi-content-copy</v-icon>
-              <v-icon color="success" small>mdi-open-in-new</v-icon>
-              {{ item.appId }} 
-            </template> -->
+          </div>
+        </v-row>
+        <v-divider class="jh-divider"></v-divider>
+        <!-- 抽屉内容 -->
 
-            <template v-slot:item.appPageDirectoryList="{ item }">
+            <!-- 抽屉内容form -->
+            <v-row class="mt-0 px-4 pb-4">
+              <v-col cols="12" sm="12" md="3" >
+                <span class="jh-input-label"><span class="red--text text--accent-2 ml-1">* </span>应用ID</span>
+                <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.appId" :rules="validationRules.requireRules"></v-text-field>
+              </v-col>
+              <v-col cols="12" sm="12" md="3" >
+                <span class="jh-input-label"><span class="red--text text--accent-2 ml-1">* </span>应用名</span>
+                <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.appName" :rules="validationRules.requireRules"></v-text-field>
+              </v-col>
+              <v-col cols="12" sm="12" md="3" >
+                <span class="jh-input-label"><span class="red--text text--accent-2 ml-1">* </span>数据库</span>
+                <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.appDatabase" :rules="validationRules.requireRules"></v-text-field>
+              </v-col>
+              <v-col cols="12" sm="12" md="3" >
+                <span class="jh-input-label"><span class="red--text text--accent-2 ml-1">* </span>应用类型</span>
+                <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.appType" :rules="validationRules.requireRules"></v-text-field>
+              </v-col>
+            </v-row>
 
-              <v-autocomplete v-model="item.appPageDirectoryList" :items="item.appPageList" 
-                  item-text="pageName" item-value="pageId" 
-                  :class="{ 'jh-v-input-change': !_.isEqual(item.appPageDirectoryListCopy, item.appPageDirectoryList) }"
-                  class="jh-v-input" multiple dense filled single-line></v-autocomplete>
-              <!-- 全选按钮 -->
-              <v-btn color="success" x-small @click="item.appPageDirectoryList = item.appPageList.map(e => e.pageId)">全选</v-btn>
-              <v-btn x-small @click="item.appPageDirectoryList = []">全取消</v-btn>
-            </template>
-            <template v-slot:item.appType="{ item }">
-              <v-autocomplete v-model="item.appType" :items="constantObj.appTypeList" 
-                item-text="value" item-value="value"
-                :class="{ 'jh-v-input-change': item.appTypeCopy !== item.appType }"
-                class="jh-v-input" dense filled single-line></v-autocomplete>
-            </template>
-            <template v-slot:item.appUrl="{ item }">
-              <v-text-field class="jh-v-input" dense single-line filled
-              :class="{ 'jh-v-input-change': item.appUrlCopy !== item.appUrl }" v-model="item.appUrl"></v-text-field>
-            </template>
-            <!--没有数据-->
-            <template v-slot:loading>
-              <div class="jh-no-data">数据加载中</div>
-            </template>
-            <template v-slot:no-data>
-              <div class="jh-no-data">暂无数据</div>
-            </template>
-            <template v-slot:no-results>
-              <div class="jh-no-data">暂无数据</div>
-            </template>
-            <!--表格分页-->
-            <template v-slot:footer.page-text="pagination">
-              <span>{{pagination.pageStart}}-{{pagination.pageStop}}</span>
-              <span class="ml-1">共{{pagination.itemsLength}}条</span>
-            </template>
-          </v-data-table>
-        </v-card>
-        <!-- <<<<<<<<<<<<< 页面内容 -->
-
-        <!-- 新增抽屉 -->
-        <v-navigation-drawer v-model="isCreateDrawerShown" v-click-outside="drawerClickOutside" fixed temporary right width="80%" class="elevation-24">
-          <v-form ref="createForm" lazy-validation>
-            <!-- 抽屉标题 -->
-            <v-row no-gutters>
-              <span class="text-h7 font-weight-bold pa-4">添加信息</span>
-            </v-row>
-            <v-divider class="jh-divider"></v-divider>
-            <!--抽屉表单主体-->
-            <v-row class="mt-0 px-4">
-              <v-col cols="12" sm="12" md="4">
-                <span class="jh-input-label">应用ID<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-text-field class="jh-v-input" dense single-line filled label="应用ID" v-model="createItem.appId" :rules="validationRules.requireRules"></v-text-field>
-              </v-col>
-              <v-col cols="12" sm="12" md="4">
-                <span class="jh-input-label">应用名<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-text-field class="jh-v-input" dense single-line filled label="应用名" v-model="createItem.appName" :rules="validationRules.requireRules"></v-text-field>
-              </v-col>
-              <v-col cols="12" sm="12" md="4">
-                <span class="jh-input-label">数据库<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-text-field class="jh-v-input" dense single-line filled label="应用名" v-model="createItem.appDatabase" :rules="validationRules.requireRules"></v-text-field>
-              </v-col>
-              <v-col cols="12" sm="12" md="4">
-                <span class="jh-input-label">应用类型<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-text-field class="jh-v-input" dense single-line filled label="应用类型" v-model="createItem.appType" :rules="validationRules.requireRules"></v-text-field>
-              </v-col>
-            </v-row>
-            <!--抽屉操作按钮-->
-            <v-row class="justify-end mx-0 my-8 px-4">
-              <v-btn color="success" @click="doUiAction('createItem')" small>保存</v-btn>
-              <v-btn class="ml-2" @click="isCreateDrawerShown = false" small>取消</v-btn>
-            </v-row>
-          </v-form>
-          <!--抽屉关闭按钮-->
-          <v-btn
-            elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn" @click="isCreateDrawerShown = false">
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
-        </v-navigation-drawer>
-
-        <!-- 编辑抽屉 -->
-        <v-navigation-drawer v-model="isUpdateDrawerShown" v-click-outside="drawerClickOutside" fixed temporary right width="80%" class="elevation-24">
-          <v-form ref="updateForm" lazy-validation>
-            <!-- 抽屉标题 -->
-            <v-row no-gutters>
-              <span class="text-h7 font-weight-bold pa-4">修改信息</span>
-            </v-row>
-            <v-divider class="jh-divider"></v-divider>
-            <!--抽屉表单主体-->
-            <v-row class="mt-0 px-4">
-              <v-col cols="12" sm="12" md="4">
-                <span class="jh-input-label">应用ID</span>
-                <v-text-field class="jh-v-input" dense single-line filled label="应用ID" v-model="updateItem.appId" disabled></v-text-field>
-              </v-col>
-              <v-col cols="12" sm="12" md="4">
-                <span class="jh-input-label">应用名<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-text-field class="jh-v-input" dense single-line filled label="应用名" v-model="updateItem.appName" :rules="validationRules.requireRules"></v-text-field>
-              </v-col>
-              <v-col cols="12" sm="12" md="4">
-                <span class="jh-input-label">数据库<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-text-field class="jh-v-input" dense single-line filled label="应用名" v-model="updateItem.appDatabase" :rules="validationRules.requireRules"></v-text-field>
-              </v-col>
-              <v-col cols="12" sm="12" md="4">
-                <span class="jh-input-label">jhId</span>
-                <v-text-field class="jh-v-input" dense single-line filled label="应用名" v-model="updateItem.appJhId"></v-text-field>
-              </v-col>
-              <v-col cols="12" sm="12" md="4">
-                <span class="jh-input-label">应用类型<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-text-field class="jh-v-input" dense single-line filled label="应用类型" v-model="updateItem.appType" :rules="validationRules.requireRules"></v-text-field>
-              </v-col>
-            </v-row>
-            <!--抽屉操作按钮-->
-            <v-row class="justify-end mx-0 my-8 px-4">
-              <v-btn color="success" @click="doUiAction('updateItem')" small>保存</v-btn>
-              <v-btn class="ml-2" @click="isUpdateDrawerShown = false" small>取消</v-btn>
-            </v-row>
-          </v-form>
-          <!--抽屉关闭按钮-->
-          <v-btn
-            elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn" @click="isUpdateDrawerShown = false">
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
-        </v-navigation-drawer>
-        <!-- <<<<<<<<<<<<< 页面内容 -->
-      </div>
-      <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
-      <v-navigation-drawer v-model="isHelpPageDrawerShown" v-click-outside="drawerClickOutside" fixed temporary right width="80%" class="elevation-24">
-        <iframe
-          style="border: 0" :src="`/${appInfo.appId}/pageDoc#2.appManagement.md`" width="100%"
-          height="100%"></iframe>
-
-        <v-btn
-          elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn"
-          @click="isHelpPageDrawerShown = false">
+             <!-- 抽屉内容组件 -->
+      </v-form>
+      <!-- 抽屉关闭按钮 -->
+      <v-btn elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn" @click="closeUpdateDrawerCheck">
+        <v-icon>mdi-close</v-icon>
+      </v-btn>
+    </v-navigation-drawer>
+    <!-- <<<<<<<<<<<<< 编辑 -->
+    <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
+    <v-navigation-drawer v-if="isHelpPageDrawerLoaded" v-model="isHelpPageDrawerShown" :permanent="isHelpPageDrawerShown" fixed temporary right width="80%" class="elevation-24">
+      <iframe style="border: 0" :src="`/${appInfo.appId}/pageDoc#appSetting.md`" width="100%" height="100%"></iframe>
+      <v-btn elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn" @click="isHelpPageDrawerShown = false">
           <v-icon>mdi-close</v-icon>
-        </v-btn>
-      </v-navigation-drawer>
-      <!-- <<<<<<<<<<<<< 帮助页抽屉 -->
-    </v-main>
-  </v-app>
+      </v-btn>
+    </v-navigation-drawer>
+    <!-- <<<<<<<<<<<<< 帮助页抽屉 -->
+  </v-main>
+</v-app>
 
-  <jh-toast />
-  <jh-mask />
-  <jh-confirm-dialog />
-
+<jh-toast />
+<jh-mask />
+<jh-confirm-dialog />
 </div>
 </script>
-
-<div id="app">
-</div>
-
-
+<div id="app"></div>
 {% endblock %}
 
 {% block vueScript %}
-
-<!-- 加载页面组件 >>>>>>>>>>>>> -->
 {% include 'common/jianghuJs/fixedTableHeightV4.html' %}
-<!-- <<<<<<<<<<<<< 加载页面组件 -->
 
 <script type="module">
+
 new Vue({
   el: '#app',
   template: '#app-template',
   vuetify: new Vuetify(),
-  data: {
-    isHelpPageDrawerShown: false,
-    isTableZebraLineShown: true,
+  data: () => ({
+
     isMobile: window.innerWidth < 500,
-    // 表格相关数据
-    validationRules: {
-      requireRules: [
-        v => !!v || 'This is required',
-      ],
-    },
-    constantObj: {
-      appType: [{"value": "internal", "text": "内部应用"}, {"value": "external", "text": "外部应用"}],
-      appTypeList: [],
-    },
-    searchInput: null,
-    isTableLoading: true,
-    tableData: [],
+    isHelpPageDrawerShown: false,
+    isHelpPageDrawerLoaded: false,
+
+    // ================================ 表格相关 ================================
     headers: [
-      {text: "应用ID", value: "appId", width: 200},
-      {text: "应用名", value: "appName", width: 160},
-      {text: "数据库", value: "appDatabase",width: 200},
-      {text: "目录设置", value: "appPageDirectoryList", width: 500},
-      {text: "应用类型", value: "appType", width: 150},
-      {text: "应用链接", value: "appUrl", width: 270},
-      {text: '操作', value: 'action', align: 'center', sortable: false, width: window.innerWidth < 500 ? 80 : 200, class: 'fixed', cellClass: 'fixed'},
+      { text: "应用ID", value: "appId", width: 200 },
+      { text: "应用名", value: "appName", width: 160 },
+      { text: "数据库", value: "appDatabase", width: 200 },
+      { text: "目录设置", value: "appPageDirectoryList", width: 500 },
+      { text: "应用类型", value: "appType", width: 150 },
+      { text: "应用链接", value: "appUrl", width: 270 },
+      { text: "操作", value: "action", align: "center", sortable: false, width:window.innerWidth < 500 ? 80 : 200, class: "fixed", cellClass: "fixed" },
     ],
-    // 新增数据
-    isCreateDrawerShown: false,
-    createItem: {},
-    createActionData: {},
-    // 编辑数据
+    tableData: [],
+    isTableLoading: false,
+    searchInput: null,
+    columnSettingGroup: {},
+    selectedColumnGroup: null,
+    serverSearchWhere: {},
+    serverSearchWhereLike: {},
+    // ================================ 编辑抽屉 ================================
     isUpdateDrawerShown: false,
     updateItem: {},
+    updateItemOrigin: {},
     updateItemId: null,
     updateActionData: {},
-    // 删除数据
-    deleteItemId: null
+    // ================================ 删除 ================================
+    deleteItem: {},
+    deleteItemId: null,
+
+    // ================================ common ================================
+    constantObj: {
+      appType: [
+        {
+          value: "internal",
+          text: "内部应用"
+        },
+        {
+          value: "external",
+          text: "外部应用"
+        }
+      ],
+      appTypeList: []
+    },
+    validationRules: {
+      requireRules: [
+        v => !!v || '必填'
+      ]
+    },
+    testString: '测试字符串',
+    serverSearchWhereLike: {
+      className: ""
+    },
+    filterMap: {},
+    isMobile: window.innerWidth < 500,
+
+    // ================================ 其他抽屉列表 ================================
+
+    
+
+
+  }),
+  watch: {
+    isHelpPageDrawerShown(val) {
+      if (val && !this.isHelpPageDrawerLoaded) {
+        this.isHelpPageDrawerLoaded = true;
+      }
+    },
   },
-  watch: {},
+  computed: {
+    tableDataComputed() {
+      if(this.filterMap) {
+        return this.tableData.filter(row => {
+          for (const key in this.filterMap) {
+            if (this.filterMap[key] && row[key] !== this.filterMap[key]) {
+              return false;
+            }
+          }
+          return true;
+        });
+      } else {
+        return this.tableData;
+      }
+    },
+    tableDataComputed() {
+      if(this.filterMap) {
+        return this.tableData.filter(row => {
+          for (const key in this.filterMap) {
+            if (this.filterMap[key] && row[key] !== this.filterMap[key]) {
+              return false;
+            }
+          }
+          return true;
+        });
+      } else {
+        return this.tableData;
+      }
+    },
+  },
   async created() {
+    this.doUiAction('getTableData');
   },
   mounted() {
     this.doUiAction('getTableData');
@@ -309,75 +327,227 @@ new Vue({
       try {
         switch (uiActionId) {
           case 'getTableData':
-            await this.getTableData();
-            break;
-          case 'getConstantObj':
-            await this.getConstantObj();
-            break;
-          case 'startCreateItem':
-            await this.prepareCreateFormData();
-            await this.openCreateDrawer();
-            break;
-          case 'createItem':
-            await this.prepareCreateValidate();
-            await this.confirmCreateItemDialog();
-            await this.prepareDoCreateItem();
-            await this.doCreateItem();
-            await this.closeCreateDrawer();
-            await this.getTableData();
+            await this.getTableData(uiActionData);
             break;
           case 'startUpdateItem':
             await this.prepareUpdateFormData(uiActionData);
-            await this.openUpdateDrawer();
+            await this.openUpdateDrawer(uiActionData);
             break;
           case 'updateItem':
-            await this.prepareUpdateValidate();
-            await this.confirmUpdateItemDialog();
-            await this.prepareDoUpdateItem();
-            await this.doUpdateItem();
-            await this.closeUpdateDrawer();
-            await this.getTableData();
+            await this.prepareUpdateValidate(uiActionData);
+            await this.confirmUpdateItemDialog(uiActionData);
+            await this.prepareDoUpdateItem(uiActionData);
+            await this.doUpdateItem(uiActionData);
+            await this.closeUpdateDrawer(uiActionData);
+            await this.getTableData(uiActionData);
             break;
           case 'deleteItem':
             await this.prepareDeleteFormData(uiActionData);
-            await this.confirmDeleteItemDialog();
-            await this.doDeleteItem();
-            await this.getTableData();
+            await this.confirmDeleteItemDialog(uiActionData);
+            await this.prepareDoDeleteItem(uiActionData);
+            await this.doDeleteItem(uiActionData);
+            await this.getTableData(uiActionData);
             break;
           case 'jump':
             await this.jump(uiActionData);
             break;
           case 'updateAppPageDirectoryList':
-            await this.updateAppPageDirectoryList();
-            await this.getTableData();
+            await this.updateAppPageDirectoryList(uiActionData);
+            await this.getTableData(uiActionData);
             break;
           case 'updateAppUserGroupRole':
             await this.updateAppUserGroupRole(uiActionData);
+            break;
+          case 'syncAppPageList':
+            await this.syncAppPageList(uiActionData);
+            await this.getTableData(uiActionData);
             break;
           default:
             console.error("[doUiAction] uiActionId not find", {uiActionId});
             break;
         }
-      } catch (e) {
-        console.error("[doUiAction] error", e);
-        await window.jhMask.hide();
+      } catch (error) {
+        window.jhMask && window.jhMask.hide();
+        throw error;
+      } finally {
+        window.jhMask && window.jhMask.hide();
       }
-
     },
+    // ---------- 获取表格数据 uiAction >>>>>>>>>> --------
     async getTableData() {
       this.isTableLoading = true;
+      const where = {};
+      const whereLike = {};
+      const whereIn = {};
+      for (const fieldKey in this.serverSearchWhere) {
+        const fieldValue = this.serverSearchWhere[fieldKey];
+        if(!!fieldValue && fieldValue != '全部') {
+          if (_.isString(fieldValue)) {
+            where[fieldKey] = fieldValue.trim();
+          } else {
+            where[fieldKey] = fieldValue;
+          }
+        }
+      }
+      for (const fieldKey in this.serverSearchWhereLike) {
+        const fieldValue = this.serverSearchWhereLike[fieldKey];
+        if(!!fieldValue && fieldValue != '全部') {
+          if (_.isString(fieldValue)) {
+            whereLike[fieldKey] = '%' + fieldValue.trim() + '%';
+          } else {
+            whereLike[fieldKey] = '%' + fieldValue + '%';
+          }
+        }
+      }
+      for (const fieldKey in this.serverSearchWhereIn) {
+        const fieldValue = this.serverSearchWhereIn[fieldKey];
+        if(!!fieldValue && _.isArray(fieldValue) && fieldValue.length > 0) {
+          whereIn[fieldKey] = fieldValue;
+        }
+      }
+      let orderBy = [{column: 'operationAt', order: 'desc'}];
+      
+      let limit = null;
+      let offset = null;
+
+
+      const {rows, count} = (await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'appSetting',
+            actionId: 'selectItemList',
+            actionData: {},
+            where,
+            whereLike,
+            whereIn,
+            orderBy
+          }
+        }
+      })).data.appData.resultData;
+      
+      this.tableData = this.formatTableData(rows);
+      this.isTableLoading = false;
+    },
+    // ---------- <<<<<<<<<<< 获取表格数据 uiAction ---------
+    // ---------- 修改数据 uiAction >>>>>>>>>>>> --------
+    async prepareUpdateFormData(funObj) {
+      this.updateItem = _.cloneDeep(funObj);
+      this.updateItemOrigin = _.cloneDeep(funObj);
+    },
+    async openUpdateDrawer() {
+      this.isUpdateDrawerShown = true;
+    },
+    async prepareUpdateValidate() {
+      if (await this.$refs.updateForm.validate()) {
+        return true;
+      }
+      throw new Error("请完善表单信息")
+    },
+    async confirmUpdateItemDialog() {
+      if (await window.confirmDialog({title: "修改", content: "确定修改吗？"}) === false) {
+        throw new Error("[confirmUpdateItemDialog] 否");
+      }
+    },
+    async prepareDoUpdateItem() {
+      const {id, ...data} = this.updateItem;
+      this.updateItemId = id;
+      this.updateActionData = {
+        appId: data.appId,
+        appName: data.appName,
+        appDatabase: data.appDatabase,
+        appType: data.appType,
+      };
+    },
+    async doUpdateItem() {
+      await window.jhMask.show();
+      await window.vtoast.loading("修改数据");
+      await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'appSetting',
+            actionId: 'updateItem',
+            actionData: this.updateActionData,
+            where: {id: this.updateItemId}
+          }
+        }
+      })
+      await window.jhMask.hide();
+      await window.vtoast.success("修改数据成功");
+    },
+    async closeUpdateDrawerCheck() {
+      await this.closeUpdateDrawer();
+    },
+    async closeUpdateDrawer() {
+      this.isUpdateDrawerShown = false;
+      this.updateItem = {};
+      this.updateActionData = null;
+      this.updateItemId = null;
+    },
+    // ---------- <<<<<<<<<<< 修改数据 uiAction ---------
+    // ---------- 删除数据 uiAction >>>>>>>>>>>> --------
+    async prepareDeleteFormData(funObj) {
+      this.deleteItem = _.cloneDeep(funObj);
+    },
+    async confirmDeleteItemDialog() {
+      if (await window.confirmDialog({title: "删除", content: "确定删除吗？"}) === false) {
+        throw new Error("[confirmDeleteItemDialog] 否");
+      }
+    },
+    async prepareDoDeleteItem() {
+      const {id} = this.deleteItem;
+      this.deleteItemId = id;
+    },
+    async doDeleteItem() {
+      await window.vtoast.loading("删除数据");
+      await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'appSetting',
+            actionId: 'deleteItem',
+            actionData: {},
+            where: {id: this.deleteItemId}
+          }
+        }
+      });
+      await window.vtoast.success("删除数据成功");
+    },
+    async clearDeleteItem() {
+      this.deleteItem = {};
+      this.deleteItemId = null;
+    },
+    // ---------- <<<<<<<<<<< 删除数据 uiAction ---------
+
+    // ---------- 抽屉列表 uiAction >>>>>>>>>>>> --------
+    // ---------- Custom uiAction >>>>>>>>>>>> --------
+    async getTableData() {
+      this.isTableLoading = true;
+      const where = {};
+      const whereLike = {};
+      const whereIn = {};
+      for (const fieldKey in this.serverSearchWhereLike) {
+        const fieldValue = this.serverSearchWhereLike[fieldKey];
+        if(!!fieldValue && fieldValue != '全部') {
+          whereLike[fieldKey] = fieldValue;
+        }
+      }
+    
       const rows = (await window.jianghuAxios({
         data: {
           appData: {
             pageId: 'appSetting',
             actionId: 'selectItemList',
             actionData: {},
-            where: {},
-            orderBy: [{column: 'operationAt', order: 'desc'}]
+            where,
+            whereLike,
+            whereIn,
+            orderBy: [{column: 'appType', order: 'asc'}, {column: 'appName', order: 'asc'}]
           }
         }
       })).data.appData.resultData.rows;
-
+      this.tableData = this.formatTableData(rows);
+      this.isTableLoading = false;
+    },
+    formatTableData(rows) {
       rows.forEach(row => {
         row.appPageList = JSON.parse(row.appPageList || '[]');
         row.appPageDirectoryList = JSON.parse(row.appPageDirectoryList || '[]');
@@ -386,31 +556,8 @@ new Vue({
         row.appUrlCopy = row.appUrl;
         row.appTypeCopy = row.appType;
       })
-
-      this.tableData = rows;
-      this.isTableLoading = false;
+      return rows;
     },
-    async getConstantObj() {
-      this.isBaseLoading = true;
-      const result = await window.jianghuAxios({
-        data: {
-          appData: {
-            pageId: 'allPage',
-            actionId: 'getConstantList',
-            where: {
-              constantKey: 'appTypeList'
-            },
-          }
-        }
-      });
-      const {rows} = result.data.appData.resultData;
-
-      rows.forEach(row => {
-        this.constantObj[row.constantKey] = JSON.parse(row.constantValue);
-      })
-    },
-
-    // ---------- 保存目录设置 uiAction >>>>>>>>>> --------
     async updateAppPageDirectoryList() {
       const changeLineList = this.tableData.filter(item => !_.isEqual(item.appPageDirectoryListCopy, item.appPageDirectoryList) || item.appUrlCopy !== item.appUrl || item.appTypeCopy !== item.appType);
       if (changeLineList.length === 0) {
@@ -443,7 +590,6 @@ new Vue({
       await window.jhMask.hide();
       await window.vtoast.success("保存目录设置成功");
     },
-    // ---------- 更新应用的权限表为System View uiAction >>>>>>>>>> --------
     async updateAppUserGroupRole(item) {
       const actionData = {};
       if (item) { actionData.id = item.id; };
@@ -461,151 +607,38 @@ new Vue({
       await window.jhMask.hide();
       await window.vtoast.success("更新应用的权限表为System View成功");
     },
-
-    // ---------- 新增数据 uiAction >>>>>>>>>> --------
-    async prepareCreateFormData() {
-      this.createItem = {};
-    },
-
-    async openCreateDrawer() {
-      this.isCreateDrawerShown = true;
-    },
-    async prepareCreateValidate() {
-      if (await this.$refs.createForm.validate()) {
-        return true;
-      }
-      throw new Error("请完善表单信息")
-    },
-
-    async confirmCreateItemDialog() {
-      if (await window.confirmDialog({title: "新增", content: "确定新增吗？"}) === false) {
-        throw new Error("[confirmCreateFormDialog] 否");
-      }
-    },
-
-    prepareDoCreateItem() {
-      const {id, ...data} = this.createItem;
-      this.createActionData = data;
-    },
-
-    async doCreateItem() {
-      await window.jhMask.show();
-      await window.vtoast.loading("新增应用");
-      await window.jianghuAxios({
-        data: {
-          appData: {
-            pageId: 'appSetting',
-            actionId: 'insertItem',
-            actionData: this.createActionData
-          }
-        }
-      })
-      await window.jhMask.hide();
-      await window.vtoast.success("新增应用成功");
-    },
-    async closeCreateDrawer() {
-      this.isCreateDrawerShown = false;
-      this.createItem = {};
-      this.createActionData = null;
-    },
-    // ---------- <<<<<<<<<<< 新增数据 uiAction  --------
-    // ---------- 修改数据 uiAction >>>>>>>>>>>> --------
-    async prepareUpdateFormData(funObj) {
-      this.updateItem = _.cloneDeep(funObj);
-    },
-
-    async openUpdateDrawer() {
-      this.isUpdateDrawerShown = true;
-    },
-
-    async prepareUpdateValidate() {
-      if (await this.$refs.updateForm.validate()) {
-        return true;
-      }
-      throw new Error("请完善表单信息")
-    },
-
-    async confirmUpdateItemDialog() {
-      if (await window.confirmDialog({title: "修改", content: "确定修改吗？"}) === false) {
-        throw new Error("[confirmUpdateItemDialog] 否");
-      }
-    },
-
-    async prepareDoUpdateItem() {
-      const {id, ...data} = this.updateItem;
-      this.updateItemId = id;
-      this.updateActionData = _.pick(data, ['id', 'appName', 'appDatabase', 'appJhId', 'appType', 'appDatabase'])
-    },
-
-    async doUpdateItem() {
-      await window.jhMask.show();
-      await window.vtoast.loading("修改应用");
-      await window.jianghuAxios({
-        data: {
-          appData: {
-            pageId: 'appSetting',
-            actionId: 'updateItem',
-            actionData: this.updateActionData,
-            where: {id: this.updateItemId}
-          }
-        }
-      })
-
-      await window.jhMask.hide();
-      await window.vtoast.success("修改应用成功");
-    },
-
-    async closeUpdateDrawer() {
-      this.isUpdateDrawerShown = false;
-      this.updateItem = {};
-      this.updateActionData = null;
-      this.updateItemId = null;
-    },
-    // ---------- <<<<<<<<<<< 修改数据 uiAction  --------
-    // ---------- 删除数据 uiAction >>>>>>>>>>>> --------
-    async prepareDeleteFormData(funObj) {
-      this.deleteItemId = funObj.id;
-    },
-    async confirmDeleteItemDialog() {
-      if (await window.confirmDialog({title: "删除", content: "确定删除吗？"}) === false) {
-        throw new Error("[confirmDeleteItemDialog] 否");
-      }
-    },
-    async doDeleteItem() {
-      await window.vtoast.loading("删除应用");
-      await window.jianghuAxios({
-        data: {
-          appData: {
-            pageId: 'appSetting',
-            actionId: 'deleteItem',
-            actionData: {},
-            where: {id: this.deleteItemId}
-          }
-        }
-      });
-      await window.vtoast.success("删除应用成功");
-      this.deleteItem = {};
-      this.deleteItemId = null;
-    },
-    // ---------- <<<<<<<<<<< 删除数据 uiAction  --------
-    // 页面跳转
     jump(url) {
       window.location.href = url;
     },
-
-    //   --------------- 复制密码 uiAction >>>>>>>>>>>>>  ---------------
     async copyText(text) {
       await navigator.clipboard.writeText(text);
       return window.vtoast.success("复制密码成功！")
     },
-    //   --------------- <<<<<<<<<<<<< 复制密码 uiAction  ---------------
+    async syncAppPageList(item) {
+      await window.jhMask.show();
+      await window.vtoast.loading({ message: '同步页面列表', timer: -1 });
+      await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'appSetting',
+            actionId: 'syncAppPageList',
+            actionData: { appId: item.appId }
+          }
+        }
+      });
+      await window.jhMask.hide();
+      await window.vtoast.success("同步页面列表成功");
+    },
+    // ---------- <<<<<<<<<<< Custom uiAction ---------
+
   }
 })
 </script>
 
 <style scoped>
+  
   .jh-v-input-change .v-input__slot {
     border-color: red !important;
   }
-</style>
-{% endblock %}
+  
+</style>{% endblock %}

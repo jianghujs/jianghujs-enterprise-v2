@@ -1,8 +1,8 @@
 <template id="select-group-tree">
   <div class="select-group-tree-container">
     <!-- 平铺容器样式 -->
-    <v-row class="ma-0" style="max-width: 100%">
-      <v-col>
+    <v-row class="ma-0" style="max-width: 100%" no-gutters>
+      <v-col class="pb-3">
         <div class="d-flex justify-space-between align-center">
           <v-text-field v-model="searchInput" :loading="isTableLoading" 
             class="jh-v-input" dense single-line filled prefix="过滤"></v-text-field>
@@ -162,8 +162,11 @@
     watch: {},
     async created() {
     },
-    mounted() {
-      this.doUiAction('getTableData');
+    async mounted() {
+      await this.doUiAction('getTableData');
+      if (localStorage.getItem('groupId')) {
+        await this.onTreeChange([localStorage.getItem('groupId')]);
+      }
     },
     methods: {
       async doUiAction(uiActionId, uiActionData) {
@@ -204,7 +207,6 @@
       },
       buildTableTree(rows) {
         const data = rows.filter(item => !item.groupPath);
-        this.selectedItem = data[0] ? [data[0]?.groupId] : [];
         // 递归  子 groupPath === 父 groupId
         const buildTree = (data) => {
           data.forEach(item => {
@@ -233,6 +235,9 @@
         if (!event.length) {
           return;
         }
+        // 设置缓存
+        localStorage.setItem('groupId', event[0]);
+        this.selectedItem = [event[0]];
         const item = this.tableData.find(item => item.groupId === event[0]);
         this.$emit('change-active', item);
         this.$emit('check-principal-auth', item);

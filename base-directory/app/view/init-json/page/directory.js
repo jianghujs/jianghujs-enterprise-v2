@@ -1,32 +1,25 @@
-{% block htmlHead %}
-{% endblock %}
-
-{% extends 'template/jhTemplateV4.html'%}
-{% block vueTemplate %}
-<script type="text/html" id="app-template">
-<div>
-<v-app mobile-breakpoint="sm">
-  <jh-menu />
-  <v-main class="mt-13">
-    <!-- 头部内容 >>>>>>>>>>>>> -->
-    <div class="jh-page-second-bar px-3 px-sm-8">
-      <v-row class="align-center" no-gutters>
-        <v-col cols="12" sm="12" md="4" xl="3" :cols="12" :sm="6" :md="4" >
-          <div class="py-4 text-body-1 font-weight-bold align-center d-flex align-center">欢迎进入目录管理
-            <!-- 帮助页按钮 -->
-            <v-icon size="15" class="black--text ml-1" @click="isHelpPageDrawerShown = true">mdi-help-circle</v-icon>
-          </div>
-        </v-col>
-          <!-- 自定义搜索内容 -->
-          <v-spacer ></v-spacer>
-      </v-row>
-    </div>
-    <!-- <<<<<<<<<<<<< 头部内容 -->
-    <!-- 页面内容 >>>>>>>>>>>>> -->
-    <div class="jh-page-body-container px-sm-8">
-      <v-row class="pa-0 ma-0">
-        <v-card class="jh-wrapper-card" style="width: 100%" outlined>
-        
+const content = {
+  pageType: "jh-page", pageId: "directory", table: "directory", pageName: "目录", 
+  resourceList: [
+    // 	directory	selectItemList	✅查询目录	service		{ "service": "directory", "serviceFunction": "getDirectoryList" }
+    {
+      actionId: "selectItemList",
+      resourceType: "service",
+      resourceHook: {},
+      desc: "✅查询列表-directory",
+      resourceData: { service: "directory", serviceFunction: "getDirectoryList" }
+    },
+  ], // { actionId: '', resourceType: '', resourceData: {}, resourceHook: {}, desc: '' }
+  headContent: [
+    { tag: 'jh-page-title', value: "欢迎进入目录管理", attrs: { cols: 12, sm: 6, md:4 }, helpBtn: true, slot: [] },
+    { tag: 'v-spacer' },
+  ],
+  pageContent: [
+    {
+      tag: 'v-card',
+      attrs: { class: 'jh-wrapper-card', style: 'width: 100%' },
+      quickAttrs: ['outlined'],
+      value: `
         <v-row dense no-gutters v-if="isDirectoryLoading || (!isDirectoryLoading && directoryList)">
           <!-- 目录 -->
           <v-col cols="12" xs="12" sm="3" md="2" class="jh-fixed-table-height overflow-y-auto" style=" max-width: 160px !important;">
@@ -42,7 +35,7 @@
                     <template v-if="value.length">
                       <div class="font-weight-bold text-subtitle-2 text--darken-2 mb-3">{{key}}</div>
                       <div class="mb-3" v-for="(val, i) in value" :key="i">
-                        <a class="jh-font-size-14 text-decoration-none"  :class="activeDirectory === val.name ? 'success--text' : 'grey--text text--darken-2'" :href="`#${val.name}`" @click="activeDirectory = val.name">{{val.name}}</a>
+                        <a class="jh-font-size-14 text-decoration-none"  :class="activeDirectory === val.name ? 'success--text' : 'grey--text text--darken-2'" :href="\`#$\{val.name}\`" @click="activeDirectory = val.name">{{val.name}}</a>
                       </div> 
                     </template>
                   </div>
@@ -61,7 +54,7 @@
                 ></v-skeleton-loader>
                 <template v-else>
                   <div class="mb-6" v-for="(catalog, catalogIndex) in directoryList" :key="catalogIndex">
-                    <div class="font-weight-medium text-h6 mb-2" :id="`${catalog.name}`">{{catalog.name}}</div>
+                    <div class="font-weight-medium text-h6 mb-2" :id="\`$\{catalog.name}\`">{{catalog.name}}</div>
                     <v-row style="margin: -8px">
                       <v-col cols="12" xs="12" sm="6" md="4"
                         v-for="(app, appIndex) in catalog.children"  
@@ -115,203 +108,125 @@
 
         <!-- 空数据 -->
         <div v-else class="text-center pt-10">暂无数据~</div>
-      
-      </v-card>
-      </v-row>
-    </div>
-    <!-- <<<<<<<<<<<<< 页面内容 -->
-    <!-- 组件列表 -->
-    <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
-    <v-navigation-drawer v-if="isHelpPageDrawerLoaded" v-model="isHelpPageDrawerShown" :permanent="isHelpPageDrawerShown" fixed temporary right width="80%" class="elevation-24">
-      <iframe style="border: 0" :src="`/${appInfo.appId}/pageDoc#directory.md`" width="100%" height="100%"></iframe>
-      <v-btn elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn" @click="isHelpPageDrawerShown = false">
-          <v-icon>mdi-close</v-icon>
-      </v-btn>
-    </v-navigation-drawer>
-    <!-- <<<<<<<<<<<<< 帮助页抽屉 -->
-  </v-main>
-</v-app>
-
-<jh-toast />
-<jh-mask />
-<jh-confirm-dialog />
-</div>
-</script>
-<div id="app"></div>
-{% endblock %}
-
-{% block vueScript %}
-{% include "common/constantUtil.html" %}
-
-<script type="module">
-
-new Vue({
-  el: '#app',
-  template: '#app-template',
-  vuetify: new Vuetify(),
-  data: () => ({
-
-    isMobile: window.innerWidth < 500,
-    isHelpPageDrawerShown: false,
-    isHelpPageDrawerLoaded: false,
-
-    // ================================ 表格相关 ================================
-    tableData: [],
-    isTableLoading: false,
-    searchInput: null,
-    columnSettingGroup: {},
-    selectedColumnGroup: null,
-    serverSearchWhere: {},
-    serverSearchWhereLike: {},
-
-    // ================================ common ================================
-    isDirectoryLoading: true,
-    directoryList: null,
-    activeDirectory: null,
-    expandApp: [],
-    isWorkWechat: false,
-    isMobile: window.innerWidth < 500,
-    directoryUrl: window.constantObj.directoryUrl,
-
-    // ================================ 其他抽屉列表 ================================
-
-    
-
-
-  }),
-  watch: {
-    isHelpPageDrawerShown(val) {
-      if (val && !this.isHelpPageDrawerLoaded) {
-        this.isHelpPageDrawerLoaded = true;
-      }
-    },
-  },
-  computed: {
-    tableDataComputed() {
-      if(this.filterMap) {
-        return this.tableData.filter(row => {
-          for (const key in this.filterMap) {
-            if (this.filterMap[key] && row[key] !== this.filterMap[key]) {
-              return false;
-            }
-          }
-          return true;
-        });
-      } else {
-        return this.tableData;
-      }
-    },
-    groupedItems() {
-      const jianghuItems = this.directoryList.filter(item => item.name.startsWith('江湖')).map(item => {
-        return {
-          name: item.name
-        }
-      });
-      const otherItems = this.directoryList.filter(item => !item.name.startsWith('江湖')).map(item => {
-        return {
-          name: item.name
-        }
-      });
+      `
+    }
+  ],
   
-      return {
-        '江湖应用': jianghuItems,
-        '其它应用': otherItems
-      };
+  includeList: [
+    // {% include 'common/constantUtil.html' %}
+    { type: 'html', path: 'common/constantUtil.html' },
+  ], // { type: < js | css | html | vueComponent >, path: ''}
+  common: { 
+    
+    data: {
+      isDirectoryLoading: true,
+      directoryList: null,
+      activeDirectory: null,
+      expandApp: [],
+
+      isWorkWechat: false,
     },
-  },
-  async created() { },
-  mounted() {
-    this.isWorkWechatEnv();
-    this.doUiAction('getTableData');
-  },
-  methods: {
-    async doUiAction(uiActionId, uiActionData) {
-      try {
-        switch (uiActionId) {
+    dataExpression: {
+      isMobile: 'window.innerWidth < 500',
+      directoryUrl: 'window.constantObj.directoryUrl'
+    }, // data 表达式
+    computed: {
+      groupedItems() {
+        const jianghuItems = this.directoryList.filter(item => item.name.startsWith('江湖')).map(item => {
+          return {
+            name: item.name
+          }
+        });
+        const otherItems = this.directoryList.filter(item => !item.name.startsWith('江湖')).map(item => {
+          return {
+            name: item.name
+          }
+        });
+
+        return {
+          '江湖应用': jianghuItems,
+          '其它应用': otherItems
+        };
+      }
+    },
+    watch: { },
+    async created() { },
+    mounted() {
+      this.isWorkWechatEnv();
+      this.doUiAction('getTableData');
+    },
+    doUiAction: {}, // 额外uiAction { [key]: [action1, action2]}
+    methods: {
+      async doUiAction(uiActionId,uiActionData){
+        switch(uiActionId){
+          case 'getTableData':
+            await this.getTableData();
+            break;
+          case 'changeExpandApp':
+            await this.changeExpandApp(uiActionData);
+            break;
+          case 'jump':
+            await this.jump(uiActionData);
+            break;
           default:
-            console.error("[doUiAction] uiActionId not find", {uiActionId});
+            console.error("[doUiAction] uiActionId not find", { uiActionId });
             break;
         }
-      } catch (error) {
-        window.jhMask && window.jhMask.hide();
-        throw error;
-      } finally {
-        window.jhMask && window.jhMask.hide();
-      }
-    },
+      },
 
-    // ---------- 抽屉列表 uiAction >>>>>>>>>>>> --------
-    // ---------- Custom uiAction >>>>>>>>>>>> --------
-    async doUiAction(uiActionId,uiActionData){
-      switch(uiActionId){
-        case 'getTableData':
-          await this.getTableData();
-          break;
-        case 'changeExpandApp':
-          await this.changeExpandApp(uiActionData);
-          break;
-        case 'jump':
-          await this.jump(uiActionData);
-          break;
-        default:
-          console.error("[doUiAction] uiActionId not find", { uiActionId });
-          break;
-      }
-    },
-    async getTableData() {
-      this.isDirectoryLoading = true;
-      const result = await window.jianghuAxios({
-        data: {
-          appData: {
-            pageId: 'directory',
-            actionId: 'selectItemList',
-            orderBy: [{column: 'operationAt', order: 'desc'}]
+      /**
+       * 获取表格数据
+       */
+      async getTableData() {
+        this.isDirectoryLoading = true;
+        const result = await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'directory',
+              actionId: 'selectItemList',
+              orderBy: [{column: 'operationAt', order: 'desc'}]
+            }
           }
-        }
-      });
-  
-      const rows = result.data.appData.resultData.rows;
-      rows.forEach((catalog, catalogIndex) => {
-        catalog.children.forEach((app, appIndex) => {
-          if (this.isMobile && (app.name.includes('-移动端') || !app.name.includes('-电脑端'))) {
-            this.expandApp.push(`${catalogIndex}-${appIndex}`);
-          } else if (!this.isMobile && !app.name.includes('-移动端')) {
-            this.expandApp.push(`${catalogIndex}-${appIndex}`);
-          }
+        });
+
+        const rows = result.data.appData.resultData.rows;
+        rows.forEach((catalog, catalogIndex) => {
+          catalog.children.forEach((app, appIndex) => {
+            if (this.isMobile && (app.name.includes('-移动端') || !app.name.includes('-电脑端'))) {
+              this.expandApp.push(`${catalogIndex}-${appIndex}`);
+            } else if (!this.isMobile && !app.name.includes('-移动端')) {
+              this.expandApp.push(`${catalogIndex}-${appIndex}`);
+            }
+          })
         })
-      })
-      this.directoryList = rows;
-      this.isDirectoryLoading = false;
-    },
-    changeExpandApp(funObj){
-      const { key } = funObj;
-      if (!this.expandApp.includes(key)) {
-        this.expandApp.push(key);
-      } else {
-        this.expandApp = this.expandApp.filter((e) => e !== key);
+        this.directoryList = rows;
+        this.isDirectoryLoading = false;
+      },
+      changeExpandApp(funObj){
+        const { key } = funObj;
+        if (!this.expandApp.includes(key)) {
+          this.expandApp.push(key);
+        } else {
+          this.expandApp = this.expandApp.filter((e) => e !== key);
+        }
+      },
+      jump(url) {
+        window.open(url);
+      },
+      //  判断是否企微环境
+      async isWorkWechatEnv() {
+        //获取user-agaent标识头
+        var ua = window.navigator.userAgent.toLowerCase();
+        //判断ua和微信浏览器的标识头是否匹配
+        if ((ua.match(/micromessenger/i) == 'micromessenger') && (ua.match(/wxwork/i) == 'wxwork')) {
+          this.isWorkWechat = true;
+        } else {
+          this.isWorkWechat = false;
+        }
       }
-    },
-    jump(url) {
-      window.open(url);
-    },
-    async isWorkWechatEnv() {
-      //获取user-agaent标识头
-      var ua = window.navigator.userAgent.toLowerCase();
-      //判断ua和微信浏览器的标识头是否匹配
-      if ((ua.match(/micromessenger/i) == 'micromessenger') && (ua.match(/wxwork/i) == 'wxwork')) {
-        this.isWorkWechat = true;
-      } else {
-        this.isWorkWechat = false;
-      }
-    },
-    // ---------- <<<<<<<<<<< Custom uiAction ---------
-
-  }
-})
-</script>
-
-<style scoped>
-  
+    }
+  },
+  style: /*css*/`
   .jh-wrapper-card{
     min-height: calc(100vh - 151px);
   }
@@ -342,5 +257,8 @@ new Vue({
     }
   }
   /* <<<<<<<<<<<<< 移动端适配 */
+  `
   
-</style>{% endblock %}
+};
+
+module.exports = content;

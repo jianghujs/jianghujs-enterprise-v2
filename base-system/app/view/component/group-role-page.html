@@ -1,57 +1,80 @@
 <template id="group-role-page">
   <div class="group-role-page-container">
-    <div class="group-role-page-container-box">
+    <div class="group-role-page-container-box pl-4">
       <v-row class="ma-0"> 
-        <v-col cols="12" class="py-0">
+        <v-col cols="12" class="pa-0">
           <v-tabs vertical @change="changeTab(roleList[$event].roleId)" v-model="tabActive" slider-size="0" right>
             <v-tab v-for="(item, index) in roleList" :value="item.roleId" class="pa-0" style="justify-content:flex-end">
               <div>
+                <div class="align-center" v-if="item.roleId === '*'"><v-chip x-small>直属成员</v-chip></div>
                 <span style="font-weight: 600px;">{{item.roleName}}</span>
-                <v-icon @click="doUiAction('deleteItem', item)">mdi-close-box-outline</v-icon>
+                <v-icon @click="doUiAction('deleteItem', item)">mdi-close-circle</v-icon>
               </div>
             </v-tab>
-            <div @click="doUiAction('startCreateItem')" class="v-tab pa-0" style="justify-content:flex-end">
+            <!-- <div @click="doUiAction('startCreateItem')" class="v-tab pa-0" style="justify-content:flex-end">
               <div>
                 <span style="font-weight: 600px;">新增角色</span>
                 <v-icon>mdi-plus-box-outline</v-icon>
               </div>
-            </div>
-
+            </div> -->
+            <v-btn @click="doUiAction('startCreateItem')" small outlined block style="max-height: 32px;">
+              添加角色
+            </v-btn>
             <v-tab-item v-model="tabActive">
-              <v-card flat>
-                <v-card-text>
-                    <v-col cols="12" v-for="(app, index) in appList" :key="index" class="pa-2">
-                      <v-card outlined class="pa-1">
-                        <v-row no-gutters>
-                          <v-col cols="12" class="d-flex align-center">
-                            <v-badge dot inline left>
-                              <span class="body-2">{{app.appName}}</span> 
-                            </v-badge>
-                            <v-chip x-small>{{app.appId}}</v-chip>
+              <div class="ml-4 pl-1 d-flex flex-row justify-start jh-fixed-table-height border-l">
+                
+                <div style="overflow-y: auto; flex: 1" @scroll="handleScroll">
+                  <div v-for="(app, index) in appList" :key="index" class="pa-0 pl-1 pb-4" :id="app.appName">
+                    <v-card outlined class="pa-3">
+                      <v-row no-gutters>
+                        <v-col cols="12" class="d-flex align-center align-center">
+                          <v-badge dot inline left>
+                            <span class="body-2">{{app.appName}}</span> 
+                          </v-badge>
+                          <v-chip x-small class="ml-1">{{app.appId}}</v-chip>
+                          <v-checkbox
+                            v-model="value"
+                            label="管理员"
+                            :value="app.appId + '|*'"
+                            class="jh-v-input mt-0 d-inline-block ml-1"
+                            hide-details
+                          ></v-checkbox>
+                        </v-col>
+                        <template v-if="!value.includes(app.appId + '|*')">
+                          <v-col cols="3" v-for="page in app.appPageList.filter(e => !['help', 'login', 'manual'].includes(e.pageId))">
                             <v-checkbox
                               v-model="value"
-                              label="管理员"
-                              :value="app.appId + '|*'"
-                              class="jh-v-input mt-0 d-inline-block"
+                              :label="page.pageName"
+                              :value="app.appId + '|' + page.pageId"
+                              class="jh-v-input mt-0"
                               hide-details
                             ></v-checkbox>
                           </v-col>
-                          <template v-if="!value.includes(app.appId + '|*')">
-                            <v-col cols="3" v-for="page in app.appPageList.filter(e => !['help', 'login', 'manual'].includes(e.pageId))">
-                              <v-checkbox
-                                v-model="value"
-                                :label="page.pageName"
-                                :value="app.appId + '|' + page.pageId"
-                                class="jh-v-input mt-0"
-                                hide-details
-                              ></v-checkbox>
-                            </v-col>
-                          </template>
-                        </v-row>
-                      </v-card>
-                  </v-col>
-                </v-card-text>
-              </v-card>
+                        </template>
+                      </v-row>
+                    </v-card>
+                  </div>
+                </div>
+                <div outlined class="d-inline-block rounded-lg" style="width: 90px; height: 100%; overflow: hidden; overflow-y: auto;">
+                  <v-list nav dense class="pt-0 pr-0">
+                    <v-list-item-group
+                      color="primary"
+                      v-model="selectedAppItem"
+                    >
+                      <v-list-item
+                        v-for="(item, i) in appList"
+                        :key="i"
+                        @click="location.href = '/<$ ctx.app.config.appId $>/page/groupAuthorityManagement#' + item.appName"
+                      >
+                        <v-list-item-content>
+                          <v-list-item-title v-text="item.appName"></v-list-item-title>
+                        </v-list-item-content>
+                      </v-list-item>
+                    </v-list-item-group>
+                  </v-list>
+                </div>
+              </div>
+              
             </v-tab-item>
           </v-tabs>
         </v-col>
@@ -79,10 +102,10 @@
               <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.roleName"></v-text-field>
             </v-col>
 
-            <v-col cols="12" sm="12" md="4">
+            <!-- <v-col cols="12" sm="12" md="4">
               <span class="jh-input-label">角色类型</span><span style="color: red;margin-left: 2px;">*</span>
               <v-select class="jh-v-input" dense single-line filled v-model="createItem.roleType" :items="constantObj.roleType"></v-select>
-            </v-col>
+            </v-col> -->
              
             <v-col cols="12" sm="12" md="4">
               <span class="jh-input-label">角色描述</span>
@@ -156,6 +179,7 @@
       deleteItem: {},
       deleteItemId: null,
       tabActive: 0,
+      selectedAppItem: 0,
     }),
     computed: {
     },
@@ -174,6 +198,7 @@
     },
     mounted() {
       console.log('group-role-page mounted');
+      resetTableMaxHeight();
     },
     methods: {
       async doUiAction(uiActionId, uiActionData) {
@@ -228,7 +253,7 @@
       // ---------- 新增数据 uiAction >>>>>>>>>> --------
       async prepareCreateFormData() {
         this.createItem = {
-          roleType: "正式角色",
+          // roleType: "正式角色",
         };
       },
 
@@ -310,17 +335,43 @@
       changeTab(val){
         this.activeRole = val
       },
+      handleScroll(e) {
+        // 计算滚动到第几个容器了、之后设置 selectedAppItem 的 index
+        let scrollTop = e.target.scrollTop;
+        let appList = this.appList;
+        let index = 0;
+        for (let i = 0; i < appList.length; i++) {
+          let app = appList[i];
+          let appElement = document.getElementById(app.appName);
+          if (appElement.offsetTop <= scrollTop) {
+            index = i;
+          }
+        }
+        this.selectedAppItem = index;
+      }
     }
   })
 </script>
 <style scoped>
   .group-role-page-container-box {
-    height: calc(100vh - 177px);
+    height: calc(100vh - 108px);
     overflow-y: auto;
-    padding: 10px;
     padding-top: 0;
+    box-sizing: border-box;
   }
   v-slide-group__content {
     align-items: center;
+  }
+  .border-l {
+    border-left: 1px solid #e0e0e0;
+  }
+  .theme--light.v-list-item:not(.v-list-item--active):not(.v-list-item--disabled) {
+    color: #666;
+  }
+  .v-list--dense .v-list-item .v-list-item__content, .v-list-item--dense .v-list-item__content {
+    padding: 4px 0;
+  }
+  .v-list--dense .v-list-item, .v-list-item--dense {
+    min-height: 32px;
   }
 </style>
