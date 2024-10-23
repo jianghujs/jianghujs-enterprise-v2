@@ -259,20 +259,20 @@ from
 
 CREATE OR REPLACE VIEW `enterpirse_user_group_role_page` AS
 select
-  `jh_enterprise_v2_system`.`enterprise_user_group_role_page`.`id` AS `id`,
-  `jh_enterprise_v2_system`.`enterprise_user_group_role_page`.`appId` AS `appId`,
-  `jh_enterprise_v2_system`.`enterprise_user_group_role_page`.`user` AS `user`,
-  `jh_enterprise_v2_system`.`enterprise_user_group_role_page`.`group` AS `group`,
-  `jh_enterprise_v2_system`.`enterprise_user_group_role_page`.`role` AS `role`,
-  `jh_enterprise_v2_system`.`enterprise_user_group_role_page`.`page` AS `page`,
-  `jh_enterprise_v2_system`.`enterprise_user_group_role_page`.`allowOrDeny` AS `allowOrDeny`,
-  `jh_enterprise_v2_system`.`enterprise_user_group_role_page`.`desc` AS `desc`,
-  `jh_enterprise_v2_system`.`enterprise_user_group_role_page`.`operation` AS `operation`,
-  `jh_enterprise_v2_system`.`enterprise_user_group_role_page`.`operationByUserId` AS `operationByUserId`,
-  `jh_enterprise_v2_system`.`enterprise_user_group_role_page`.`operationByUser` AS `operationByUser`,
-  `jh_enterprise_v2_system`.`enterprise_user_group_role_page`.`operationAt` AS `operationAt`
+  `jh_enterprise_v2_base_system`.`enterprise_user_group_role_page`.`id` AS `id`,
+  `jh_enterprise_v2_base_system`.`enterprise_user_group_role_page`.`appId` AS `appId`,
+  `jh_enterprise_v2_base_system`.`enterprise_user_group_role_page`.`user` AS `user`,
+  `jh_enterprise_v2_base_system`.`enterprise_user_group_role_page`.`group` AS `group`,
+  `jh_enterprise_v2_base_system`.`enterprise_user_group_role_page`.`role` AS `role`,
+  `jh_enterprise_v2_base_system`.`enterprise_user_group_role_page`.`page` AS `page`,
+  `jh_enterprise_v2_base_system`.`enterprise_user_group_role_page`.`allowOrDeny` AS `allowOrDeny`,
+  `jh_enterprise_v2_base_system`.`enterprise_user_group_role_page`.`desc` AS `desc`,
+  `jh_enterprise_v2_base_system`.`enterprise_user_group_role_page`.`operation` AS `operation`,
+  `jh_enterprise_v2_base_system`.`enterprise_user_group_role_page`.`operationByUserId` AS `operationByUserId`,
+  `jh_enterprise_v2_base_system`.`enterprise_user_group_role_page`.`operationByUser` AS `operationByUser`,
+  `jh_enterprise_v2_base_system`.`enterprise_user_group_role_page`.`operationAt` AS `operationAt`
 from
-  `jh_enterprise_v2_system`.`enterprise_user_group_role_page`;
+  `jh_enterprise_v2_base_system`.`enterprise_user_group_role_page`;
 
 
 
@@ -282,24 +282,24 @@ from
 
 CREATE OR REPLACE VIEW `enterprise_app` AS
 select
-  `jh_enterprise_v2_system`.`enterprise_app`.`id` AS `id`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`appId` AS `appId`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`appDatabase` AS `appDatabase`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`appPageList` AS `appPageList`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`appPageDirectoryList` AS `appPageDirectoryList`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`appGroup` AS `appGroup`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`appName` AS `appName`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`appDesc` AS `appDesc`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`appUrl` AS `appUrl`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`appMenu` AS `appMenu`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`appType` AS `appType`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`operation` AS `operation`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`operationByUserId` AS `operationByUserId`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`operationByUser` AS `operationByUser`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`operationAt` AS `operationAt`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`sort` AS `sort`
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`id` AS `id`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`appId` AS `appId`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`appDatabase` AS `appDatabase`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`appPageList` AS `appPageList`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`appPageDirectoryList` AS `appPageDirectoryList`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`appGroup` AS `appGroup`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`appName` AS `appName`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`appDesc` AS `appDesc`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`appUrl` AS `appUrl`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`appMenu` AS `appMenu`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`appType` AS `appType`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`operation` AS `operation`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`operationByUserId` AS `operationByUserId`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`operationByUser` AS `operationByUser`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`operationAt` AS `operationAt`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`sort` AS `sort`
 from
-  `jh_enterprise_v2_system`.`enterprise_app`;
+  `jh_enterprise_v2_base_system`.`enterprise_app`;
 
 
 

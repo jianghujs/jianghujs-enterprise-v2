@@ -700,51 +700,51 @@ INSERT INTO `task_template` (`id`,`idSequence`,`taskTemplateId`,`taskTemplateIco
 
 CREATE OR REPLACE VIEW `_view01_task` AS
 select
-  `jh_enterprise_v2_task`.`task`.`id` AS `id`,
-  `jh_enterprise_v2_task`.`task`.`idSequence` AS `idSequence`,
-  `jh_enterprise_v2_task`.`task`.`taskId` AS `taskId`,
-  `jh_enterprise_v2_task`.`task`.`taskTemplateId` AS `taskTemplateId`,
-  `jh_enterprise_v2_task`.`task`.`taskBizId` AS `taskBizId`,
-  `jh_enterprise_v2_task`.`task`.`taskTitle` AS `taskTitle`,
-  `jh_enterprise_v2_task`.`task`.`taskDesc` AS `taskDesc`,
-  `jh_enterprise_v2_task`.`task`.`taskLevel` AS `taskLevel`,
-  `jh_enterprise_v2_task`.`task`.`taskTag` AS `taskTag`,
-  `jh_enterprise_v2_task`.`task`.`taskStatus` AS `taskStatus`,
-  `jh_enterprise_v2_task`.`task`.`taskType` AS `taskType`,
-  `jh_enterprise_v2_task`.`task`.`taskContent` AS `taskContent`,
-  `jh_enterprise_v2_task`.`task`.`taskCreateAt` AS `taskCreateAt`,
-  `jh_enterprise_v2_task`.`task`.`taskReadStatus` AS `taskReadStatus`,
-  `jh_enterprise_v2_task`.`task`.`taskStartAt` AS `taskStartAt`,
-  `jh_enterprise_v2_task`.`task`.`taskEndAt` AS `taskEndAt`,
-  `jh_enterprise_v2_task`.`task`.`taskManagerId` AS `taskManagerId`,
-  `jh_enterprise_v2_task`.`task`.`taskMemberIdList` AS `taskMemberIdList`,
-  `jh_enterprise_v2_task`.`task`.`taskCommentList` AS `taskCommentList`,
-  `jh_enterprise_v2_task`.`task`.`taskRelationList` AS `taskRelationList`,
-  `jh_enterprise_v2_task`.`task`.`taskFileList` AS `taskFileList`,
-  `jh_enterprise_v2_task`.`task`.`taskChildList` AS `taskChildList`,
-  `jh_enterprise_v2_task`.`task`.`taskNoticeConfig` AS `taskNoticeConfig`,
-  `jh_enterprise_v2_task`.`task`.`taskAuditUserIdList` AS `taskAuditUserIdList`,
-  `jh_enterprise_v2_task`.`task`.`taskAuditedUserIdList` AS `taskAuditedUserIdList`,
-  `jh_enterprise_v2_task`.`task`.`taskAuditConfig` AS `taskAuditConfig`,
-  `jh_enterprise_v2_task`.`task`.`operation` AS `operation`,
-  `jh_enterprise_v2_task`.`task`.`operationByUserId` AS `operationByUserId`,
-  `jh_enterprise_v2_task`.`task`.`operationByUser` AS `operationByUser`,
-  `jh_enterprise_v2_task`.`task`.`operationAt` AS `operationAt`,
-  `jh_enterprise_v2_task`.`task_template`.`taskTemplateName` AS `taskTemplateName`,
+  `jh_enterprise_v2_base_task`.`task`.`id` AS `id`,
+  `jh_enterprise_v2_base_task`.`task`.`idSequence` AS `idSequence`,
+  `jh_enterprise_v2_base_task`.`task`.`taskId` AS `taskId`,
+  `jh_enterprise_v2_base_task`.`task`.`taskTemplateId` AS `taskTemplateId`,
+  `jh_enterprise_v2_base_task`.`task`.`taskBizId` AS `taskBizId`,
+  `jh_enterprise_v2_base_task`.`task`.`taskTitle` AS `taskTitle`,
+  `jh_enterprise_v2_base_task`.`task`.`taskDesc` AS `taskDesc`,
+  `jh_enterprise_v2_base_task`.`task`.`taskLevel` AS `taskLevel`,
+  `jh_enterprise_v2_base_task`.`task`.`taskTag` AS `taskTag`,
+  `jh_enterprise_v2_base_task`.`task`.`taskStatus` AS `taskStatus`,
+  `jh_enterprise_v2_base_task`.`task`.`taskType` AS `taskType`,
+  `jh_enterprise_v2_base_task`.`task`.`taskContent` AS `taskContent`,
+  `jh_enterprise_v2_base_task`.`task`.`taskCreateAt` AS `taskCreateAt`,
+  `jh_enterprise_v2_base_task`.`task`.`taskReadStatus` AS `taskReadStatus`,
+  `jh_enterprise_v2_base_task`.`task`.`taskStartAt` AS `taskStartAt`,
+  `jh_enterprise_v2_base_task`.`task`.`taskEndAt` AS `taskEndAt`,
+  `jh_enterprise_v2_base_task`.`task`.`taskManagerId` AS `taskManagerId`,
+  `jh_enterprise_v2_base_task`.`task`.`taskMemberIdList` AS `taskMemberIdList`,
+  `jh_enterprise_v2_base_task`.`task`.`taskCommentList` AS `taskCommentList`,
+  `jh_enterprise_v2_base_task`.`task`.`taskRelationList` AS `taskRelationList`,
+  `jh_enterprise_v2_base_task`.`task`.`taskFileList` AS `taskFileList`,
+  `jh_enterprise_v2_base_task`.`task`.`taskChildList` AS `taskChildList`,
+  `jh_enterprise_v2_base_task`.`task`.`taskNoticeConfig` AS `taskNoticeConfig`,
+  `jh_enterprise_v2_base_task`.`task`.`taskAuditUserIdList` AS `taskAuditUserIdList`,
+  `jh_enterprise_v2_base_task`.`task`.`taskAuditedUserIdList` AS `taskAuditedUserIdList`,
+  `jh_enterprise_v2_base_task`.`task`.`taskAuditConfig` AS `taskAuditConfig`,
+  `jh_enterprise_v2_base_task`.`task`.`operation` AS `operation`,
+  `jh_enterprise_v2_base_task`.`task`.`operationByUserId` AS `operationByUserId`,
+  `jh_enterprise_v2_base_task`.`task`.`operationByUser` AS `operationByUser`,
+  `jh_enterprise_v2_base_task`.`task`.`operationAt` AS `operationAt`,
+  `jh_enterprise_v2_base_task`.`task_template`.`taskTemplateName` AS `taskTemplateName`,
   `_view01_user`.`username` AS `username`
 from
   (
   (
-    `jh_enterprise_v2_task`.`task`
-    left join `jh_enterprise_v2_task`.`task_template` on(
+    `jh_enterprise_v2_base_task`.`task`
+    left join `jh_enterprise_v2_base_task`.`task_template` on(
     (
-      `jh_enterprise_v2_task`.`task`.`taskTemplateId` = `jh_enterprise_v2_task`.`task_template`.`taskTemplateId`
+      `jh_enterprise_v2_base_task`.`task`.`taskTemplateId` = `jh_enterprise_v2_base_task`.`task_template`.`taskTemplateId`
     )
     )
   )
-  left join `jh_enterprise_v2_task`.`_view01_user` on(
+  left join `jh_enterprise_v2_base_task`.`_view01_user` on(
     (
-    `jh_enterprise_v2_task`.`task`.`taskManagerId` = `_view01_user`.`userId`
+    `jh_enterprise_v2_base_task`.`task`.`taskManagerId` = `_view01_user`.`userId`
     )
   )
   );
@@ -783,24 +783,24 @@ from
 
 CREATE OR REPLACE VIEW `enterprise_app` AS
 select
-  `jh_enterprise_v2_system`.`enterprise_app`.`id` AS `id`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`appId` AS `appId`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`appDatabase` AS `appDatabase`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`appPageList` AS `appPageList`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`appPageDirectoryList` AS `appPageDirectoryList`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`appGroup` AS `appGroup`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`appName` AS `appName`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`appDesc` AS `appDesc`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`appUrl` AS `appUrl`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`appMenu` AS `appMenu`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`appType` AS `appType`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`operation` AS `operation`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`operationByUserId` AS `operationByUserId`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`operationByUser` AS `operationByUser`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`operationAt` AS `operationAt`,
-  `jh_enterprise_v2_system`.`enterprise_app`.`sort` AS `sort`
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`id` AS `id`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`appId` AS `appId`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`appDatabase` AS `appDatabase`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`appPageList` AS `appPageList`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`appPageDirectoryList` AS `appPageDirectoryList`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`appGroup` AS `appGroup`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`appName` AS `appName`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`appDesc` AS `appDesc`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`appUrl` AS `appUrl`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`appMenu` AS `appMenu`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`appType` AS `appType`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`operation` AS `operation`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`operationByUserId` AS `operationByUserId`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`operationByUser` AS `operationByUser`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`operationAt` AS `operationAt`,
+  `jh_enterprise_v2_base_system`.`enterprise_app`.`sort` AS `sort`
 from
-  `jh_enterprise_v2_system`.`enterprise_app`;
+  `jh_enterprise_v2_base_system`.`enterprise_app`;
 
 
 
