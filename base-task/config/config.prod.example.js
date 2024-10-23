@@ -22,7 +22,7 @@ module.exports = appInfo => {
           port: '3306',
           user: 'root',
           password: '123456',
-          database: 'jh_enterprise_v2_task',
+          database: 'jh_enterprise_v2_base_task',
         },
         pool: { min: 0, max: 10 },
         acquireConnectionTimeout: 30000,
