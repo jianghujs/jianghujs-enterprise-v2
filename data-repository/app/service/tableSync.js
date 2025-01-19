@@ -63,12 +63,17 @@ class UtilService extends Service {
 
   async selectSourceDatabase() {
     const {jianghuKnex, config} = this.app;
-    const rows = await jianghuKnex('information_schema.SCHEMATA')
-      .whereNotIn('schema_name', ['sys', 'information_schema'])
-      .orderBy('schema_name', 'desc')
-      .select('schema_name as sourceDatabase');
     const { defaultTargetDatabase } = this.getConfig();  
-    return { defaultTargetDatabase, rows};
+
+    const tableList = await jianghuKnex('information_schema.TABLES')
+      .whereNotIn('table_schema', ['sys', 'information_schema', 'performance_schema', 'mysql'])
+      .where('table_type', 'BASE TABLE')
+      .orderBy('table_name', 'desc')
+      .select('table_name as sourceTable', 'table_schema as sourceDatabase');
+
+    const databaseMap = _.groupBy(tableList, 'sourceDatabase');
+    const databaseList = Object.keys(databaseMap).map(key => ({ sourceDatabase: key, tableList: databaseMap[key] }));
+    return { defaultTargetDatabase, databaseMap, databaseList};
   }
 
   async selectSourceTable() {

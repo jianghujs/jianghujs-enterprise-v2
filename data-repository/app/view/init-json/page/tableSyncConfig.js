@@ -78,6 +78,9 @@ const content = {
         <template v-slot:item.enableMysqlTrigger="{ item }">
           <span :class="item.enableMysqlTrigger == '开启' ? 'success--text' : 'grey--text'">{{ item.enableMysqlTrigger }}</span>
         </template>
+        <template v-slot:item.syncTimeSlot="{ item }">
+          <span>{{ constantObj.syncTimeSlotMap[item.syncTimeSlot] || item.syncTimeSlot + '分钟' }}</span>
+        </template>
         <template v-slot:item.syncDesc="{ item }">
           <div class="d-flex justify-space-between ">
             <v-chip small :class="item.syncDesc == '正常' ? 'jh-status-tag-success' : 'jh-status-tag-error'"> 
@@ -103,13 +106,13 @@ const content = {
       tag: 'jh-create-drawer',
       key: "create",
       attrs: {},
-      title: '新增',
+      title: '新增同步表',
       headSlot: [
         { tag: 'v-spacer'}
       ],
       contentList: [
         { 
-          label: "新增", 
+          label: "新增同步表", 
           type: "form", 
           formItemList: [
             /**
@@ -144,28 +147,41 @@ const content = {
       tag: 'jh-update-drawer',
       key: "update",
       attrs: {},
-      title: '详情',
+      title: '{{updateItem.id}} | 编辑',
       headSlot: [
         { tag: 'v-spacer'}
       ],
       contentList: [
         { 
-          label: "详情", 
+          label: "编辑", 
           type: "form", 
           formItemList: [
-            /**
-            * colAtts: { cols: 12, md: 3 } // 表单父容器栅格设置
-            * attrs: {} // 表单项属性
-            */
-            { label: "同步组", model: "syncGroup", tag: "v-text-field", rules: "validationRules.requireRules" },
-            { label: "源库", model: "sourceDatabase", tag: "v-text-field", rules: "validationRules.requireRules" },
-            { label: "源表", model: "sourceTable", tag: "v-text-field", rules: "validationRules.requireRules" },
-            { label: "目标库", model: "targetDatabase", tag: "v-text-field", rules: "validationRules.requireRules" },
-            { label: "目标表", model: "targetTable", tag: "v-text-field", rules: "validationRules.requireRules" },
-            { label: "定时检查", model: "syncTimeSlot", tag: "v-text-field", rules: "validationRules.requireRules" },
-            { label: "Trigger实时同步", model: "enableMysqlTrigger", tag: "v-text-field", rules: "validationRules.requireRules" },
-            { label: "同步状态", model: "syncDesc", tag: "v-text-field", rules: "validationRules.requireRules" },
-            { label: "同步触发时间", model: "lastSyncTime", tag: "v-text-field", rules: "validationRules.requireRules" },
+            { label: "同步-源库", model: "sourceDatabase", tag: "v-autocomplete", rules: "validationRules.requireRules", 
+              attrs: { ':items': 'constantObj.databaseList', 'item-text': 'sourceDatabase', 'item-value': 'sourceDatabase'},
+              colAttrs: { md: 4 },
+            },
+            { label: '同步-源表 <span role="button" @click="initConstantObjData({ showTip: true })" class="success--text ml-1">查询<v-icon size="18" color="success">mdi-sync</v-icon></span>', 
+              model: "sourceTable", tag: "v-autocomplete", rules: "validationRules.requireRules", 
+              attrs: { ':items': 'constantObj.databaseMap[updateItem.sourceDatabase]||[]', 'item-text': 'sourceTable', 'item-value': 'sourceTable'},
+              colAttrs: { md: 4 },
+            },
+            { tag: 'div', colAttrs: { md: 12, class: 'pa-0'} },
+            { label: "同步-目标库", model: "targetDatabase", tag: "v-autocomplete", rules: "validationRules.requireRules", 
+              attrs: { ':items': 'constantObj.databaseList', 'item-text': 'sourceDatabase', 'item-value': 'sourceDatabase'},
+              colAttrs: { md: 4 },
+            },
+            { label: "同步-目标表", model: "targetTable", tag: "v-text-field", rules: "validationRules.requireRules", 
+              colAttrs: { md: 4 },
+            },
+            { tag: 'div', colAttrs: { md: 12, class: 'pa-0'} },
+            { label: "定时检查", model: "syncTimeSlot", tag: "v-select", rules: "validationRules.requireRules", 
+              attrs: { ':items': 'constantObj.syncTimeSlot', 'item-text': 'text', 'item-value': 'value' },
+              colAttrs: { md: 4 },
+            },
+            { label: "实时同步", model: "enableMysqlTrigger", default: true, tag: "v-checkbox", 
+              attrs: { trueValue: "开启", falseValue: "关闭" }, quickAttrs: ['dense'],
+              colAttrs: { md: 4 },
+            },
           ], 
           action: [{
             tag: "v-btn",
@@ -191,8 +207,26 @@ const content = {
       viewMode: null,
       constantObj: {
         viewMode: ["同步组模式", "源库模式"],
-        categoryList: [],
-        categoryMap: {},
+        syncTimeSlot: [
+          { text: '2分钟', value: 2 }, 
+          { text: '5分钟', value: 5 }, 
+          { text: '10分钟', value: 10 }, 
+          { text: '1小时', value: 60 }, 
+          { text: '6小时', value: 360 }, 
+          { text: '12小时', value: 720 }, 
+          { text: '24小时', value: 1440 }
+        ],
+        syncTimeSlotMap: {
+          2: '2分钟',
+          5: '5分钟',
+          10: '10分钟',
+          60: '1小时',
+          360: '6小时',
+          720: '12小时',
+          1440: '24小时',
+        },
+        databaseMap: {},
+        databaseList: [],
       },
       validationRules: {
         requireRules: [
@@ -224,6 +258,7 @@ const content = {
       headers() {
         if (this.viewMode == '源库模式') {
           return [
+            { text: "ID", value: "id", width: 50, sortable: true, cellClass: "text-truncate max-width-300" },
             { text: "源库", value: "sourceDatabase", width: 80, sortable: true, class: "fixed", cellClass: "fixed text-truncate max-width-300"  },
             { text: "源表", value: "sourceTable", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
             { text: "目标表", value: "targetTableText", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
@@ -237,6 +272,7 @@ const content = {
         }
 
         return [
+          { text: "ID", value: "id", width: 50, sortable: true, cellClass: "text-truncate max-width-300" },
           { text: "同步组", value: "syncGroup",  width: 120, sortable: true, class: "fixed", cellClass: "fixed text-truncate max-width-300"  },
           { text: "源表", value: "sourceTableText", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
           { text: "目标表", value: "targetTableText", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
@@ -249,12 +285,15 @@ const content = {
       }
     },
     async created() {
-      this.viewMode = window.localStorage.getItem(`${window.appInfo.appId}_${this.pageId}_viewMode`) || '列表模式';
+      this.viewMode = window.localStorage.getItem(`${window.appInfo.appId}_${this.pageId}_viewMode`) || '同步组模式';
       await this.doUiAction('getTableData');
+      this.doUiAction('initConstantObjData', {});
     },
     doUiAction: {
       manualSyncTable: ['manualSyncTable', 'doUiAction.getTableData'],
       syncGroupSelectDailog: ['syncGroupSelectDailog'],
+
+      initConstantObjData: ['initConstantObjData'],
     }, // 额外uiAction { [key]: [action1, action2]}
     methods: {
       // ---------- CRUD覆盖 uiAction >>>>>>>>>>>> --------
@@ -351,6 +390,22 @@ const content = {
             await this.doUiAction('getTableData');
           },
         });
+      },
+      async initConstantObjData({ showTip = false }) {
+        if (showTip) { window.vtoast.loading("查询表"); }
+        const result = await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'tableSyncConfig',
+              actionId: 'selectSourceDatabase',
+            }
+          }
+        });
+        const { defaultTargetDatabase, databaseMap, databaseList } = result.data.appData.resultData;
+        this.constantObj.databaseMap = databaseMap;
+        this.constantObj.databaseList = databaseList;
+        this.defaultTargetDatabase = defaultTargetDatabase;
+        if (showTip) { window.vtoast.success("查询表"); }
       },
       // ---------- <<<<<<<<<<< 同步相关 uiAction ---------
 
