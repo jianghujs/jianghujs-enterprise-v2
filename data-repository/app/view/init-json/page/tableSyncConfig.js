@@ -1,31 +1,31 @@
 const content = {
-  pageType: "jh-page", pageId: "tableSyncConfig", table: "a_table_sync_config", 
+  pageType: "jh-page", pageId: "tableSyncConfig", table: "_table_sync_config", 
   pageName: "同步表管理", template: "jhTemplateV4", version: 'v3',
   resourceList: [
     {
       actionId: "selectItemList",
       resourceType: "sql",
       desc: "✅查询列表",
-      resourceData: { table: "a_table_sync_config", operation: "select" }
+      resourceData: { table: "_table_sync_config", operation: "select" }
     },
     {
       actionId: "insertItem",
       resourceType: "sql",
       // resourceHook: { before: [{service:"common",serviceFunction:"generateBizIdOfBeforeHook"}] },
       desc: "✅添加",
-      resourceData: { table: "a_table_sync_config", operation: "jhInsert" }
+      resourceData: { table: "_table_sync_config", operation: "jhInsert" }
     },
     {
       actionId: "updateItem",
       resourceType: "sql",
       desc: "✅更新",
-      resourceData: { table: "a_table_sync_config", operation: "jhUpdate" }
+      resourceData: { table: "_table_sync_config", operation: "jhUpdate" }
     },
     {
       actionId: "deleteItem",
       resourceType: "sql",
       desc: "✅删除",
-      resourceData: { table: "a_table_sync_config", operation: "jhDelete" }
+      resourceData: { table: "_table_sync_config", operation: "jhDelete" }
     }
   ], // { actionId: '', resourceType: '', resourceData: {}, resourceHook: {}, desc: '' }
   headContent: [
@@ -70,7 +70,7 @@ const content = {
         <template v-slot:item.syncGroup="{ item }">
           <div class="d-flex justify-space-between">
             <span>{{ item.syncGroup }}</span>
-            <span role="button" class="translate-y-[0px]" @click="doUiAction('chunkUserAssignmentDailog', { item })">
+            <span role="button" class="translate-y-[0px]" @click="doUiAction('syncGroupSelectDailog', { item })">
               <v-icon size="18" color="success">mdi-note-edit-outline</v-icon>
             </span>
           </div>
@@ -254,6 +254,7 @@ const content = {
     },
     doUiAction: {
       manualSyncTable: ['manualSyncTable', 'doUiAction.getTableData'],
+      syncGroupSelectDailog: ['syncGroupSelectDailog'],
     }, // 额外uiAction { [key]: [action1, action2]}
     methods: {
       // ---------- CRUD覆盖 uiAction >>>>>>>>>>>> --------
@@ -316,6 +317,40 @@ const content = {
           timeout: 360 * 1000,
         });
         window.vtoast.success("同步成功");
+      },
+      async syncGroupSelectDailog({ item }){
+        const dailogTitle = "同步组设置"
+        await window.jhConfirmDailog({ 
+          title: dailogTitle,
+          data: { 
+            syncGroupList: ['Enterprise', 'HR', 'USER', 'test'],
+            syncGroupSelect: item.syncGroup,
+          },
+          htmlTemplate: /*html*/`
+            <v-combobox class="jh-v-input mb-2"
+              :items="syncGroupList" single-line dense filled :multiple="false" :return-object="false" 
+              v-model="syncGroupSelect"></v-combobox>
+          `,
+          onConfirm: async ($instance) => {
+            // Tip: 等10ms让 vueData更新完
+            await new Promise(resolve => setTimeout(resolve, 10));
+            window.vtoast.loading(dailogTitle);
+            await window.jianghuAxios({
+              data: {
+                appData: {
+                  pageId: 'tableSyncConfig',
+                  actionId: 'updateItem',
+                  actionData: {
+                    syncGroup: $instance.syncGroupSelect,
+                  },
+                  where: { id: item.id }
+                }
+              }
+            });
+            window.vtoast.success(dailogTitle);
+            await this.doUiAction('getTableData');
+          },
+        });
       },
       // ---------- <<<<<<<<<<< 同步相关 uiAction ---------
 
