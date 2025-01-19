@@ -11,10 +11,6 @@ module.exports = appInfo => {
     // authTokenKey: 'directory',
     // loginPage: '/directory/page/login',
     dataSyncStatus: '启用', // 是否启用同步，启用/禁用
-    jiangHuConfig: {
-      packageIdCheck: true,
-      updateRequestDemoAndResponseDemo: false,
-    },
     knex: {
       client: {
         dialect: 'mysql',
