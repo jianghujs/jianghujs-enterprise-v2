@@ -5,10 +5,6 @@ const path = require('path');
 module.exports = appInfo => {
 
   return {
-    appType: 'multiApp',
-    appDirectoryLink: '/directory',
-    authTokenKey: 'directory',
-    loginPage: '/directory/page/login',
     dataSyncStatus: '启用', // 是否启用同步，启用/禁用
     knex: {
       client: {

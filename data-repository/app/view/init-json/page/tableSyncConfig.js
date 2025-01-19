@@ -107,11 +107,12 @@ const content = {
         }
       ],
       headers: [
+        {text: "同步组", value: "syncGroup"},
         {text: "同步-源表", value: "sourceTable", width: 140, class: 'fixed', cellClass: 'fixed'},
         {text: "同步-目标表", value: "targetTable"},
         {text: "同步-源库", value: "sourceDatabaseShowName"},
         {text: "同步-目标库", value: "targetDatabase"},
-  
+        
         {text: "同步-源表类型", value: "tableType", width: 120},
         {text: "定时检查/分钟", value: "syncTimeSlot", width: 140},
         {text: "Trigger实时同步", value: "enableMysqlTrigger", width: 120},
@@ -145,7 +146,7 @@ const content = {
           formItemList: [
             { label: "同步-源库", model: "sourceDatabase", tag: "v-autocomplete", rules: "validationRules.requireRules", attrs: { ':items': 'constantObj.sourceDatabase'}  },
             { label: "同步-源表", model: "sourceTable", tag: "v-autocomplete", rules: "validationRules.requireRules", attrs: { ':items': 'constantObj.sourceTable'}  },
-            { tag: 'div', colAttrs: { md: 12, class: 'pa-0'} },
+              { tag: 'div', colAttrs: { md: 12, class: 'pa-0'} },
             { label: "同步-目标库", model: "targetDatabase", tag: "v-autocomplete", rules: "validationRules.requireRules", attrs: { ':items': 'constantObj.sourceDatabase'}  },
             { label: "同步-目标表", model: "targetTable", tag: "v-text-field", rules: "validationRules.requireRules", attrs: { ':placeholder': '\`${createItem.sourceDatabase}__${createItem.sourceTable}\`' } },
             { tag: 'div', colAttrs: { md: 12, class: 'pa-0'} },
