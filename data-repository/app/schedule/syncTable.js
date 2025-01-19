@@ -18,69 +18,76 @@ module.exports = app => {
       const databaseName =  ctx.app.config.knex.client.connection.database;
       const connection = ctx.app.config.knex.client.connection;
       const syncList = [
-        { sourceTable: "_resource", syncTable: "_resource_01" },
-      ]
-      logger.warn('[syncTable] start');
+        { sourceTable: "_resource", targetTable: "_resource_01", sourceDatabase: databaseName, targetDatabase: databaseName, },
+      ];
+      logger.warn('[targetTable] start');
       for (const syncObj of syncList) {
-        const { sourceTable, syncTable } = syncObj
-        await doSyncTableDDL({ knex, databaseName, sourceTable, syncTable, logger });
+        await doTargetTableDDL({ knex, logger, syncObj });
       }
       for (const syncObj of syncList) {
-        const { sourceTable, syncTable } = syncObj
-        await doSyncTable({ knex, connection, sourceTable, syncTable, logger });
+        await doTargetTableSync({ knex, logger, connection, syncObj });
       }
-      logger.warn('[syncTable] end', { useTime: `${new Date().getTime() - startTime}/ms` });
+      logger.warn('[targetTable] end', { useTime: `${new Date().getTime() - startTime}/ms` });
     },
     
   }
 };
 
-async function doSyncTableDDL({ knex, databaseName, sourceTable, syncTable, logger }) {
-  const columnsDefinition = (await knex.raw(`SELECT COLUMN_NAME,IS_NULLABLE,COLUMN_TYPE,CHARACTER_SET_NAME,COLLATION_NAME,COLUMN_COMMENT FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '${databaseName}' AND TABLE_NAME = '${sourceTable}';`))[0];
-  const viewDefinition = (await knex.raw(`SELECT CHARACTER_SET_CLIENT,COLLATION_CONNECTION FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_SCHEMA = '${databaseName}' AND TABLE_NAME = '${sourceTable}';`))[0][0];
+async function doTargetTableDDL({ 
+    knex, logger,
+    syncObj: { sourceDatabase, sourceTable, targetDatabase, targetTable }
+  }) {
+  const columnsDefinition = (await knex.raw(`SELECT COLUMN_NAME,IS_NULLABLE,COLUMN_TYPE,CHARACTER_SET_NAME,COLLATION_NAME,COLUMN_COMMENT FROM INFORMATION_SCHEMA.COLUMNS 
+    WHERE TABLE_SCHEMA = '${sourceDatabase}' AND TABLE_NAME = '${sourceTable}';`))[0];
+  const viewDefinition = (await knex.raw(`SELECT CHARACTER_SET_CLIENT,COLLATION_CONNECTION FROM INFORMATION_SCHEMA.VIEWS 
+    WHERE TABLE_SCHEMA = '${sourceDatabase}' AND TABLE_NAME = '${sourceTable}';`))[0][0];
   
-  let syncTableDDL = null;
-  let syncTableDDLExcept = null;
-  const tableTypeResult = await knex.raw(`SELECT TABLE_TYPE FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '${databaseName}' AND TABLE_NAME = '${sourceTable}';`);
+  let targetTableDDL = null;
+  let targetTableDDLExcept = null;
+  const tableTypeResult = await knex.raw(`SELECT TABLE_TYPE FROM INFORMATION_SCHEMA.TABLES 
+    WHERE TABLE_SCHEMA = '${sourceDatabase}' AND TABLE_NAME = '${sourceTable}';`);
   const tableType = tableTypeResult[0][0].TABLE_TYPE;
   if (tableType === 'VIEW') {
-    syncTableDDLExcept = getCreateTableSqlFromView({ syncTable, columnsDefinition, viewDefinition });
+    targetTableDDLExcept = getCreateTableSqlFromView({ targetTable, columnsDefinition, viewDefinition });
   } 
 
   if(tableType === "BASE TABLE"){
     const sourceTableDDLResult = await knex.raw(`SHOW CREATE TABLE ${sourceTable};`);
     const sourceTableDDL = sourceTableDDLResult[0][0]['Create Table'];
-    syncTableDDLExcept = sourceTableDDL && sourceTableDDL
-      .replace(`CREATE TABLE \`${sourceTable}\``, `CREATE TABLE \`${syncTable}\``)
+    targetTableDDLExcept = sourceTableDDL && sourceTableDDL
+      .replace(`CREATE TABLE \`${sourceTable}\``, `CREATE TABLE \`${targetTable}\``)
       .replace(/AUTO_INCREMENT=\d+ ?/, '').replace(/\n\s*/g, '');
   }
 
-  const tableExists = await knex.schema.hasTable(syncTable);
+  const tableExists = await knex.schema.hasTable(targetTable);
   if (tableExists) {
-    const syncTableDDLResult = await knex.raw(`SHOW CREATE TABLE ${syncTable};`);
-    syncTableDDL = syncTableDDLResult[0][0]['Create Table']
+    const targetTableDDLResult = await knex.raw(`SHOW CREATE TABLE ${targetTable};`);
+    targetTableDDL = targetTableDDLResult[0][0]['Create Table']
       .replace(/AUTO_INCREMENT=\d+ ?/, '').replace(/\n\s*/g, '');
   }
 
-  if(!syncTableDDLExcept){
-    logger.error(`[syncTableDDL] ${sourceTable} 不存在`);
+  if(!targetTableDDLExcept){
+    logger.error(`[targetTableDDL] ${sourceTable} 不存在`);
     return;
   }
 
 
-  if (syncTableDDL !== syncTableDDLExcept) {
-    logger.warn('[syncTable]', syncTable, 'DDL有改动, 重新生成同步表');
-    await knex.raw(`DROP TABLE IF EXISTS ${syncTable};`);
-    await knex.raw(syncTableDDLExcept);
+  if (targetTableDDL !== targetTableDDLExcept) {
+    logger.warn('[targetTable]', targetTable, 'DDL有改动, 重新生成同步表');
+    await knex.raw(`DROP TABLE IF EXISTS ${targetTable};`);
+    await knex.raw(targetTableDDLExcept);
   }
 }
 
-async function doSyncTable({ knex, connection, sourceTable, syncTable, logger }) {
-  // logger.warn(`[syncTable] ${syncTable} start`);
+async function doTargetTableSync({ 
+  knex, connection, logger,
+  syncObj: { sourceDatabase, sourceTable, targetDatabase, targetTable }
+}) {
+  // logger.warn(`[targetTable] ${targetTable} start`);
   const hyperDiffResult = await hyperDiff({
-    oldDatabaseConnectionConfig: connection,
-    oldTable: syncTable,
-    newDatabaseConnectionConfig: connection,
+    oldDatabaseConnectionConfig: {...connection, database: targetDatabase},
+    oldTable: targetTable,
+    newDatabaseConnectionConfig: {...connection, database: sourceDatabase},
     newTable: sourceTable,
     splitCount: 2,
     stopThreshold: 100,
@@ -88,24 +95,24 @@ async function doSyncTable({ knex, connection, sourceTable, syncTable, logger })
   });
   const { added, removed, changed } = hyperDiffResult;
   if (added.length > 0) {
-    await knex(`${syncTable}`).insert(added);
+    await knex(`${targetTable}`).insert(added);
   }
   if (removed.length > 0) {
     const idList = removed.map(item => item.id);
-    await knex(`${syncTable}`).whereIn('id', idList).delete();
+    await knex(`${targetTable}`).whereIn('id', idList).delete();
   }
   if (changed.length > 0) {
     for (const item of changed) {
       const { id, ...updateParam } = item.new;
-      await knex(`${syncTable}`).where({ id }).update(updateParam);
+      await knex(`${targetTable}`).where({ id }).update(updateParam);
     }
   }
-  logger.warn('[syncTable]', syncTable, { added: added.length, removed: removed.length, changed: changed.length });
+  logger.warn('[targetTable]', targetTable, { added: added.length, removed: removed.length, changed: changed.length });
 }
 
-function getCreateTableSqlFromView({syncTable,columnsDefinition,viewDefinition}){
+function getCreateTableSqlFromView({targetTable,columnsDefinition,viewDefinition}){
   // 构建sql语句
-  let sql = `CREATE TABLE \`${syncTable}\` (\n`
+  let sql = `CREATE TABLE \`${targetTable}\` (\n`
   for(const index in columnsDefinition){
     const {COLUMN_NAME,IS_NULLABLE,COLUMN_TYPE,CHARACTER_SET_NAME,COLLATION_NAME,COLUMN_COMMENT} = columnsDefinition[index];
     // sql += `\`${COLUMN_NAME}\` ${COLUMN_TYPE}${CHARACTER_SET_NAME ? ` CHARACTER SET ${CHARACTER_SET_NAME}`:''}${COLLATION_NAME ? ` COLLATE ${COLLATION_NAME}`:''}${COLUMN_TYPE.includes("text") ? '' : (IS_NULLABLE==='YES'?' DEFAULT NULL':' NOT NULL')}${COLUMN_COMMENT?` COMMENT '${COLUMN_COMMENT}'`:''}`
