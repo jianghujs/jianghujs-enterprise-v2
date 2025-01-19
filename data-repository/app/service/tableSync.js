@@ -132,7 +132,7 @@ class UtilService extends Service {
 
     validateUtil.validate(appDataSchema.syncTable, actionData);
     const {useSyncTimeSlotFilter} = actionData;
-    const tableSyncConfigWhere = _.pick(actionData, ['id']);
+    const tableSyncConfigWhere = _.pick(actionData, ['idList']);
 
     const {jianghuKnex, logger} = this.app;
     const lastSyncTime = dayjs().format();
@@ -140,7 +140,7 @@ class UtilService extends Service {
     const outsideKnexMap = {};
 
     let tableSyncConfigList = await jianghuKnex('_table_sync_config')
-      .where(tableSyncConfigWhere)
+      .whereIn('id', tableSyncConfigWhere.idList)
       .select();
     const allTable = await jianghuKnex('information_schema.tables').select('table_schema as database', 'table_name as tableName', 'table_type as tableType');
     const allTableMap = Object.fromEntries(allTable.map(obj => [`${obj.database}.${obj.tableName}`, obj]));

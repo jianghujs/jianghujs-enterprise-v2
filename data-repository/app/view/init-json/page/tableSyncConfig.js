@@ -43,12 +43,13 @@ const content = {
   pageContent: [
     {
       tag: 'jh-table',
-      attrs: {  },
+      attrs: { 
+      },
       colAttrs: { clos: 12 },
       cardAttrs: { class: 'rounded-lg elevation-0' },
       headActionList: [
         { tag: 'v-btn', value: '新增同步表', attrs: { color: 'success', class: 'mr-2', '@click': 'doUiAction("startCreateItem")' }, quickAttrs: ['small'] },
-        { tag: 'v-btn', value: '批量同步', attrs: { color: 'grey', class: 'mr-2', '@click': 'doUiAction("startCreateItem")' }, quickAttrs: ['small'] },
+        { tag: 'v-btn', value: '全部同步', attrs: { color: 'success', class: 'mr-2', '@click': "doUiAction('manualSyncTable', { idList: tableData.map(item => item.id) })" }, quickAttrs: ['small'] },
         { tag: 'v-spacer' },
         /*html*/`
         <div class="v-btn-toggle">
@@ -64,24 +65,34 @@ const content = {
         </div>
         `
       ],
-      headers: [
-        { text: "同步组", value: "syncGroup", width: 80, sortable: true },
-        { text: "源库", value: "sourceDatabase", width: 80, sortable: true },
-        { text: "源表", value: "sourceTable", width: 80, sortable: true },
-        { text: "目标库", value: "targetDatabase", width: 80, sortable: true },
-        { text: "目标表", value: "targetTable", width: 80, sortable: true },
-        { text: "定时检查", value: "syncTimeSlot", width: 80, sortable: true },
-        { text: "Trigger实时同步", value: "enableMysqlTrigger", width: 80, sortable: true },
-        { text: "同步状态", value: "syncDesc", width: 80, sortable: true },
-        { text: "同步触发时间", value: "lastSyncTime", width: 80, sortable: true },
-        { text: "操作", value: "action", type: "action", width: 'window.innerWidth < 500 ? 70 : 120', align: "center", class: "fixed", cellClass: "fixed" },
+      value: [
+        /*html*/`
+        <template v-slot:item.syncGroup="{ item }">
+          <div class="d-flex justify-space-between">
+            <span>{{ item.syncGroup }}</span>
+            <span role="button" class="translate-y-[0px]" @click="doUiAction('chunkUserAssignmentDailog', { item })">
+              <v-icon size="18" color="success">mdi-note-edit-outline</v-icon>
+            </span>
+          </div>
+        </template>
+        <template v-slot:item.enableMysqlTrigger="{ item }">
+          <span :class="item.enableMysqlTrigger == '开启' ? 'success--text' : 'grey--text'">{{ item.enableMysqlTrigger }}</span>
+        </template>
+        <template v-slot:item.syncDesc="{ item }">
+          <div class="d-flex justify-space-between ">
+            <v-chip small :class="item.syncDesc == '正常' ? 'jh-status-tag-success' : 'jh-status-tag-error'"> 
+              {{ item.syncDesc }} 
+            </v-chip>
+            <span role="button" @click="doUiAction('manualSyncTable', { idList: [item.id] })" title="同步" class="translate-y-[2px]">
+              <v-icon size="18" color="success">mdi-sync</v-icon>
+            </span>
+          </div>
+        </template>
+        `
       ],
-      value: [],
       rowActionList: [
-        { text: '同步', icon: 'mdi-sync', color: 'success', click: 'doUiAction("manualSyncOneTable", item)' }, // 简写支持 pc 和 移动端折叠
         { text: '编辑', icon: 'mdi-note-edit-outline', color: 'success', click: 'doUiAction("startUpdateItem", item)' }, // 简写支持 pc 和 移动端折叠
         { text: '删除', icon: 'mdi-trash-can-outline', color: 'error', click: 'doUiAction("deleteItem", item)' } // 简写支持 pc 和 移动端折叠
-         
         // { text: '详情', icon: 'mdi-note-edit-outline', color: 'success', click: 'doUiAction("startUpdateItem", item)' },
         // { text: '删除', icon: 'mdi-trash-can-outline', color: 'error', click: 'doUiAction("deleteItem", item)' }
       ],
@@ -179,7 +190,7 @@ const content = {
       pageId: '<$ ctx.packagePage.pageId $>',
       viewMode: null,
       constantObj: {
-        viewMode: ["列表模式", "分组模式"],
+        viewMode: ["同步组模式", "源库模式"],
         categoryList: [],
         categoryMap: {},
       },
@@ -210,15 +221,104 @@ const content = {
           return this.tableData;
         }
       },
+      headers() {
+        if (this.viewMode == '源库模式') {
+          return [
+            { text: "源库", value: "sourceDatabase", width: 80, sortable: true, class: "fixed", cellClass: "fixed text-truncate max-width-300"  },
+            { text: "源表", value: "sourceTable", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+            { text: "目标表", value: "targetTableText", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+            { text: "同步组", value: "syncGroup",  width: 120, sortable: true, class: "", cellClass: "text-truncate max-width-300"  },
+            { text: "定时检查", value: "syncTimeSlot", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+            { text: "实时同步", value: "enableMysqlTrigger", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+            { text: "同步状态", value: "syncDesc", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+            { text: "同步触发时间", value: "lastSyncTime", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+            { text: "操作", value: "action", type: "action", width: 80, align: "center", class: "fixed", cellClass: "fixed text-truncate max-width-300" },
+          ]
+        }
+
+        return [
+          { text: "同步组", value: "syncGroup",  width: 120, sortable: true, class: "fixed", cellClass: "fixed text-truncate max-width-300"  },
+          { text: "源表", value: "sourceTableText", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+          { text: "目标表", value: "targetTableText", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+          { text: "定时检查", value: "syncTimeSlot", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+          { text: "实时同步", value: "enableMysqlTrigger", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+          { text: "同步状态", value: "syncDesc", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+          { text: "同步触发时间", value: "lastSyncTime", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+          { text: "操作", value: "action", type: "action", width: 80, align: "center", class: "fixed", cellClass: "fixed text-truncate max-width-300" },
+        ];
+      }
     },
     async created() {
       this.viewMode = window.localStorage.getItem(`${window.appInfo.appId}_${this.pageId}_viewMode`) || '列表模式';
       await this.doUiAction('getTableData');
     },
     doUiAction: {
+      manualSyncTable: ['manualSyncTable', 'doUiAction.getTableData'],
     }, // 额外uiAction { [key]: [action1, action2]}
     methods: {
-       
+      // ---------- CRUD覆盖 uiAction >>>>>>>>>>>> --------
+      async getTableData() {
+        this.isTableLoading = true;
+
+        let orderBy =[
+          { column: 'syncGroup', order: 'asc' },
+          { column: 'sourceDatabase', order: 'asc' },
+          { column: 'sourceTable', order: 'asc' },
+        ];
+        if (this.viewMode == '源库模式') {
+          orderBy = [
+            { column: 'sourceDatabase', order: 'asc' },
+            { column: 'syncGroup', order: 'asc' },
+            { column: 'sourceTable', order: 'asc' },
+          ];
+        }
+        const result = await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'tableSyncConfig',
+              actionId: "selectItemList",
+              actionData: {},
+              ...this.tableParams,
+              orderBy,
+            }
+          }
+        });
+        const { rows, count } = result.data.appData.resultData;
+        
+        this.tableDataFromBackend = rows;
+        this.isTableLoading = false;
+      },
+      formatTableData() {
+        let tableData = this.tableDataFromBackend.map(row => {
+          row.sourceTableText = `${row.sourceDatabase}.${row.sourceTable}`;
+          row.targetTableText = `${row.targetDatabase}.${row.targetTable}`;
+          row.lastSyncTime = row.lastSyncTime ? dayjs(row.lastSyncTime).format('YYYY-MM-DD HH:mm:ss') : '';
+          return row;
+        });
+        this.tableData = tableData;
+      },
+      // ---------- <<<<<<<<<<< CRUD覆盖 uiAction ---------
+
+
+      // ---------- 同步相关 uiAction >>>>>>>>>>>> --------
+      async manualSyncTable({ idList }) {
+        window.vtoast.loading({ message: `${idList.length}个表同步`, time: -1 });
+        await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'tableSyncConfig',
+              actionId: 'syncTable',
+              actionData: {
+                idList,
+              }
+            }
+          },
+          timeout: 360 * 1000,
+        });
+        window.vtoast.success("同步成功");
+      },
+      // ---------- <<<<<<<<<<< 同步相关 uiAction ---------
+
     }
   },
    
