@@ -90,10 +90,10 @@
         <template v-slot:item.syncTimeSlot="{ item }">
           <span>{{ constantObj.syncTimeSlotMap[item.syncTimeSlot] || item.syncTimeSlot + '分钟' }}</span>
         </template>
-        <template v-slot:item.syncDesc="{ item }">
+        <template v-slot:item.syncStatus="{ item }">
           <div class="d-flex justify-space-between ">
-            <v-chip small :class="item.syncDesc == '正常' ? 'jh-status-tag-success' : 'jh-status-tag-error'"> 
-              {{ item.syncDesc }} 
+            <v-chip small :class="item.syncStatus == '正常' ? 'jh-status-tag-success' : 'jh-status-tag-error'"> 
+              {{ item.syncStatus }} 
             </v-chip>
             <span role="button" @click="doUiAction('manualSyncTable', { idList: [item.id] })" title="同步" class="translate-y-[2px]">
               <v-icon size="18" color="success">mdi-sync</v-icon>
@@ -110,8 +110,8 @@
                   <span role="button" class="success--text font-weight-medium font-size-2 mr-2" @click="doUiAction('startUpdateItem', item)" >
                     <v-icon size="16" class="success--text">mdi-note-edit-outline</v-icon>编辑
                   </span>
-                  <span role="button" class="error--text font-weight-medium font-size-2 mr-2" @click="doUiAction('deleteItem', item)" >
-                    <v-icon size="16" class="error--text">mdi-trash-can-outline</v-icon>删除
+                  <span role="button" class="error--text font-weight-medium font-size-2 mr-2" @click="doUiAction('recycleItem', { item })" >
+                    <v-icon size="16" class="error--text">mdi-trash-can-outline</v-icon>回收站
                   </span>
                 </template>
                 <!-- 手机端 -->
@@ -126,8 +126,8 @@
                     <v-list-item @click="doUiAction('startUpdateItem', item)" >
                       <v-list-item-title>编辑</v-list-item-title>
                     </v-list-item>
-                    <v-list-item @click="doUiAction('deleteItem', item)" >
-                      <v-list-item-title>删除</v-list-item-title>
+                    <v-list-item @click="doUiAction('recycleItem', { item })" >
+                      <v-list-item-title>回收站</v-list-item-title>
                     </v-list-item>
                   </v-list>
                 </v-menu>
@@ -343,9 +343,6 @@ new Vue({
     updateItemOrigin: {},
     updateItemId: null,
     updateActionData: {},
-    // ================================ 删除 ================================
-    deleteItem: {},
-    deleteItemId: null,
 
     // ================================ common ================================
     pageId: '<$ ctx.packagePage.pageId $>',
@@ -465,8 +462,9 @@ new Vue({
           { text: "同步组", value: "syncGroup",  width: 120, sortable: true, class: "", cellClass: "text-truncate max-width-300"  },
           { text: "定时检查", value: "syncTimeSlot", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
           { text: "实时同步", value: "enableMysqlTrigger", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-          { text: "同步状态", value: "syncDesc", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-          { text: "同步触发时间", value: "lastSyncTime", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+          { text: "同步状态", value: "syncStatus", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+          { text: "最后一次同步检查", value: "lastSyncTime", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+          { text: "最后一次同步详情", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
           { text: "操作", value: "action", type: "action", width: 80, align: "center", class: "fixed", cellClass: "fixed text-truncate max-width-300" },
         ]
       }
@@ -478,8 +476,9 @@ new Vue({
         { text: "目标表", value: "targetTableText", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
         { text: "定时检查", value: "syncTimeSlot", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
         { text: "实时同步", value: "enableMysqlTrigger", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-        { text: "同步状态", value: "syncDesc", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-        { text: "同步触发时间", value: "lastSyncTime", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+        { text: "同步状态", value: "syncStatus", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+        { text: "最后一次同步检查", value: "lastSyncTime", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+        { text: "最后一次同步详情", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
         { text: "操作", value: "action", type: "action", width: 80, align: "center", class: "fixed", cellClass: "fixed text-truncate max-width-300" },
       ];
     },
@@ -523,13 +522,6 @@ new Vue({
             await this.closeUpdateDrawer(uiActionData);
             await this.doUiAction('getTableData', uiActionData);
             break;
-          case 'deleteItem':
-            await this.prepareDeleteFormData(uiActionData);
-            await this.confirmDeleteItemDialog(uiActionData);
-            await this.prepareDoDeleteItem(uiActionData);
-            await this.doDeleteItem(uiActionData);
-            await this.doUiAction('getTableData', uiActionData);
-            break;
           case 'manualSyncTable':
             await this.manualSyncTable(uiActionData);
             await this.doUiAction('getTableData', uiActionData);
@@ -539,6 +531,10 @@ new Vue({
             break;
           case 'initConstantObjData':
             await this.initConstantObjData(uiActionData);
+            break;
+          case 'recycleItem':
+            await this.recycleItem(uiActionData);
+            await this.doUiAction('getTableData', uiActionData);
             break;
           default:
             console.error("[doUiAction] uiActionId not find", {uiActionId});
@@ -745,38 +741,6 @@ new Vue({
       this.updateItemId = null;
     },
     // ---------- <<<<<<<<<<< 修改数据 uiAction ---------
-    // ---------- 删除数据 uiAction >>>>>>>>>>>> --------
-    async prepareDeleteFormData(funObj) {
-      this.deleteItem = _.cloneDeep(funObj);
-    },
-    async confirmDeleteItemDialog() {
-      if (await window.confirmDialog({title: "删除", content: "确定删除吗？"}) === false) {
-        throw new Error("[confirmDeleteItemDialog] 否");
-      }
-    },
-    async prepareDoDeleteItem() {
-      const {id} = this.deleteItem;
-      this.deleteItemId = id;
-    },
-    async doDeleteItem() {
-      await window.vtoast.loading("删除数据");
-      await window.jianghuAxios({
-        data: {
-          appData: {
-            pageId: 'tableSyncConfig',
-            actionId: 'deleteItem',
-            actionData: {},
-            where: {id: this.deleteItemId}
-          }
-        }
-      });
-      await window.vtoast.success("删除数据成功");
-    },
-    async clearDeleteItem() {
-      this.deleteItem = {};
-      this.deleteItemId = null;
-    },
-    // ---------- <<<<<<<<<<< 删除数据 uiAction ---------
 
     // ---------- 抽屉列表 uiAction >>>>>>>>>>>> --------
     // ---------- Custom uiAction >>>>>>>>>>>> --------
@@ -795,6 +759,7 @@ new Vue({
           { column: 'sourceTable', order: 'asc' },
         ];
       }
+      this.tableParams.where.rowStatus = '正常';
       const result = await window.jianghuAxios({
         data: {
           appData: {
@@ -826,6 +791,20 @@ new Vue({
         enableMysqlTrigger: "开启",
       };
       this.createItemOrigin = _.cloneDeep(this.createItem);
+    },
+    async recycleItem({ item }) {
+      window.vtoast.loading(`${item.id} 移入回收站`);
+      await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'tableSyncConfig',
+            actionId: 'updateItem',
+            where: { id: item.id },
+            actionData: { rowStatus: '回收站' }
+          }
+        }
+      });
+      window.vtoast.success(`${item.id} 移入回收站`);
     },
     async manualSyncTable({ idList }) {
       window.vtoast.loading({ message: `${idList.length}个表同步`, time: -1 });

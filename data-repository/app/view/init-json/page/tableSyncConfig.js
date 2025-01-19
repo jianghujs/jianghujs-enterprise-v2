@@ -21,12 +21,12 @@ const content = {
       desc: "✅更新",
       resourceData: { table: "_table_sync_config", operation: "jhUpdate" }
     },
-    {
-      actionId: "deleteItem",
-      resourceType: "sql",
-      desc: "✅删除",
-      resourceData: { table: "_table_sync_config", operation: "jhDelete" }
-    }
+    // {
+    //   actionId: "deleteItem",
+    //   resourceType: "sql",
+    //   desc: "✅删除",
+    //   resourceData: { table: "_table_sync_config", operation: "jhDelete" }
+    // }
   ], // { actionId: '', resourceType: '', resourceData: {}, resourceHook: {}, desc: '' }
   headContent: [
     { tag: 'jh-page-title', value: "<$ ctx.packagePage.pageName $>", attrs: { cols: 12, sm: 6, md:4 }, helpBtn: true, slot: [] },
@@ -81,10 +81,10 @@ const content = {
         <template v-slot:item.syncTimeSlot="{ item }">
           <span>{{ constantObj.syncTimeSlotMap[item.syncTimeSlot] || item.syncTimeSlot + '分钟' }}</span>
         </template>
-        <template v-slot:item.syncDesc="{ item }">
+        <template v-slot:item.syncStatus="{ item }">
           <div class="d-flex justify-space-between ">
-            <v-chip small :class="item.syncDesc == '正常' ? 'jh-status-tag-success' : 'jh-status-tag-error'"> 
-              {{ item.syncDesc }} 
+            <v-chip small :class="item.syncStatus == '正常' ? 'jh-status-tag-success' : 'jh-status-tag-error'"> 
+              {{ item.syncStatus }} 
             </v-chip>
             <span role="button" @click="doUiAction('manualSyncTable', { idList: [item.id] })" title="同步" class="translate-y-[2px]">
               <v-icon size="18" color="success">mdi-sync</v-icon>
@@ -95,7 +95,7 @@ const content = {
       ],
       rowActionList: [
         { text: '编辑', icon: 'mdi-note-edit-outline', color: 'success', click: 'doUiAction("startUpdateItem", item)' }, // 简写支持 pc 和 移动端折叠
-        { text: '删除', icon: 'mdi-trash-can-outline', color: 'error', click: 'doUiAction("deleteItem", item)' } // 简写支持 pc 和 移动端折叠
+        { text: '回收站', icon: 'mdi-trash-can-outline', color: 'error', click: 'doUiAction("recycleItem", { item })' } // 简写支持 pc 和 移动端折叠
         // { text: '详情', icon: 'mdi-note-edit-outline', color: 'success', click: 'doUiAction("startUpdateItem", item)' },
         // { text: '删除', icon: 'mdi-trash-can-outline', color: 'error', click: 'doUiAction("deleteItem", item)' }
       ],
@@ -284,8 +284,9 @@ const content = {
             { text: "同步组", value: "syncGroup",  width: 120, sortable: true, class: "", cellClass: "text-truncate max-width-300"  },
             { text: "定时检查", value: "syncTimeSlot", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
             { text: "实时同步", value: "enableMysqlTrigger", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-            { text: "同步状态", value: "syncDesc", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-            { text: "同步触发时间", value: "lastSyncTime", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+            { text: "同步状态", value: "syncStatus", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+            { text: "最后一次同步检查", value: "lastSyncTime", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+            { text: "最后一次同步详情", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
             { text: "操作", value: "action", type: "action", width: 80, align: "center", class: "fixed", cellClass: "fixed text-truncate max-width-300" },
           ]
         }
@@ -297,8 +298,9 @@ const content = {
           { text: "目标表", value: "targetTableText", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
           { text: "定时检查", value: "syncTimeSlot", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
           { text: "实时同步", value: "enableMysqlTrigger", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-          { text: "同步状态", value: "syncDesc", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-          { text: "同步触发时间", value: "lastSyncTime", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+          { text: "同步状态", value: "syncStatus", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+          { text: "最后一次同步检查", value: "lastSyncTime", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+          { text: "最后一次同步详情", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
           { text: "操作", value: "action", type: "action", width: 80, align: "center", class: "fixed", cellClass: "fixed text-truncate max-width-300" },
         ];
       }
@@ -313,6 +315,7 @@ const content = {
       syncGroupSelectDailog: ['syncGroupSelectDailog'],
 
       initConstantObjData: ['initConstantObjData'],
+      recycleItem: ['recycleItem', 'doUiAction.getTableData'],
     }, // 额外uiAction { [key]: [action1, action2]}
     methods: {
       // ---------- CRUD覆盖 uiAction >>>>>>>>>>>> --------
@@ -331,6 +334,7 @@ const content = {
             { column: 'sourceTable', order: 'asc' },
           ];
         }
+        this.tableParams.where.rowStatus = '正常';
         const result = await window.jianghuAxios({
           data: {
             appData: {
@@ -362,6 +366,20 @@ const content = {
           enableMysqlTrigger: "开启",
         };
         this.createItemOrigin = _.cloneDeep(this.createItem);
+      },
+      async recycleItem({ item }) {
+        window.vtoast.loading(`${item.id} 移入回收站`);
+        await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'tableSyncConfig',
+              actionId: 'updateItem',
+              where: { id: item.id },
+              actionData: { rowStatus: '回收站' }
+            }
+          }
+        });
+        window.vtoast.success(`${item.id} 移入回收站`);
       },
       // ---------- <<<<<<<<<<< CRUD覆盖 uiAction ---------
 
