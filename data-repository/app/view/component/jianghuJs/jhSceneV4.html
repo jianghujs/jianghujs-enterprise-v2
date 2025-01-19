@@ -3,7 +3,7 @@
 <div class="jh-scene">
 <v-row class="ma-0">
   <!-- 场景列表 -->
-  <v-btn-toggle :value="currentSceneIndex" mandatory dense class="mr-md-2" color="success" @change="doUiAction('useScene', sceneList[$event])" > 
+  <v-btn-toggle :value="currentSceneIndex" mandatory dense :class="{'mr-md-2': showActionBtn}" color="success" @change="doUiAction('useScene', sceneList[$event])" > 
     <v-btn small v-for="scene, index in sceneList" :key="index"> {{scene.name}} </v-btn> 
   </v-btn-toggle>
   <!-- 新增场景按钮 -->
@@ -11,7 +11,7 @@
   <!-- 场景操作菜单 -->
   <v-menu offset-y v-model="isSceneOperationShown">
     <template v-slot:activator="{on, attrs}">
-      <v-btn-toggle dense color="white"> 
+      <v-btn-toggle v-if="showActionBtn" dense color="white"> 
         <v-btn small v-bind="attrs" v-on="on"><v-icon right small class="mx-0">mdi-chevron-down</v-icon></v-btn> 
       </v-btn-toggle>
     </template>
@@ -139,6 +139,10 @@ Vue.component('jh-scene', {
     currentSceneId: {
       type: String,
       default: null
+    },
+    showActionBtn: {
+      type: Boolean,
+      default: true
     }
   },
   data() {
@@ -241,15 +245,22 @@ Vue.component('jh-scene', {
       let localSceneList = localStorage.getItem(this.sceneListKey);
       if(localSceneList == null) localSceneList = '[]';
       localSceneList = JSON.parse(localSceneList);
-      console.log(localSceneList)
+      localSceneList = _.filter(localSceneList, function (sceneItem) {
+        return !sceneItem.system;
+      });
+      localSceneList = _.uniqBy([
+        ...this.defaultSceneList,
+        ...localSceneList
+      ], 'name');
       this.sceneList = localSceneList;
+      localStorage.setItem(this.sceneListKey, JSON.stringify(localSceneList))
       this.sceneCustomList = localSceneList.filter(item => !item.system);
     },
 
     // 使用默认场景
     async useDefaultScene() {
       let defaultScene = this.sceneList.find(item => item.default === true);
-      this.currentSceneIndex = this.sceneList.findIndex(item => item.id === defaultScene.id);
+      this.currentSceneIndex = this.sceneList.findIndex(item => item.id === defaultScene?.id);
       if (defaultScene) {
         this.useScene(defaultScene);
       }

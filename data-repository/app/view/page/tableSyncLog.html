@@ -260,6 +260,16 @@ new Vue({
           whereIn[fieldKey] = fieldValue;
         }
       }
+
+      let whereOrOptions = [];
+      if (this.keyword) {
+        if (!this.keywordFieldList || this.keywordFieldList.length === 0) {
+          console.warn('keywordFieldList is empty');
+        }
+        this.keywordFieldList.forEach(fieldKey => {
+          whereOrOptions.push([fieldKey, 'like', '%' + this.keyword.trim() + '%']);
+        });
+      }
       let orderBy = [{column: 'operationAt', order: 'desc'}];
 
       let limit = null;
@@ -275,7 +285,7 @@ new Vue({
       limit = this.tableOptions.itemsPerPage === -1 ? 10000 : this.tableOptions.itemsPerPage;
       offset = (this.tableOptions.page - 1) * limit;
 
-      this.tableParams = { where, whereLike, whereIn, limit, offset, orderBy };
+      this.tableParams = { where, whereLike, whereIn, limit, offset, orderBy, whereOrOptions };
     },
     // 准备请求参数-自定义
     prepareTableParams() {

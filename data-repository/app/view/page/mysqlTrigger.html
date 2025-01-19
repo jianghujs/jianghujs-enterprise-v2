@@ -230,6 +230,16 @@ new Vue({
           whereIn[fieldKey] = fieldValue;
         }
       }
+
+      let whereOrOptions = [];
+      if (this.keyword) {
+        if (!this.keywordFieldList || this.keywordFieldList.length === 0) {
+          console.warn('keywordFieldList is empty');
+        }
+        this.keywordFieldList.forEach(fieldKey => {
+          whereOrOptions.push([fieldKey, 'like', '%' + this.keyword.trim() + '%']);
+        });
+      }
       let orderBy = [
         {
           "column": "TRIGGER_SCHEMA",
@@ -244,7 +254,7 @@ new Vue({
       let limit = null;
       let offset = null;
 
-      this.tableParams = { where, whereLike, whereIn, limit, offset, orderBy };
+      this.tableParams = { where, whereLike, whereIn, limit, offset, orderBy, whereOrOptions };
     },
     // 准备请求参数-自定义
     prepareTableParams() {

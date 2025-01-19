@@ -12,6 +12,9 @@ module.exports = appInfo => {
   const appId = 'data-repository';
 
   return {
+    jianghuConfig: {
+      enableLoginCaptcha: true,
+    },
     triggerPrefix: 'jh',
     appId,
     appTitle: '数据中心',

@@ -23,7 +23,7 @@
         <v-col cols="12" xs="12" sm="12" md="8" xl="9" class="pl-md-2 mb-2 mb-md-0" :cols="12" :sm="6" :md="8" >
           <v-row class="jh-backend-form-container justify-end py-md-3" no-gutters>
             <div class="jh-backend-search-btn ml-2">
-              <v-btn class="elevation-0 float-right mt-2 mt-md-0" color="success" small @click="doUiAction('getTableData')">
+              <v-btn class="elevation-0 float-right mt-2 mt-sm-0" color="success" small @click="doUiAction('getTableData')">
                 查询
               </v-btn>
             </div>
@@ -146,7 +146,7 @@
         <!-- 抽屉内容 -->
 
             <!-- 抽屉内容form -->
-            <v-row class="mt-0 px-4 pb-4" >
+            <v-row class="mt-0 px-4 pb-4">
               <v-col cols="12" sm="12" md="3" >
                 <span class="jh-input-label"><span class="red--text text--accent-2 ml-1">* </span>同步-源库</span>
                 <v-autocomplete :items="constantObj.sourceDatabase" class="jh-v-input" dense single-line filled v-model="createItem.sourceDatabase" :rules="validationRules.requireRules"></v-autocomplete>
@@ -209,7 +209,7 @@
         <!-- 抽屉内容 -->
 
             <!-- 抽屉内容form -->
-            <v-row class="mt-0 px-4 pb-4" >
+            <v-row class="mt-0 px-4 pb-4">
               <v-col cols="12" sm="12" md="3" >
                 <span class="jh-input-label"><span class="red--text text--accent-2 ml-1">* </span>同步-源库</span>
                 <v-autocomplete :items="constantObj.sourceDatabase" class="jh-v-input" dense single-line filled v-model="updateItem.sourceDatabase" :rules="validationRules.requireRules"></v-autocomplete>
@@ -507,12 +507,22 @@ new Vue({
           whereIn[fieldKey] = fieldValue;
         }
       }
+
+      let whereOrOptions = [];
+      if (this.keyword) {
+        if (!this.keywordFieldList || this.keywordFieldList.length === 0) {
+          console.warn('keywordFieldList is empty');
+        }
+        this.keywordFieldList.forEach(fieldKey => {
+          whereOrOptions.push([fieldKey, 'like', '%' + this.keyword.trim() + '%']);
+        });
+      }
       let orderBy = [{column: 'operationAt', order: 'desc'}];
 
       let limit = null;
       let offset = null;
 
-      this.tableParams = { where, whereLike, whereIn, limit, offset, orderBy };
+      this.tableParams = { where, whereLike, whereIn, limit, offset, orderBy, whereOrOptions };
     },
     // 准备请求参数-自定义
     prepareTableParams() {
