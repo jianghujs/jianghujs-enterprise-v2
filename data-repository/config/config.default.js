@@ -12,10 +12,15 @@ module.exports = appInfo => {
   const appId = 'data-repository';
 
   return {
+    triggerPrefix: 'jh',
     jianghuConfig: {
       enableLoginCaptcha: true,
     },
-    triggerPrefix: 'jh',
+    schedule: {
+      syncTable: false,
+      syncTableRemote: false,
+      mergeTable: false,
+    },
     appId,
     appTitle: '数据中心',
     appLogo: `${appId}/public/img/logo.png`,
