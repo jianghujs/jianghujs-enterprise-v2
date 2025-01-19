@@ -30,12 +30,12 @@ const content = {
       }
     },
     {
-      actionId: "syncTable",
+      actionId: "doSyncTableByIdList",
       resourceType: "service",
-      desc: "✅数据库管理页-手动同步表",
+      desc: "✅数据库管理页-触发同步",
       resourceData: {
         service: "tableSync",
-        serviceFunction: "syncTable"
+        serviceFunction: "doSyncTableByIdList"
       }
     },
     {
@@ -69,7 +69,7 @@ const content = {
       cardAttrs: { class: 'rounded-lg elevation-0' },
       headActionList: [
         { tag: 'v-btn', value: '新增同步表', attrs: { color: 'success', class: 'mr-2', '@click': 'doUiAction("startCreateItem")' }, quickAttrs: ['small'] },
-        { tag: 'v-btn', value: '全部同步', attrs: { color: 'success', class: 'mr-2', '@click': "doUiAction('manualSyncTable', { idList: tableData.map(item => item.id) })" }, quickAttrs: ['small'] },
+        { tag: 'v-btn', value: '全部同步', attrs: { color: 'success', class: 'mr-2', '@click': "doUiAction('doSyncTableByIdList', { idList: tableData.map(item => item.id) })" }, quickAttrs: ['small'] },
         { tag: 'v-spacer' },
         /*html*/`
         <div class="v-btn-toggle">
@@ -106,7 +106,7 @@ const content = {
             <v-chip small :class="item.syncStatus == '正常' ? 'jh-status-tag-success' : 'jh-status-tag-error'"> 
               {{ item.syncStatus }} 
             </v-chip>
-            <span role="button" @click="doUiAction('manualSyncTable', { idList: [item.id] })" title="同步" class="translate-y-[2px]">
+            <span role="button" @click="doUiAction('doSyncTableByIdList', { idList: [item.id] })" title="同步" class="translate-y-[2px]">
               <v-icon size="18" color="success">mdi-sync</v-icon>
             </span>
           </div>
@@ -306,8 +306,8 @@ const content = {
             { text: "定时检查", value: "syncTimeSlot", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
             { text: "实时同步", value: "enableMysqlTrigger", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
             { text: "同步状态", value: "syncStatus", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-            { text: "最后一次同步检查", value: "lastSyncTime", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-            { text: "最后一次同步详情", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+            { text: "最后一次数据同步", value: "lastSyncTime", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+            { text: "最后一次数据详情", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
             { text: "操作", value: "action", type: "action", width: 80, align: "center", class: "fixed", cellClass: "fixed text-truncate max-width-300" },
           ]
         }
@@ -320,8 +320,8 @@ const content = {
           { text: "定时检查", value: "syncTimeSlot", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
           { text: "实时同步", value: "enableMysqlTrigger", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
           { text: "同步状态", value: "syncStatus", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-          { text: "最后一次同步检查", value: "lastSyncTime", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-          { text: "最后一次同步详情", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+          { text: "最后一次数据同步", value: "lastSyncTime", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+          { text: "最后一次数据详情", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
           { text: "操作", value: "action", type: "action", width: 80, align: "center", class: "fixed", cellClass: "fixed text-truncate max-width-300" },
         ];
       }
@@ -332,7 +332,7 @@ const content = {
       await this.doUiAction('getTableData');
     },
     doUiAction: {
-      manualSyncTable: ['manualSyncTable', 'doUiAction.getTableData'],
+      doSyncTableByIdList: ['doSyncTableByIdList', 'doUiAction.getTableData'],
       syncGroupSelectDailog: ['syncGroupSelectDailog'],
 
       initConstantObjData: ['initConstantObjData'],
@@ -406,13 +406,13 @@ const content = {
 
 
       // ---------- 同步相关 uiAction >>>>>>>>>>>> --------
-      async manualSyncTable({ idList }) {
+      async doSyncTableByIdList({ idList }) {
         window.vtoast.loading({ message: `${idList.length}个表同步`, time: -1 });
         await window.jianghuAxios({
           data: {
             appData: {
               pageId: 'tableSyncConfig',
-              actionId: 'syncTable',
+              actionId: 'doSyncTableByIdList',
               actionData: {
                 idList,
               }

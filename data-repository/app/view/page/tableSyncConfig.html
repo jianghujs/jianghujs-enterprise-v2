@@ -42,7 +42,7 @@
               <v-btn color="success" class="mr-2" @click="doUiAction('startCreateItem')" small>
             新增同步表
           </v-btn>
-              <v-btn color="success" class="mr-2" @click="doUiAction('manualSyncTable', { idList: tableData.map(item => item.id) })" small>
+              <v-btn color="success" class="mr-2" @click="doUiAction('doSyncTableByIdList', { idList: tableData.map(item => item.id) })" small>
             全部同步
           </v-btn>
               <v-spacer ></v-spacer>
@@ -95,7 +95,7 @@
             <v-chip small :class="item.syncStatus == '正常' ? 'jh-status-tag-success' : 'jh-status-tag-error'"> 
               {{ item.syncStatus }} 
             </v-chip>
-            <span role="button" @click="doUiAction('manualSyncTable', { idList: [item.id] })" title="同步" class="translate-y-[2px]">
+            <span role="button" @click="doUiAction('doSyncTableByIdList', { idList: [item.id] })" title="同步" class="translate-y-[2px]">
               <v-icon size="18" color="success">mdi-sync</v-icon>
             </span>
           </div>
@@ -458,8 +458,8 @@ new Vue({
           { text: "定时检查", value: "syncTimeSlot", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
           { text: "实时同步", value: "enableMysqlTrigger", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
           { text: "同步状态", value: "syncStatus", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-          { text: "最后一次同步检查", value: "lastSyncTime", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-          { text: "最后一次同步详情", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+          { text: "最后一次数据同步", value: "lastSyncTime", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+          { text: "最后一次数据详情", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
           { text: "操作", value: "action", type: "action", width: 80, align: "center", class: "fixed", cellClass: "fixed text-truncate max-width-300" },
         ]
       }
@@ -472,8 +472,8 @@ new Vue({
         { text: "定时检查", value: "syncTimeSlot", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
         { text: "实时同步", value: "enableMysqlTrigger", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
         { text: "同步状态", value: "syncStatus", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-        { text: "最后一次同步检查", value: "lastSyncTime", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-        { text: "最后一次同步详情", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+        { text: "最后一次数据同步", value: "lastSyncTime", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+        { text: "最后一次数据详情", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
         { text: "操作", value: "action", type: "action", width: 80, align: "center", class: "fixed", cellClass: "fixed text-truncate max-width-300" },
       ];
     },
@@ -517,8 +517,8 @@ new Vue({
             await this.closeUpdateDrawer(uiActionData);
             await this.doUiAction('getTableData', uiActionData);
             break;
-          case 'manualSyncTable':
-            await this.manualSyncTable(uiActionData);
+          case 'doSyncTableByIdList':
+            await this.doSyncTableByIdList(uiActionData);
             await this.doUiAction('getTableData', uiActionData);
             break;
           case 'syncGroupSelectDailog':
@@ -802,13 +802,13 @@ new Vue({
       });
       window.vtoast.success(`${item.id} 移入回收站`);
     },
-    async manualSyncTable({ idList }) {
+    async doSyncTableByIdList({ idList }) {
       window.vtoast.loading({ message: `${idList.length}个表同步`, time: -1 });
       await window.jianghuAxios({
         data: {
           appData: {
             pageId: 'tableSyncConfig',
-            actionId: 'syncTable',
+            actionId: 'doSyncTableByIdList',
             actionData: {
               idList,
             }

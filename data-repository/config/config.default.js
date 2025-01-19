@@ -17,9 +17,9 @@ module.exports = appInfo => {
       enableLoginCaptcha: true,
     },
     schedule: {
-      syncTable: false,
-      syncTableRemote: false,
-      mergeTable: false,
+      tableSyncSchedule: false,
+      tableSyncRemoteSchedule: false,
+      mergeTableSchedule: false,
     },
     appId,
     appTitle: '数据中心',
