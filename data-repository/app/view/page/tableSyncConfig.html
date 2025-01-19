@@ -179,41 +179,35 @@
 
             <!-- 抽屉内容form -->
             <v-row class="mt-0 px-4 pb-4">
-              <v-col cols="12" sm="12" md="3" >
-                <span class="jh-input-label">同步组</span>
-                <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.syncGroup" :rules="validationRules.requireRules"></v-text-field>
+              <v-col cols="12" sm="12" md="3" :md="4">
+                <span class="jh-input-label">同步-源库</span>
+                <v-autocomplete :items="constantObj.databaseList" item-text="sourceDatabase" item-value="sourceDatabase" class="jh-v-input" dense single-line filled v-model="createItem.sourceDatabase" :rules="validationRules.requireRules"></v-autocomplete>
               </v-col>
-              <v-col cols="12" sm="12" md="3" >
-                <span class="jh-input-label">源库</span>
-                <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.sourceDatabase" :rules="validationRules.requireRules"></v-text-field>
+              <v-col cols="12" sm="12" md="3" :md="4">
+                <span class="jh-input-label">同步-源表 <span role="button" @click="initConstantObjData({ showTip: true })" class="success--text ml-1">查询<v-icon size="18" color="success">mdi-sync</v-icon></span></span>
+                <v-autocomplete :items="constantObj.databaseMap[createItem.sourceDatabase]||[]" item-text="sourceTable" item-value="sourceTable" class="jh-v-input" dense single-line filled v-model="createItem.sourceTable" :rules="validationRules.requireRules"></v-autocomplete>
               </v-col>
-              <v-col cols="12" sm="12" md="3" >
-                <span class="jh-input-label">源表</span>
-                <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.sourceTable" :rules="validationRules.requireRules"></v-text-field>
+              <v-col cols="12" sm="12" md="3" :md="12"class="pa-0">
+                <div ></div>
               </v-col>
-              <v-col cols="12" sm="12" md="3" >
-                <span class="jh-input-label">目标库</span>
-                <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.targetDatabase" :rules="validationRules.requireRules"></v-text-field>
+              <v-col cols="12" sm="12" md="3" :md="4">
+                <span class="jh-input-label">同步-目标库</span>
+                <v-autocomplete :items="constantObj.databaseList" item-text="sourceDatabase" item-value="sourceDatabase" class="jh-v-input" dense single-line filled v-model="createItem.targetDatabase" :rules="validationRules.requireRules"></v-autocomplete>
               </v-col>
-              <v-col cols="12" sm="12" md="3" >
-                <span class="jh-input-label">目标表</span>
+              <v-col cols="12" sm="12" md="3" :md="4">
+                <span class="jh-input-label">同步-目标表</span>
                 <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.targetTable" :rules="validationRules.requireRules"></v-text-field>
               </v-col>
-              <v-col cols="12" sm="12" md="3" >
+              <v-col cols="12" sm="12" md="3" :md="12"class="pa-0">
+                <div ></div>
+              </v-col>
+              <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">定时检查</span>
-                <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.syncTimeSlot" :rules="validationRules.requireRules"></v-text-field>
+                <v-select :items="constantObj.syncTimeSlot" item-text="text" item-value="value" class="jh-v-input" dense single-line filled v-model="createItem.syncTimeSlot" :rules="validationRules.requireRules"></v-select>
               </v-col>
-              <v-col cols="12" sm="12" md="3" >
-                <span class="jh-input-label">Trigger实时同步</span>
-                <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.enableMysqlTrigger" :rules="validationRules.requireRules"></v-text-field>
-              </v-col>
-              <v-col cols="12" sm="12" md="3" >
-                <span class="jh-input-label">同步状态</span>
-                <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.syncDesc" :rules="validationRules.requireRules"></v-text-field>
-              </v-col>
-              <v-col cols="12" sm="12" md="3" >
-                <span class="jh-input-label">同步触发时间</span>
-                <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.lastSyncTime" :rules="validationRules.requireRules"></v-text-field>
+              <v-col cols="12" sm="12" md="3" :md="4">
+                <span class="jh-input-label">实时同步</span>
+                <v-checkbox true-value="开启" false-value="关闭" class="jh-v-input" dense single-line filled v-model="createItem.enableMysqlTrigger" dense></v-checkbox>
               </v-col>
             </v-row>
 
@@ -248,6 +242,13 @@
 
             <!-- 抽屉内容form -->
             <v-row class="mt-0 px-4 pb-4">
+              <v-col cols="12" sm="12" md="3" :md="4">
+                <span class="jh-input-label">同步组</span>
+                <v-combobox :items="constantObj.syncGroup" item-text="syncGroup" item-value="syncGroup" :return-object="false" class="jh-v-input" dense single-line filled v-model="updateItem.syncGroup" :rules="validationRules.requireRules"></v-combobox>
+              </v-col>
+              <v-col cols="12" sm="12" md="3" :md="12"class="pa-0">
+                <div ></div>
+              </v-col>
               <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">同步-源库</span>
                 <v-autocomplete :items="constantObj.databaseList" item-text="sourceDatabase" item-value="sourceDatabase" class="jh-v-input" dense single-line filled v-model="updateItem.sourceDatabase" :rules="validationRules.requireRules"></v-autocomplete>
@@ -353,6 +354,12 @@ new Vue({
       viewMode: [
         "同步组模式",
         "源库模式"
+      ],
+      syncGroup: [
+        "Enterprise",
+        "HR",
+        "USER",
+        "test"
       ],
       syncTimeSlot: [
         {
@@ -479,8 +486,8 @@ new Vue({
   },
   async created() {
     this.viewMode = window.localStorage.getItem(`${window.appInfo.appId}_${this.pageId}_viewMode`) || '同步组模式';
-    await this.doUiAction('getTableData');
     this.doUiAction('initConstantObjData', {});
+    await this.doUiAction('getTableData');
   },
   methods: {
     async doUiAction(uiActionId, uiActionData) {
@@ -628,6 +635,7 @@ new Vue({
     // ---------- 新增数据 uiAction >>>>>>>>>> --------
     async prepareCreateFormData() {
       this.createItem = {
+        enableMysqlTrigger: "开启",
       };
       this.createItemOrigin = _.cloneDeep(this.createItem);
     },
@@ -648,15 +656,12 @@ new Vue({
     prepareDoCreateItem() {
       const {id, ...data} = this.createItem;
       this.createActionData = {
-        syncGroup: data.syncGroup,
         sourceDatabase: data.sourceDatabase,
         sourceTable: data.sourceTable,
         targetDatabase: data.targetDatabase,
         targetTable: data.targetTable,
         syncTimeSlot: data.syncTimeSlot,
         enableMysqlTrigger: data.enableMysqlTrigger,
-        syncDesc: data.syncDesc,
-        lastSyncTime: data.lastSyncTime,
       };
     },
     async doCreateItem() {
@@ -705,6 +710,7 @@ new Vue({
       const {id, ...data} = this.updateItem;
       this.updateItemId = id;
       this.updateActionData = {
+        syncGroup: data.syncGroup,
         sourceDatabase: data.sourceDatabase,
         sourceTable: data.sourceTable,
         targetDatabase: data.targetDatabase,
@@ -814,6 +820,13 @@ new Vue({
       });
       this.tableData = tableData;
     },
+    async prepareCreateFormData() {
+      this.createItem = {
+        targetDatabase: this.defaultTargetDatabase,
+        enableMysqlTrigger: "开启",
+      };
+      this.createItemOrigin = _.cloneDeep(this.createItem);
+    },
     async manualSyncTable({ idList }) {
       window.vtoast.loading({ message: `${idList.length}个表同步`, time: -1 });
       await window.jianghuAxios({
@@ -835,7 +848,7 @@ new Vue({
       await window.jhConfirmDailog({ 
         title: dailogTitle,
         data: { 
-          syncGroupList: ['Enterprise', 'HR', 'USER', 'test'],
+          syncGroupList: this.constantObj.syncGroup,
           syncGroupSelect: item.syncGroup,
         },
         htmlTemplate: /*html*/`

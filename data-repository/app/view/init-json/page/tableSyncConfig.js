@@ -115,19 +115,32 @@ const content = {
           label: "新增同步表", 
           type: "form", 
           formItemList: [
-            /**
-            * colAtts: { cols: 12, md: 3 } // 表单父容器栅格设置
-            * attrs: {} // 表单项属性
-            */
-            { label: "同步组", model: "syncGroup", tag: "v-text-field", rules: "validationRules.requireRules" },
-            { label: "源库", model: "sourceDatabase", tag: "v-text-field", rules: "validationRules.requireRules" },
-            { label: "源表", model: "sourceTable", tag: "v-text-field", rules: "validationRules.requireRules" },
-            { label: "目标库", model: "targetDatabase", tag: "v-text-field", rules: "validationRules.requireRules" },
-            { label: "目标表", model: "targetTable", tag: "v-text-field", rules: "validationRules.requireRules" },
-            { label: "定时检查", model: "syncTimeSlot", tag: "v-text-field", rules: "validationRules.requireRules" },
-            { label: "Trigger实时同步", model: "enableMysqlTrigger", tag: "v-text-field", rules: "validationRules.requireRules" },
-            { label: "同步状态", model: "syncDesc", tag: "v-text-field", rules: "validationRules.requireRules" },
-            { label: "同步触发时间", model: "lastSyncTime", tag: "v-text-field", rules: "validationRules.requireRules" },
+            { label: "同步-源库", model: "sourceDatabase", tag: "v-autocomplete", rules: "validationRules.requireRules", 
+              attrs: { ':items': 'constantObj.databaseList', 'item-text': 'sourceDatabase', 'item-value': 'sourceDatabase'},
+              colAttrs: { md: 4 },
+            },
+            { label: '同步-源表 <span role="button" @click="initConstantObjData({ showTip: true })" class="success--text ml-1">查询<v-icon size="18" color="success">mdi-sync</v-icon></span>', 
+              model: "sourceTable", tag: "v-autocomplete", rules: "validationRules.requireRules", 
+              attrs: { ':items': 'constantObj.databaseMap[createItem.sourceDatabase]||[]', 'item-text': 'sourceTable', 'item-value': 'sourceTable'},
+              colAttrs: { md: 4 },
+            },
+            { tag: 'div', colAttrs: { md: 12, class: 'pa-0'} },
+            { label: "同步-目标库", model: "targetDatabase", tag: "v-autocomplete", rules: "validationRules.requireRules", 
+              attrs: { ':items': 'constantObj.databaseList', 'item-text': 'sourceDatabase', 'item-value': 'sourceDatabase'},
+              colAttrs: { md: 4 },
+            },
+            { label: "同步-目标表", model: "targetTable", tag: "v-text-field", rules: "validationRules.requireRules", 
+              colAttrs: { md: 4 },
+            },
+            { tag: 'div', colAttrs: { md: 12, class: 'pa-0'} },
+            { label: "定时检查", model: "syncTimeSlot", tag: "v-select", rules: "validationRules.requireRules", 
+              attrs: { ':items': 'constantObj.syncTimeSlot', 'item-text': 'text', 'item-value': 'value' },
+              colAttrs: { md: 4 },
+            },
+            { label: "实时同步", model: "enableMysqlTrigger", default: "开启", tag: "v-checkbox", 
+              attrs: { trueValue: "开启", falseValue: "关闭" }, quickAttrs: ['dense'],
+              colAttrs: { md: 4 },
+            },
           ], 
           action: [{
             tag: "v-btn",
@@ -156,6 +169,11 @@ const content = {
           label: "编辑", 
           type: "form", 
           formItemList: [
+            { label: "同步组", model: "syncGroup", tag: "v-combobox", rules: "validationRules.requireRules", 
+              attrs: { ':items': 'constantObj.syncGroup', 'item-text': 'syncGroup', 'item-value': 'syncGroup', "return-object": false},
+              colAttrs: { md: 4 },
+            },
+            { tag: 'div', colAttrs: { md: 12, class: 'pa-0'} },
             { label: "同步-源库", model: "sourceDatabase", tag: "v-autocomplete", rules: "validationRules.requireRules", 
               attrs: { ':items': 'constantObj.databaseList', 'item-text': 'sourceDatabase', 'item-value': 'sourceDatabase'},
               colAttrs: { md: 4 },
@@ -178,7 +196,7 @@ const content = {
               attrs: { ':items': 'constantObj.syncTimeSlot', 'item-text': 'text', 'item-value': 'value' },
               colAttrs: { md: 4 },
             },
-            { label: "实时同步", model: "enableMysqlTrigger", default: true, tag: "v-checkbox", 
+            { label: "实时同步", model: "enableMysqlTrigger", default: "开启", tag: "v-checkbox", 
               attrs: { trueValue: "开启", falseValue: "关闭" }, quickAttrs: ['dense'],
               colAttrs: { md: 4 },
             },
@@ -207,6 +225,7 @@ const content = {
       viewMode: null,
       constantObj: {
         viewMode: ["同步组模式", "源库模式"],
+        syncGroup: ['Enterprise', 'HR', 'USER', 'test'],
         syncTimeSlot: [
           { text: '2分钟', value: 2 }, 
           { text: '5分钟', value: 5 }, 
@@ -286,8 +305,8 @@ const content = {
     },
     async created() {
       this.viewMode = window.localStorage.getItem(`${window.appInfo.appId}_${this.pageId}_viewMode`) || '同步组模式';
-      await this.doUiAction('getTableData');
       this.doUiAction('initConstantObjData', {});
+      await this.doUiAction('getTableData');
     },
     doUiAction: {
       manualSyncTable: ['manualSyncTable', 'doUiAction.getTableData'],
@@ -337,6 +356,13 @@ const content = {
         });
         this.tableData = tableData;
       },
+      async prepareCreateFormData() {
+        this.createItem = {
+          targetDatabase: this.defaultTargetDatabase,
+          enableMysqlTrigger: "开启",
+        };
+        this.createItemOrigin = _.cloneDeep(this.createItem);
+      },
       // ---------- <<<<<<<<<<< CRUD覆盖 uiAction ---------
 
 
@@ -362,7 +388,7 @@ const content = {
         await window.jhConfirmDailog({ 
           title: dailogTitle,
           data: { 
-            syncGroupList: ['Enterprise', 'HR', 'USER', 'test'],
+            syncGroupList: this.constantObj.syncGroup,
             syncGroupSelect: item.syncGroup,
           },
           htmlTemplate: /*html*/`
