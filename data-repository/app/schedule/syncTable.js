@@ -19,6 +19,7 @@ module.exports = app => {
       const connection = ctx.app.config.knex.client.connection;
       const syncList = [
         { sourceTable: "_resource", targetTable: "_resource_01", sourceDatabase: databaseName, targetDatabase: databaseName, },
+        { sourceTable: "_directory_user_session", targetTable: "_resource_02", sourceDatabase: 'jh_enterprise_v2_directory', targetDatabase: databaseName, },
       ];
       logger.warn('[targetTable] start');
       for (const syncObj of syncList) {
@@ -49,28 +50,32 @@ async function doTargetTableDDL({
   const tableType = tableTypeResult[0][0].TABLE_TYPE;
   if (tableType === 'VIEW') {
     targetTableDDLExcept = getCreateTableSqlFromView({ targetTable, columnsDefinition, viewDefinition });
+    targetTableDDLExcept = targetTableDDLExcept
+      .replace(/AUTO_INCREMENT=\d+ ?/, '')
+      .replace(/\n\s*/g, '');
   } 
 
   if(tableType === "BASE TABLE"){
     const sourceTableDDLResult = await knex.raw(`SHOW CREATE TABLE ${sourceTable};`);
     const sourceTableDDL = sourceTableDDLResult[0][0]['Create Table'];
-    targetTableDDLExcept = sourceTableDDL && sourceTableDDL
+    targetTableDDLExcept = sourceTableDDL
       .replace(`CREATE TABLE \`${sourceTable}\``, `CREATE TABLE \`${targetTable}\``)
-      .replace(/AUTO_INCREMENT=\d+ ?/, '').replace(/\n\s*/g, '');
+      .replace(/AUTO_INCREMENT=\d+ ?/, '')
+      .replace(/\n\s*/g, '');
   }
 
   const tableExists = await knex.schema.hasTable(targetTable);
   if (tableExists) {
     const targetTableDDLResult = await knex.raw(`SHOW CREATE TABLE ${targetTable};`);
     targetTableDDL = targetTableDDLResult[0][0]['Create Table']
-      .replace(/AUTO_INCREMENT=\d+ ?/, '').replace(/\n\s*/g, '');
+      .replace(/AUTO_INCREMENT=\d+ ?/, '')
+      .replace(/\n\s*/g, '');
   }
 
   if(!targetTableDDLExcept){
     logger.error(`[targetTableDDL] ${sourceTable} 不存在`);
     return;
   }
-
 
   if (targetTableDDL !== targetTableDDLExcept) {
     logger.warn('[targetTable]', targetTable, 'DDL有改动, 重新生成同步表');
