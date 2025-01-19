@@ -111,6 +111,9 @@ const content = {
             </span>
           </div>
         </template>
+        <template v-slot:item.lastSyncInfo="{ item }">
+          <span :title="item.lastSyncInfo">{{ item.lastSyncInfo }}</span>
+        </template>
         `
       ],
       rowActionList: [

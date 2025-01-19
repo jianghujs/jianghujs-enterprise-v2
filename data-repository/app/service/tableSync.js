@@ -83,11 +83,13 @@ class TableSyncService extends Service {
     logger.warn('[doSyncTableByIdList] start', { tableCount });
     const startTime = new Date().getTime();
     for (const [index, syncObj] of syncList.entries()) { 
+      const { id } = syncObj;
       try {
         await this.doTargetTableDDL(syncObj);
         await this.doSyncTable(syncObj);
         logger.info(`[doSyncTableByIdList] ${index + 1}/${tableCount} ID:${syncObj.id} 成功`);
       } catch (error) {
+        await jianghuKnex('_table_sync_config').where({ id }).update({ syncStatus: '失败', lastSyncTime: dayjs().format(), lastSyncInfo: error.message });
         logger.error(`[doSyncTableByIdList] ID:${syncObj.id} 失败`, error);
       }
     }
@@ -106,7 +108,7 @@ class TableSyncService extends Service {
     let targetTableDDLExcept = null;
     const tableTypeResult = await knex.raw(`SELECT TABLE_TYPE FROM INFORMATION_SCHEMA.TABLES 
       WHERE TABLE_SCHEMA = '${sourceDatabase}' AND TABLE_NAME = '${sourceTable}';`);
-    const tableType = tableTypeResult[0][0].TABLE_TYPE;
+    const tableType = tableTypeResult[0]?.[0]?.TABLE_TYPE;
     if (tableType === 'VIEW') {
       targetTableDDLExcept = getCreateTableSqlFromView({ targetTable, columnsDefinition, viewDefinition });
       targetTableDDLExcept = targetTableDDLExcept
@@ -127,7 +129,7 @@ class TableSyncService extends Service {
 
     if(!targetTableDDLExcept){
       logger.error(`[syncTable.targetTableDDL] ${sourceDatabase}.${sourceTable} 不存在`);
-      return;
+      throw new Error(`${sourceDatabase}.${sourceTable} 源表不存在` );
     }
 
     const tableExists = await knex.schema.hasTable(targetTable);
