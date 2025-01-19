@@ -180,6 +180,18 @@
             <!-- 抽屉内容form -->
             <v-row class="mt-0 px-4 pb-4">
               <v-col cols="12" sm="12" md="3" :md="4">
+                <span class="jh-input-label">同步组</span>
+                <v-combobox :items="constantObj.syncGroup" item-text="syncGroup" item-value="syncGroup" :return-object="false" class="jh-v-input" dense single-line filled v-model="createItem.syncGroup"></v-combobox>
+              </v-col>
+              <v-col cols="12" sm="12" md="3" :md="4">
+                <span class="jh-input-label">定时检查</span>
+                <v-select :items="constantObj.syncTimeSlot" item-text="text" item-value="value" class="jh-v-input" dense single-line filled v-model="createItem.syncTimeSlot" :rules="validationRules.requireRules"></v-select>
+              </v-col>
+              <v-col cols="12" sm="12" md="3" :md="4">
+                <span class="jh-input-label">实时同步</span>
+                <v-checkbox true-value="开启" false-value="关闭" class="pt-0 mt-0 h-[25px]" dense single-line filled v-model="createItem.enableMysqlTrigger" dense></v-checkbox>
+              </v-col>
+              <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">同步-源库</span>
                 <v-autocomplete :items="constantObj.databaseList" item-text="sourceDatabase" item-value="sourceDatabase" class="jh-v-input" dense single-line filled v-model="createItem.sourceDatabase" :rules="validationRules.requireRules"></v-autocomplete>
               </v-col>
@@ -197,17 +209,6 @@
               <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">同步-目标表</span>
                 <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.targetTable" :rules="validationRules.requireRules"></v-text-field>
-              </v-col>
-              <v-col cols="12" sm="12" md="3" :md="12"class="pa-0">
-                <div ></div>
-              </v-col>
-              <v-col cols="12" sm="12" md="3" :md="4">
-                <span class="jh-input-label">定时检查</span>
-                <v-select :items="constantObj.syncTimeSlot" item-text="text" item-value="value" class="jh-v-input" dense single-line filled v-model="createItem.syncTimeSlot" :rules="validationRules.requireRules"></v-select>
-              </v-col>
-              <v-col cols="12" sm="12" md="3" :md="4">
-                <span class="jh-input-label">实时同步</span>
-                <v-checkbox true-value="开启" false-value="关闭" class="jh-v-input" dense single-line filled v-model="createItem.enableMysqlTrigger" dense></v-checkbox>
               </v-col>
             </v-row>
 
@@ -244,10 +245,15 @@
             <v-row class="mt-0 px-4 pb-4">
               <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">同步组</span>
-                <v-combobox :items="constantObj.syncGroup" item-text="syncGroup" item-value="syncGroup" :return-object="false" class="jh-v-input" dense single-line filled v-model="updateItem.syncGroup" :rules="validationRules.requireRules"></v-combobox>
+                <v-combobox :items="constantObj.syncGroup" item-text="syncGroup" item-value="syncGroup" :return-object="false" class="jh-v-input" dense single-line filled v-model="updateItem.syncGroup"></v-combobox>
               </v-col>
-              <v-col cols="12" sm="12" md="3" :md="12"class="pa-0">
-                <div ></div>
+              <v-col cols="12" sm="12" md="3" :md="4">
+                <span class="jh-input-label">定时检查</span>
+                <v-select :items="constantObj.syncTimeSlot" item-text="text" item-value="value" class="jh-v-input" dense single-line filled v-model="updateItem.syncTimeSlot" :rules="validationRules.requireRules"></v-select>
+              </v-col>
+              <v-col cols="12" sm="12" md="3" :md="4">
+                <span class="jh-input-label">实时同步</span>
+                <v-checkbox true-value="开启" false-value="关闭" class="pt-0 mt-0 h-[25px]" dense single-line filled v-model="updateItem.enableMysqlTrigger" dense></v-checkbox>
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">同步-源库</span>
@@ -267,17 +273,6 @@
               <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">同步-目标表</span>
                 <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.targetTable" :rules="validationRules.requireRules"></v-text-field>
-              </v-col>
-              <v-col cols="12" sm="12" md="3" :md="12"class="pa-0">
-                <div ></div>
-              </v-col>
-              <v-col cols="12" sm="12" md="3" :md="4">
-                <span class="jh-input-label">定时检查</span>
-                <v-select :items="constantObj.syncTimeSlot" item-text="text" item-value="value" class="jh-v-input" dense single-line filled v-model="updateItem.syncTimeSlot" :rules="validationRules.requireRules"></v-select>
-              </v-col>
-              <v-col cols="12" sm="12" md="3" :md="4">
-                <span class="jh-input-label">实时同步</span>
-                <v-checkbox true-value="开启" false-value="关闭" class="jh-v-input" dense single-line filled v-model="updateItem.enableMysqlTrigger" dense></v-checkbox>
               </v-col>
             </v-row>
 
@@ -652,12 +647,13 @@ new Vue({
     prepareDoCreateItem() {
       const {id, ...data} = this.createItem;
       this.createActionData = {
+        syncGroup: data.syncGroup,
+        syncTimeSlot: data.syncTimeSlot,
+        enableMysqlTrigger: data.enableMysqlTrigger,
         sourceDatabase: data.sourceDatabase,
         sourceTable: data.sourceTable,
         targetDatabase: data.targetDatabase,
         targetTable: data.targetTable,
-        syncTimeSlot: data.syncTimeSlot,
-        enableMysqlTrigger: data.enableMysqlTrigger,
       };
     },
     async doCreateItem() {
@@ -707,12 +703,12 @@ new Vue({
       this.updateItemId = id;
       this.updateActionData = {
         syncGroup: data.syncGroup,
+        syncTimeSlot: data.syncTimeSlot,
+        enableMysqlTrigger: data.enableMysqlTrigger,
         sourceDatabase: data.sourceDatabase,
         sourceTable: data.sourceTable,
         targetDatabase: data.targetDatabase,
         targetTable: data.targetTable,
-        syncTimeSlot: data.syncTimeSlot,
-        enableMysqlTrigger: data.enableMysqlTrigger,
       };
     },
     async doUpdateItem() {
@@ -789,6 +785,7 @@ new Vue({
       this.createItem = {
         targetDatabase: this.defaultTargetDatabase,
         enableMysqlTrigger: "开启",
+        syncTimeSlot: 10,
       };
       this.createItemOrigin = _.cloneDeep(this.createItem);
     },
@@ -798,9 +795,8 @@ new Vue({
         data: {
           appData: {
             pageId: 'tableSyncConfig',
-            actionId: 'updateItem',
-            where: { id: item.id },
-            actionData: { rowStatus: '回收站' }
+            actionId: 'recycleTableSyncConfig',
+            actionData: { id: item.id }
           }
         }
       });

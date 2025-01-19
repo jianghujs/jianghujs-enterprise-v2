@@ -5,28 +5,48 @@ const content = {
     {
       actionId: "selectItemList",
       resourceType: "sql",
-      desc: "✅查询列表",
+      desc: "✅数据库管理页-查询同步表",
       resourceData: { table: "_table_sync_config", operation: "select" }
     },
     {
       actionId: "insertItem",
       resourceType: "sql",
-      // resourceHook: { before: [{service:"common",serviceFunction:"generateBizIdOfBeforeHook"}] },
-      desc: "✅添加",
-      resourceData: { table: "_table_sync_config", operation: "jhInsert" }
+      desc: "✅数据库管理页-创建同步表",
+      resourceData: { table: "_table_sync_config", operation: "insert" }
     },
     {
       actionId: "updateItem",
       resourceType: "sql",
-      desc: "✅更新",
-      resourceData: { table: "_table_sync_config", operation: "jhUpdate" }
+      desc: "✅数据库管理页-更新同步表",
+      resourceData: { table: "_table_sync_config", operation: "update" }
     },
-    // {
-    //   actionId: "deleteItem",
-    //   resourceType: "sql",
-    //   desc: "✅删除",
-    //   resourceData: { table: "_table_sync_config", operation: "jhDelete" }
-    // }
+    {
+      actionId: "selectSourceDatabase",
+      resourceType: "service",
+      desc: "✅数据库管理页-查询源数据库列表",
+      resourceData: {
+        service: "tableSync",
+        serviceFunction: "selectSourceDatabase"
+      }
+    },
+    {
+      actionId: "syncTable",
+      resourceType: "service",
+      desc: "✅数据库管理页-手动同步表",
+      resourceData: {
+        service: "tableSync",
+        serviceFunction: "syncTable"
+      }
+    },
+    {
+      actionId: "recycleTableSyncConfig",
+      resourceType: "service",
+      desc: "✅数据库管理页-同步表回收站",
+      resourceData: {
+        service: "tableSync",
+        serviceFunction: "recycleTableSyncConfig"
+      }
+    }
   ], // { actionId: '', resourceType: '', resourceData: {}, resourceHook: {}, desc: '' }
   headContent: [
     { tag: 'jh-page-title', value: "<$ ctx.packagePage.pageName $>", attrs: { cols: 12, sm: 6, md:4 }, helpBtn: true, slot: [] },
@@ -115,6 +135,18 @@ const content = {
           label: "新增同步表", 
           type: "form", 
           formItemList: [
+            { label: "同步组", model: "syncGroup", tag: "v-combobox", 
+              attrs: { ':items': 'constantObj.syncGroup', 'item-text': 'syncGroup', 'item-value': 'syncGroup', "return-object": false},
+              colAttrs: { md: 4 },
+            },
+            { label: "定时检查", model: "syncTimeSlot", tag: "v-select", rules: "validationRules.requireRules", 
+              attrs: { ':items': 'constantObj.syncTimeSlot', 'item-text': 'text', 'item-value': 'value' },
+              colAttrs: { md: 4 },
+            },
+            { label: "实时同步", model: "enableMysqlTrigger", default: "开启", tag: "v-checkbox", 
+              attrs: { trueValue: "开启", falseValue: "关闭","class": "pt-0 mt-0 h-[25px]" }, quickAttrs: ['dense'],
+              colAttrs: { md: 4 },
+            },
             { label: "同步-源库", model: "sourceDatabase", tag: "v-autocomplete", rules: "validationRules.requireRules", 
               attrs: { ':items': 'constantObj.databaseList', 'item-text': 'sourceDatabase', 'item-value': 'sourceDatabase'},
               colAttrs: { md: 4 },
@@ -130,15 +162,6 @@ const content = {
               colAttrs: { md: 4 },
             },
             { label: "同步-目标表", model: "targetTable", tag: "v-text-field", rules: "validationRules.requireRules", 
-              colAttrs: { md: 4 },
-            },
-            { tag: 'div', colAttrs: { md: 12, class: 'pa-0'} },
-            { label: "定时检查", model: "syncTimeSlot", tag: "v-select", rules: "validationRules.requireRules", 
-              attrs: { ':items': 'constantObj.syncTimeSlot', 'item-text': 'text', 'item-value': 'value' },
-              colAttrs: { md: 4 },
-            },
-            { label: "实时同步", model: "enableMysqlTrigger", default: "开启", tag: "v-checkbox", 
-              attrs: { trueValue: "开启", falseValue: "关闭" }, quickAttrs: ['dense'],
               colAttrs: { md: 4 },
             },
           ], 
@@ -169,11 +192,18 @@ const content = {
           label: "编辑", 
           type: "form", 
           formItemList: [
-            { label: "同步组", model: "syncGroup", tag: "v-combobox", rules: "validationRules.requireRules", 
+            { label: "同步组", model: "syncGroup", tag: "v-combobox",
               attrs: { ':items': 'constantObj.syncGroup', 'item-text': 'syncGroup', 'item-value': 'syncGroup', "return-object": false},
               colAttrs: { md: 4 },
             },
-            { tag: 'div', colAttrs: { md: 12, class: 'pa-0'} },
+            { label: "定时检查", model: "syncTimeSlot", tag: "v-select", rules: "validationRules.requireRules", 
+              attrs: { ':items': 'constantObj.syncTimeSlot', 'item-text': 'text', 'item-value': 'value' },
+              colAttrs: { md: 4 },
+            },
+            { label: "实时同步", model: "enableMysqlTrigger", default: "开启", tag: "v-checkbox", 
+              attrs: { trueValue: "开启", falseValue: "关闭", "class": "pt-0 mt-0 h-[25px]" }, quickAttrs: ['dense'],
+              colAttrs: { md: 4 },
+            },
             { label: "同步-源库", model: "sourceDatabase", tag: "v-autocomplete", rules: "validationRules.requireRules", 
               attrs: { ':items': 'constantObj.databaseList', 'item-text': 'sourceDatabase', 'item-value': 'sourceDatabase'},
               colAttrs: { md: 4 },
@@ -189,15 +219,6 @@ const content = {
               colAttrs: { md: 4 },
             },
             { label: "同步-目标表", model: "targetTable", tag: "v-text-field", rules: "validationRules.requireRules", 
-              colAttrs: { md: 4 },
-            },
-            { tag: 'div', colAttrs: { md: 12, class: 'pa-0'} },
-            { label: "定时检查", model: "syncTimeSlot", tag: "v-select", rules: "validationRules.requireRules", 
-              attrs: { ':items': 'constantObj.syncTimeSlot', 'item-text': 'text', 'item-value': 'value' },
-              colAttrs: { md: 4 },
-            },
-            { label: "实时同步", model: "enableMysqlTrigger", default: "开启", tag: "v-checkbox", 
-              attrs: { trueValue: "开启", falseValue: "关闭" }, quickAttrs: ['dense'],
               colAttrs: { md: 4 },
             },
           ], 
@@ -364,6 +385,7 @@ const content = {
         this.createItem = {
           targetDatabase: this.defaultTargetDatabase,
           enableMysqlTrigger: "开启",
+          syncTimeSlot: 10,
         };
         this.createItemOrigin = _.cloneDeep(this.createItem);
       },
@@ -373,9 +395,8 @@ const content = {
           data: {
             appData: {
               pageId: 'tableSyncConfig',
-              actionId: 'updateItem',
-              where: { id: item.id },
-              actionData: { rowStatus: '回收站' }
+              actionId: 'recycleTableSyncConfig',
+              actionData: { id: item.id }
             }
           }
         });
