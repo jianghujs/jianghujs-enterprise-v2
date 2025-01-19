@@ -80,16 +80,14 @@ class TableSyncService extends Service {
       .whereIn("id", idList)
       .select('id', 'sourceDatabase', 'sourceTable', 'targetDatabase', 'targetTable');
     const tableCount = syncList.length;
-    logger.warn('[doSyncTableByIdList] start', { tableCount });
     const startTime = new Date().getTime();
     for (const [index, syncObj] of syncList.entries()) { 
-      const { id } = syncObj;
       try {
         await this.doTargetTableDDL(syncObj);
         await this.doSyncTable(syncObj);
         logger.info(`[doSyncTableByIdList] ${index + 1}/${tableCount} ID:${syncObj.id} 成功`);
       } catch (error) {
-        await jianghuKnex('_table_sync_config').where({ id }).update({ syncStatus: '失败', lastSyncTime: dayjs().format(), lastSyncInfo: error.message });
+        await jianghuKnex('_table_sync_config').where({ id: syncObj.id }).update({ syncStatus: '失败', lastSyncTime: dayjs().format(), lastSyncInfo: error.message });
         logger.error(`[doSyncTableByIdList] ID:${syncObj.id} 失败`, error);
       }
     }

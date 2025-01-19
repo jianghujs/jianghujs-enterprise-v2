@@ -14,33 +14,13 @@ module.exports = app => {
       disable: !app.config.schedule.tableSyncSchedule,
     },
     async task(ctx) {
-      const startTime = new Date().getTime();
       const { jianghuKnex, logger } = ctx.app;
-      // const databaseName =  ctx.app.config.knex.client.connection.database;
-      // const syncList = [
-      //   { sourceTable: "_resource", targetTable: "_resource_01", sourceDatabase: databaseName, targetDatabase: databaseName, },
-      // ];
-
       const syncList = await jianghuKnex('_table_sync_config')
         .where({ rowStatus: '正常' })
-        // .where({ id: 291 })
-        .select('id', 'sourceDatabase', 'sourceTable', 'targetDatabase', 'targetTable');
+        .select('id');
       const tableCount = syncList.length ;
-
-
-      logger.warn('[syncTable] start', { tableCount });
-      for (const [index, syncObj] of syncList.entries()) {
-        try {
-          await ctx.service.tableSync.doTargetTableDDL(syncObj);
-          await ctx.service.tableSync.doSyncTable(syncObj);
-          logger.info(`[doSyncTable] ${index + 1}/${tableCount} ID:${syncObj.id} 成功`);
-        } catch (error) {
-          errorIdMap[syncObj.id] = error;
-          logger.error(`[doSyncTable] ID:${syncObj.id} 失败`, error);
-        }
-      }
-
-      logger.warn('[syncTable] end', { tableCount, useTime: `${new Date().getTime() - startTime}/ms` });
+      logger.warn('[tableSyncSchedule] start', { tableCount });
+      await ctx.service.tableSync.doSyncTableByIdList({ idList: syncList.map(obj => obj.id) });
     },
     
   }
