@@ -120,7 +120,7 @@ const content = {
         </template>
 
         <template v-slot:item.tableType="{ item }">
-          <span :title="item.tableType">{{ constantObj.tableTypeMap[item.sourceDatabase + '.' + item.sourceTable] || '' }}</span>
+          <span :title="item.tableType">{{ constantObj.tableTypeMap[item.sourceRemoteName + '.' + item.sourceDatabase + '.' + item.sourceTable] || '' }}</span>
         </template>
         `
       ],
@@ -155,27 +155,37 @@ const content = {
               colAttrs: { md: 4 },
             },
             { tag: 'div', colAttrs: { md: 12, class: 'pa-0'} },
+            
+            { label: "同步-源MYSQL", model: "sourceRemoteName", tag: "v-combobox", rules: "validationRules.requireRules", 
+              attrs: { ':items': 'constantObj.remoteNameList', 'return-object': false },
+              colAttrs: { md: 4 },
+            },
             { label: "同步-源库", model: "sourceDatabase", tag: "v-combobox", rules: "validationRules.requireRules", 
-              attrs: { ':items': 'constantObj.databaseList', 'return-object': false },
+              attrs: { ':items': 'constantObj.databaseListMap[createItem.sourceRemoteName] || []', 
+                'item-text': 'databaseName', 'item-value': 'databaseName', 'return-object': false },
               colAttrs: { md: 4 },
             },
             { label: /*html*/`
                 同步-源表 
                 <span v-if="createItem.sourceTable">
-                  (源表类型: {{ constantObj.tableTypeMap[createItem.sourceDatabase + '.' + createItem.sourceTable] || '' }})
+                  (源表类型: {{ constantObj.tableTypeMap[createItem.sourceRemoteName + '.' + createItem.sourceDatabase + '.' + createItem.sourceTable] || '' }})
                 </span>
                 <span role="button" @click="initConstantObjData({ showTip: true })" class="success--text ml-1">
                   查询<v-icon size="18" color="success">mdi-sync</v-icon>
                 </span>
                 `, 
               model: "sourceTable", tag: "v-combobox", rules: "validationRules.requireRules", 
-              attrs: { ':items': 'constantObj.tableListMap[createItem.sourceDatabase]||[]', 
-                  'item-text': 'sourceTable', 'item-value': 'sourceTable', 'return-object': false},
+              attrs: { ':items': 'constantObj.tableListMap[createItem.sourceRemoteName + "." + createItem.sourceDatabase]||[]', 
+                'item-text': 'tableName', 'item-value': 'tableName', 'return-object': false},
               colAttrs: { md: 4 },
             },
-            { tag: 'div', colAttrs: { md: 12, class: 'pa-0'} },
+            { label: "同步-目标MYSQL", model: "targetRemoteName", tag: "v-combobox", rules: "validationRules.requireRules", 
+              attrs: { ':items': 'constantObj.remoteNameList', 'return-object': false },
+              colAttrs: { md: 4 },
+            },
             { label: "同步-目标库", model: "targetDatabase", tag: "v-combobox", rules: "validationRules.requireRules", 
-              attrs: { ':items': 'constantObj.databaseList', 'return-object': false },
+              attrs: { ':items': 'constantObj.databaseListMap[createItem.targetRemoteName] || []', 
+                'item-text': 'databaseName', 'item-value': 'databaseName', 'return-object': false },
               colAttrs: { md: 4 },
             },
             { label: "同步-目标表", model: "targetTable", tag: "v-text-field", rules: "validationRules.targetTableRules", 
@@ -220,33 +230,35 @@ const content = {
             { tag: 'div', colAttrs: { md: 12, class: 'pa-0'} },
 
             { label: "同步-源MYSQL", model: "sourceRemoteName", tag: "v-combobox", rules: "validationRules.requireRules", 
-              attrs: { ':items': 'constantObj.databaseList', 'return-object': false },
+              attrs: { ':items': 'constantObj.remoteNameList', 'return-object': false },
               colAttrs: { md: 4 },
             },
             { label: "同步-源库", model: "sourceDatabase", tag: "v-combobox", rules: "validationRules.requireRules", 
-              attrs: { ':items': 'constantObj.databaseList', 'return-object': false },
+              attrs: { ':items': 'constantObj.databaseListMap[updateItem.sourceRemoteName] || []', 
+                'item-text': 'databaseName', 'item-value': 'databaseName', 'return-object': false },
               colAttrs: { md: 4 },
             },
             { label: /*html*/`
-              同步-源表 
-              <span v-if="updateItem.sourceTable">
-                (源表类型: {{ constantObj.tableTypeMap[updateItem.sourceDatabase + '.' + updateItem.sourceTable] || '' }})
-              </span>
-              <span role="button" @click="initConstantObjData({ showTip: true })" class="success--text ml-1">
-                查询<v-icon size="18" color="success">mdi-sync</v-icon>
-              </span>
-              `, 
+                同步-源表 
+                <span v-if="updateItem.sourceTable">
+                  (源表类型: {{ constantObj.tableTypeMap[updateItem.sourceRemoteName + '.' + updateItem.sourceDatabase + '.' + updateItem.sourceTable] || '' }})
+                </span>
+                <span role="button" @click="initConstantObjData({ showTip: true })" class="success--text ml-1">
+                  查询<v-icon size="18" color="success">mdi-sync</v-icon>
+                </span>
+                `, 
               model: "sourceTable", tag: "v-combobox", rules: "validationRules.requireRules", 
-              attrs: { ':items': 'constantObj.tableListMap[updateItem.sourceDatabase]||[]', 
-                'item-text': 'sourceTable', 'item-value': 'sourceTable', 'return-object': false },
+              attrs: { ':items': 'constantObj.tableListMap[updateItem.sourceRemoteName + "." + updateItem.sourceDatabase]||[]', 
+                'item-text': 'tableName', 'item-value': 'tableName', 'return-object': false },
               colAttrs: { md: 4 },
             },
             { label: "同步-目标MYSQL", model: "targetRemoteName", tag: "v-combobox", rules: "validationRules.requireRules", 
-              attrs: { ':items': 'constantObj.databaseList', 'return-object': false },
+              attrs: { ':items': 'constantObj.remoteNameList', 'return-object': false },
               colAttrs: { md: 4 },
             },
             { label: "同步-目标库", model: "targetDatabase", tag: "v-combobox", rules: "validationRules.requireRules", 
-              attrs: { ':items': 'constantObj.databaseList', 'return-object': false },
+              attrs: { ':items': 'constantObj.databaseListMap[updateItem.targetRemoteName] || []', 
+                'item-text': 'databaseName', 'item-value': 'databaseName', 'return-object': false },
               colAttrs: { md: 4 },
             },
             { label: "同步-目标表", model: "targetTable", tag: "v-text-field", rules: "validationRules.targetTableRules", 
@@ -296,7 +308,8 @@ const content = {
           720: '12小时',
           1440: '24小时',
         },
-        databaseList: [],
+        remoteNameList: [],
+        databaseListMap: [],
         tableListMap: {},
         tableTypeMap: {},
       },
@@ -510,8 +523,10 @@ const content = {
             }
           }
         });
-        const { databaseList, tableListMap, tableTypeMap } = result.data.appData.resultData;
-        this.constantObj.databaseList = databaseList;
+        // const { databaseList, tableListMap, tableTypeMap } = result.data.appData.resultData;
+        const { remoteNameList, databaseListMap, tableListMap, tableTypeMap } = result.data.appData.resultData;
+        this.constantObj.remoteNameList = remoteNameList;
+        this.constantObj.databaseListMap = databaseListMap;
         this.constantObj.tableListMap = tableListMap;
         this.constantObj.tableTypeMap = tableTypeMap;
         if (showTip) { window.vtoast.success("查询表"); }

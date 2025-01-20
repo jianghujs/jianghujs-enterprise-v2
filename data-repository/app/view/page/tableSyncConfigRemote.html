@@ -109,7 +109,7 @@
         </template>
 
         <template v-slot:item.tableType="{ item }">
-          <span :title="item.tableType">{{ constantObj.tableTypeMap[item.sourceDatabase + '.' + item.sourceTable] || '' }}</span>
+          <span :title="item.tableType">{{ constantObj.tableTypeMap[item.sourceRemoteName + '.' + item.sourceDatabase + '.' + item.sourceTable] || '' }}</span>
         </template>
         
 
@@ -202,27 +202,32 @@
                 <div ></div>
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="4">
+                <span class="jh-input-label">同步-源MYSQL</span>
+                <v-combobox :items="constantObj.remoteNameList" :return-object="false" class="jh-v-input" dense single-line filled v-model="createItem.sourceRemoteName" :rules="validationRules.requireRules"></v-combobox>
+              </v-col>
+              <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">同步-源库</span>
-                <v-combobox :items="constantObj.databaseList" :return-object="false" class="jh-v-input" dense single-line filled v-model="createItem.sourceDatabase" :rules="validationRules.requireRules"></v-combobox>
+                <v-combobox :items="constantObj.databaseListMap[createItem.sourceRemoteName] || []" item-text="databaseName" item-value="databaseName" :return-object="false" class="jh-v-input" dense single-line filled v-model="createItem.sourceDatabase" :rules="validationRules.requireRules"></v-combobox>
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">
                 同步-源表 
                 <span v-if="createItem.sourceTable">
-                  (源表类型: {{ constantObj.tableTypeMap[createItem.sourceDatabase + '.' + createItem.sourceTable] || '' }})
+                  (源表类型: {{ constantObj.tableTypeMap[createItem.sourceRemoteName + '.' + createItem.sourceDatabase + '.' + createItem.sourceTable] || '' }})
                 </span>
                 <span role="button" @click="initConstantObjData({ showTip: true })" class="success--text ml-1">
                   查询<v-icon size="18" color="success">mdi-sync</v-icon>
                 </span>
                 </span>
-                <v-combobox :items="constantObj.tableListMap[createItem.sourceDatabase]||[]" item-text="sourceTable" item-value="sourceTable" :return-object="false" class="jh-v-input" dense single-line filled v-model="createItem.sourceTable" :rules="validationRules.requireRules"></v-combobox>
+                <v-combobox :items="constantObj.tableListMap[createItem.sourceRemoteName + '.' + createItem.sourceDatabase]||[]" item-text="tableName" item-value="tableName" :return-object="false" class="jh-v-input" dense single-line filled v-model="createItem.sourceTable" :rules="validationRules.requireRules"></v-combobox>
               </v-col>
-              <v-col cols="12" sm="12" md="3" :md="12"class="pa-0">
-                <div ></div>
+              <v-col cols="12" sm="12" md="3" :md="4">
+                <span class="jh-input-label">同步-目标MYSQL</span>
+                <v-combobox :items="constantObj.remoteNameList" :return-object="false" class="jh-v-input" dense single-line filled v-model="createItem.targetRemoteName" :rules="validationRules.requireRules"></v-combobox>
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">同步-目标库</span>
-                <v-combobox :items="constantObj.databaseList" :return-object="false" class="jh-v-input" dense single-line filled v-model="createItem.targetDatabase" :rules="validationRules.requireRules"></v-combobox>
+                <v-combobox :items="constantObj.databaseListMap[createItem.targetRemoteName] || []" item-text="databaseName" item-value="databaseName" :return-object="false" class="jh-v-input" dense single-line filled v-model="createItem.targetDatabase" :rules="validationRules.requireRules"></v-combobox>
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">同步-目标表</span>
@@ -274,31 +279,31 @@
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">同步-源MYSQL</span>
-                <v-combobox :items="constantObj.databaseList" :return-object="false" class="jh-v-input" dense single-line filled v-model="updateItem.sourceRemoteName" :rules="validationRules.requireRules"></v-combobox>
+                <v-combobox :items="constantObj.remoteNameList" :return-object="false" class="jh-v-input" dense single-line filled v-model="updateItem.sourceRemoteName" :rules="validationRules.requireRules"></v-combobox>
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">同步-源库</span>
-                <v-combobox :items="constantObj.databaseList" :return-object="false" class="jh-v-input" dense single-line filled v-model="updateItem.sourceDatabase" :rules="validationRules.requireRules"></v-combobox>
+                <v-combobox :items="constantObj.databaseListMap[updateItem.sourceRemoteName] || []" item-text="databaseName" item-value="databaseName" :return-object="false" class="jh-v-input" dense single-line filled v-model="updateItem.sourceDatabase" :rules="validationRules.requireRules"></v-combobox>
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">
-              同步-源表 
-              <span v-if="updateItem.sourceTable">
-                (源表类型: {{ constantObj.tableTypeMap[updateItem.sourceDatabase + '.' + updateItem.sourceTable] || '' }})
-              </span>
-              <span role="button" @click="initConstantObjData({ showTip: true })" class="success--text ml-1">
-                查询<v-icon size="18" color="success">mdi-sync</v-icon>
-              </span>
-              </span>
-                <v-combobox :items="constantObj.tableListMap[updateItem.sourceDatabase]||[]" item-text="sourceTable" item-value="sourceTable" :return-object="false" class="jh-v-input" dense single-line filled v-model="updateItem.sourceTable" :rules="validationRules.requireRules"></v-combobox>
+                同步-源表 
+                <span v-if="updateItem.sourceTable">
+                  (源表类型: {{ constantObj.tableTypeMap[updateItem.sourceRemoteName + '.' + updateItem.sourceDatabase + '.' + updateItem.sourceTable] || '' }})
+                </span>
+                <span role="button" @click="initConstantObjData({ showTip: true })" class="success--text ml-1">
+                  查询<v-icon size="18" color="success">mdi-sync</v-icon>
+                </span>
+                </span>
+                <v-combobox :items="constantObj.tableListMap[updateItem.sourceRemoteName + '.' + updateItem.sourceDatabase]||[]" item-text="tableName" item-value="tableName" :return-object="false" class="jh-v-input" dense single-line filled v-model="updateItem.sourceTable" :rules="validationRules.requireRules"></v-combobox>
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">同步-目标MYSQL</span>
-                <v-combobox :items="constantObj.databaseList" :return-object="false" class="jh-v-input" dense single-line filled v-model="updateItem.targetRemoteName" :rules="validationRules.requireRules"></v-combobox>
+                <v-combobox :items="constantObj.remoteNameList" :return-object="false" class="jh-v-input" dense single-line filled v-model="updateItem.targetRemoteName" :rules="validationRules.requireRules"></v-combobox>
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">同步-目标库</span>
-                <v-combobox :items="constantObj.databaseList" :return-object="false" class="jh-v-input" dense single-line filled v-model="updateItem.targetDatabase" :rules="validationRules.requireRules"></v-combobox>
+                <v-combobox :items="constantObj.databaseListMap[updateItem.targetRemoteName] || []" item-text="databaseName" item-value="databaseName" :return-object="false" class="jh-v-input" dense single-line filled v-model="updateItem.targetDatabase" :rules="validationRules.requireRules"></v-combobox>
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">同步-目标表</span>
@@ -412,7 +417,8 @@ new Vue({
         720: "12小时",
         1440: "24小时"
       },
-      databaseList: [],
+      remoteNameList: [],
+      databaseListMap: [],
       tableListMap: {},
       tableTypeMap: {}
     },
@@ -678,8 +684,10 @@ new Vue({
       this.createActionData = {
         syncGroup: data.syncGroup,
         syncTimeSlot: data.syncTimeSlot,
+        sourceRemoteName: data.sourceRemoteName,
         sourceDatabase: data.sourceDatabase,
         sourceTable: data.sourceTable,
+        targetRemoteName: data.targetRemoteName,
         targetDatabase: data.targetDatabase,
         targetTable: data.targetTable,
       };
@@ -890,8 +898,10 @@ new Vue({
           }
         }
       });
-      const { databaseList, tableListMap, tableTypeMap } = result.data.appData.resultData;
-      this.constantObj.databaseList = databaseList;
+      // const { databaseList, tableListMap, tableTypeMap } = result.data.appData.resultData;
+      const { remoteNameList, databaseListMap, tableListMap, tableTypeMap } = result.data.appData.resultData;
+      this.constantObj.remoteNameList = remoteNameList;
+      this.constantObj.databaseListMap = databaseListMap;
       this.constantObj.tableListMap = tableListMap;
       this.constantObj.tableTypeMap = tableTypeMap;
       if (showTip) { window.vtoast.success("查询表"); }

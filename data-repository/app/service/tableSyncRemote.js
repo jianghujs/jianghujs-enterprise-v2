@@ -33,35 +33,36 @@ class TableSyncRemoteService extends Service {
     const { jianghuKnex, config, logger } = this.app;
     const remoteDatabaseList = config.remoteDatabaseList;
 
-    const databaseList = [];
+    const remoteNameList = [];
+    const databaseListMap = {};
     const tableListMap = {};
     const tableTypeMap = {};
 
     for(const remoteDatabase of remoteDatabaseList){
       const { remoteName, ...connection } = remoteDatabase;
-      const databaseName = remoteName;
-      const databaseNameReal = connection.database;
+      remoteNameList.push(remoteName);
       try {
         const knex = Knex({ client: 'mysql2', connection });
         const tableList = await knex.select('TABLE_NAME').from('information_schema.TABLES')
-          .where('TABLE_SCHEMA', databaseNameReal)
-        .orderBy('table_name', 'desc')
-        .select('table_name as sourceTable', 'table_schema as sourceDatabase', 'table_type as tableType');
+          .whereNotIn('table_schema', ['sys', 'information_schema', 'performance_schema', 'mysql'])
+          .orderBy('table_name', 'desc')
+          .select('table_schema as databaseName', 'table_name as tableName', 'table_type as tableType');
         knex.destroy();
-        databaseList.push(databaseName);
-        tableListMap[databaseName] = tableList;
+        databaseListMap[remoteName] = [...new Set(tableList.map(item => item.databaseName))];
+        Object.entries(_.groupBy(tableList, 'databaseName')).forEach(([databaseName, databaseTableList]) => {
+          tableListMap[`${remoteName}.${databaseName}`] = databaseTableList;
+        })
         tableList.forEach(item => {
-          tableTypeMap[`${databaseName}.${item.sourceTable}`] = item.tableType;
+          tableTypeMap[`${remoteName}.${item.databaseName}.${item.tableName}`] = item.tableType;
         });
       } catch (error) {
-        databaseList.push(databaseName);
-        tableListMap[databaseName] = [];
+        databaseListMap[remoteName] = [];
         logger.error('[getDatabaseInfo]', `remoteName: ${remoteName}`, error);
         continue;
       }
     }
-   
-    return { databaseList, tableListMap, tableTypeMap };
+    return { remoteNameList, databaseListMap, tableListMap, tableTypeMap };
+    // return { databaseList, tableListMap, tableTypeMap };
   }
 
   async recycleTableSyncConfig({ id }) {
