@@ -162,6 +162,7 @@ class TableSyncService extends Service {
       ignoreColumns: [],
     });
     const { added, removed, changed } = hyperDiffResult;
+    const diffCount = added.length + removed.length + changed.length;
     if (added.length > 0) {
       await knex(`${targetTable}`).insert(added);
     }
@@ -178,20 +179,18 @@ class TableSyncService extends Service {
 
     if (id) {
       await jianghuKnex('_table_sync_config').where({ id }).update({ syncStatus: '正常' });
-    }
-
-
-    if (added.length > 0 || removed.length > 0 || changed.length > 0) {
-      if (id) {
+      if(diffCount > 0){
         await jianghuKnex('_table_sync_config').where({ id })
           .update({ 
             lastSyncTime: dayjs().format(),
             lastSyncInfo: `${added.length}条新增, ${changed.length}条修改, ${removed.length}条删除`,
+            syncTimesCount: knex.raw('syncTimesCount + 1'),
           });
-      } 
+      }
+    }
 
+    if (diffCount > 0) {
       logger.warn('[syncTable.doSyncTable]', `${targetDatabase}.${targetTable}`, { added: added.length, removed: removed.length, changed: changed.length });
-
     }
   }
 

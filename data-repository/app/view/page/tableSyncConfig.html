@@ -43,7 +43,10 @@
             新增同步表
           </v-btn>
               <v-btn color="success" class="mr-2" @click="doUiAction('doSyncTableByIdList', { idList: tableData.map(item => item.id) })" small>
-            全部同步
+            同步全部
+          </v-btn>
+              <v-btn color="success" class="mr-2" @click="doUiAction('clearSyncTimesCount', {})" small>
+            清除同步次数
           </v-btn>
               <v-spacer ></v-spacer>
               
@@ -461,8 +464,9 @@ new Vue({
           { text: "定时检查", value: "syncTimeSlot", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
           { text: "实时同步", value: "enableMysqlTrigger", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
           { text: "同步状态", value: "syncStatus", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-          { text: "最后一次数据同步", value: "lastSyncTime", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-          { text: "最后一次数据详情", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+          { text: "数据同步次数", value: "syncTimesCount", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+          { text: "数据同步时间(最后一次)", value: "lastSyncTime", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+          { text: "数据同步详情(最后一次)", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
           { text: "操作", value: "action", type: "action", width: 80, align: "center", class: "fixed", cellClass: "fixed text-truncate max-width-300" },
         ]
       }
@@ -475,8 +479,9 @@ new Vue({
         { text: "定时检查", value: "syncTimeSlot", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
         { text: "实时同步", value: "enableMysqlTrigger", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
         { text: "同步状态", value: "syncStatus", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-        { text: "最后一次数据同步", value: "lastSyncTime", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-        { text: "最后一次数据详情", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+        { text: "数据同步次数", value: "syncTimesCount", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+        { text: "数据同步时间(最后一次)", value: "lastSyncTime", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+        { text: "数据同步详情(最后一次)", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
         { text: "操作", value: "action", type: "action", width: 80, align: "center", class: "fixed", cellClass: "fixed text-truncate max-width-300" },
       ];
     },
@@ -532,6 +537,10 @@ new Vue({
             break;
           case 'recycleItem':
             await this.recycleItem(uiActionData);
+            await this.doUiAction('getTableData', uiActionData);
+            break;
+          case 'clearSyncTimesCount':
+            await this.clearSyncTimesCount(uiActionData);
             await this.doUiAction('getTableData', uiActionData);
             break;
           default:
@@ -870,6 +879,20 @@ new Vue({
       this.constantObj.databaseList = databaseList;
       this.defaultTargetDatabase = defaultTargetDatabase;
       if (showTip) { window.vtoast.success("查询表"); }
+    },
+    async clearSyncTimesCount({ item }) {
+      window.vtoast.loading("清除同步次数");
+      await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'tableSyncConfig',
+            actionId: 'updateItem',
+            actionData: { syncTimesCount: 0 },
+            whereIn: { id: this.tableData.map(item => item.id) }
+          }
+        }
+      });
+      window.vtoast.success("清除同步次数");
     },
     // ---------- <<<<<<<<<<< Custom uiAction ---------
 

@@ -69,7 +69,8 @@ const content = {
       cardAttrs: { class: 'rounded-lg elevation-0' },
       headActionList: [
         { tag: 'v-btn', value: '新增同步表', attrs: { color: 'success', class: 'mr-2', '@click': 'doUiAction("startCreateItem")' }, quickAttrs: ['small'] },
-        { tag: 'v-btn', value: '全部同步', attrs: { color: 'success', class: 'mr-2', '@click': "doUiAction('doSyncTableByIdList', { idList: tableData.map(item => item.id) })" }, quickAttrs: ['small'] },
+        { tag: 'v-btn', value: '同步全部', attrs: { color: 'success', class: 'mr-2', '@click': "doUiAction('doSyncTableByIdList', { idList: tableData.map(item => item.id) })" }, quickAttrs: ['small'] },
+        { tag: 'v-btn', value: '清除同步次数', attrs: { color: 'success', class: 'mr-2', '@click': "doUiAction('clearSyncTimesCount', {})" }, quickAttrs: ['small'] },
         { tag: 'v-spacer' },
         /*html*/`
         <div class="v-btn-toggle">
@@ -309,8 +310,9 @@ const content = {
             { text: "定时检查", value: "syncTimeSlot", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
             { text: "实时同步", value: "enableMysqlTrigger", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
             { text: "同步状态", value: "syncStatus", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-            { text: "最后一次数据同步", value: "lastSyncTime", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-            { text: "最后一次数据详情", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+            { text: "数据同步次数", value: "syncTimesCount", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+            { text: "数据同步时间(最后一次)", value: "lastSyncTime", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+            { text: "数据同步详情(最后一次)", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
             { text: "操作", value: "action", type: "action", width: 80, align: "center", class: "fixed", cellClass: "fixed text-truncate max-width-300" },
           ]
         }
@@ -323,8 +325,9 @@ const content = {
           { text: "定时检查", value: "syncTimeSlot", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
           { text: "实时同步", value: "enableMysqlTrigger", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
           { text: "同步状态", value: "syncStatus", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-          { text: "最后一次数据同步", value: "lastSyncTime", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-          { text: "最后一次数据详情", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+          { text: "数据同步次数", value: "syncTimesCount", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+          { text: "数据同步时间(最后一次)", value: "lastSyncTime", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+          { text: "数据同步详情(最后一次)", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
           { text: "操作", value: "action", type: "action", width: 80, align: "center", class: "fixed", cellClass: "fixed text-truncate max-width-300" },
         ];
       }
@@ -340,6 +343,7 @@ const content = {
 
       initConstantObjData: ['initConstantObjData'],
       recycleItem: ['recycleItem', 'doUiAction.getTableData'],
+      clearSyncTimesCount: ['clearSyncTimesCount', 'doUiAction.getTableData'],
     }, // 额外uiAction { [key]: [action1, action2]}
     methods: {
       // ---------- CRUD覆盖 uiAction >>>>>>>>>>>> --------
@@ -474,6 +478,20 @@ const content = {
         this.constantObj.databaseList = databaseList;
         this.defaultTargetDatabase = defaultTargetDatabase;
         if (showTip) { window.vtoast.success("查询表"); }
+      },
+      async clearSyncTimesCount({ item }) {
+        window.vtoast.loading("清除同步次数");
+        await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'tableSyncConfig',
+              actionId: 'updateItem',
+              actionData: { syncTimesCount: 0 },
+              whereIn: { id: this.tableData.map(item => item.id) }
+            }
+          }
+        });
+        window.vtoast.success("清除同步次数");
       },
       // ---------- <<<<<<<<<<< 同步相关 uiAction ---------
 
