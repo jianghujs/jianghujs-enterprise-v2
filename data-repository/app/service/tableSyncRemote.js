@@ -65,6 +65,7 @@ class TableSyncRemoteService extends Service {
     // return { databaseList, tableListMap, tableTypeMap };
   }
 
+  // TODO: 待完善
   async recycleTableSyncConfig({ id }) {
     const { jianghuKnex, knex } = this.app;
     const syncObj = await jianghuKnex('_table_sync_config_remote').where({ id }).first();
@@ -83,7 +84,7 @@ class TableSyncRemoteService extends Service {
     const syncList = await jianghuKnex('_table_sync_config_remote')
       .where({ rowStatus: '正常' })
       .whereIn("id", idList)
-      .select('id', 'sourceDatabase', 'sourceTable', 'targetDatabase', 'targetTable');
+      .select('id', 'sourceRemoteName', 'targetRemoteName', 'sourceDatabase', 'sourceTable', 'targetDatabase', 'targetTable');
     const tableCount = syncList.length;
     const startTime = new Date().getTime();
 
@@ -93,17 +94,17 @@ class TableSyncRemoteService extends Service {
     }, {});
 
     for (const [index, syncObj] of syncList.entries()) { 
+      const { id, sourceDatabase, sourceTable, targetDatabase, targetTable} = syncObj;
       try {
-        const sourceConnection = remoteConnectionMap[syncObj.sourceDatabase];
-        const targetConnection = remoteConnectionMap[syncObj.targetDatabase];
-        const sourceDatabase = sourceConnection?.database;
-        const targetDatabase = targetConnection?.database;
-        const sourceTable = syncObj.sourceTable;
-        const targetTable = syncObj.targetTable;
+        const sourceConnection = remoteConnectionMap[syncObj.sourceRemoteName] || {};
+        const targetConnection = remoteConnectionMap[syncObj.targetRemoteName] || {};
+        sourceConnection.database = sourceDatabase;
+        targetConnection.database = targetDatabase;
         const sourceKnex = Knex({ client: 'mysql2', connection: sourceConnection });
         const targetKnex = Knex({ client: 'mysql2', connection: targetConnection });
         await this.doTargetTableDDL({ sourceDatabase, sourceTable, targetDatabase, targetTable, sourceKnex, targetKnex });
-        await this.doSyncTable({ id: syncObj.id, 
+        await this.doSyncTable({ 
+          id, 
           sourceDatabase, sourceTable, targetDatabase, targetTable, 
           sourceConnection, targetConnection, sourceKnex, targetKnex 
         });
@@ -115,7 +116,7 @@ class TableSyncRemoteService extends Service {
           .update({ 
             syncStatus: '失败', 
             lastSyncTime: dayjs().format(), 
-            lastSyncInfo: error.message,
+            lastSyncInfo: `ERROR: ${error.message}`,
             syncTimesCount: knex.raw('syncTimesCount + 1'),
           });
         logger.error(`[doSyncTableRemoteByIdList] ID:${syncObj.id} 失败`, error);
@@ -210,7 +211,8 @@ class TableSyncRemoteService extends Service {
     }
 
     if (id) {
-      await jianghuKnex('_table_sync_config_remote').where({ id }).update({ syncStatus: '正常' });
+      await jianghuKnex('_table_sync_config_remote').where({ id }).update({syncStatus: '正常'});
+      await jianghuKnex('_table_sync_config_remote').where({ id }).where('lastSyncInfo', 'like', 'ERROR%').update({lastSyncInfo: ''});
       if(diffCount > 0){
         await jianghuKnex('_table_sync_config_remote').where({ id })
           .update({ 
