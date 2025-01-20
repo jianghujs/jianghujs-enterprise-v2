@@ -294,7 +294,6 @@ const content = {
         },
         databaseMap: {},
         databaseList: [],
-        tableTriggerCountMap: {},
         tableTypeMap: {},
       },
       validationRules: {
@@ -503,10 +502,9 @@ const content = {
             }
           }
         });
-        const { databaseMap, databaseList, tableTriggerCountMap, tableTypeMap } = result.data.appData.resultData;
+        const { databaseMap, databaseList, tableTypeMap } = result.data.appData.resultData;
         this.constantObj.databaseMap = databaseMap;
         this.constantObj.databaseList = databaseList;
-        this.constantObj.tableTriggerCountMap = tableTriggerCountMap;
         this.constantObj.tableTypeMap = tableTypeMap;
         if (showTip) { window.vtoast.success("查询表"); }
       },

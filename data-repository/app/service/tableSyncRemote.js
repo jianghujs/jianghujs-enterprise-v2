@@ -29,36 +29,38 @@ function getCreateTableSqlFromView({targetTable,columnsDefinition,viewDefinition
 class TableSyncRemoteService extends Service {
 
   async getDatabaseInfo() {
-    const { jianghuKnex, config } = this.app;
+    const { jianghuKnex, config, logger } = this.app;
     const remoteDatabaseList = config.remoteDatabaseList;
 
     const databaseList = [];
     const databaseMap = {};
     const tableTypeMap = {};
 
-    // TDDO：try catch，有的人本地没有 remoteDatabaseList
     for(const remoteDatabase of remoteDatabaseList){
       const { sourceDatabase, ...connection } = remoteDatabase;
       const sourceDatabaseReal = connection.database;
-      const knex = Knex({ client: 'mysql2', connection });
-      const tableList = await knex.select('TABLE_NAME').from('information_schema.TABLES')
-        .where('TABLE_SCHEMA', sourceDatabaseReal)
+
+      try {
+        const knex = Knex({ client: 'mysql2', connection });
+        const tableList = await knex.select('TABLE_NAME').from('information_schema.TABLES')
+          .where('TABLE_SCHEMA', sourceDatabaseReal)
         .orderBy('table_name', 'desc')
         .select('table_name as sourceTable', 'table_schema as sourceDatabase', 'table_type as tableType');
-      knex.destroy();
-      databaseList.push({ sourceDatabase, tableList });
-      databaseMap[sourceDatabase] = tableList;
-
-      tableList.forEach(item => {
-        tableTypeMap[`${sourceDatabase}.${item.sourceTable}`] = item.tableType;
-      });
+        knex.destroy();
+        databaseList.push({ sourceDatabase, tableList });
+        databaseMap[sourceDatabase] = tableList;
+        tableList.forEach(item => {
+          tableTypeMap[`${sourceDatabase}.${item.sourceTable}`] = item.tableType;
+        });
+      } catch (error) {
+        databaseList.push({ sourceDatabase, tableList: [] });
+        databaseMap[sourceDatabase] = [];
+        logger.error('[getDatabaseInfo]', `remoteDatabase: ${sourceDatabase}`, error);
+        continue;
+      }
     }
    
-    return { databaseList, databaseMap, tableTypeMap,
-      // Tip: 为了避免 page/tableSyncConfigRemote.js 报错，这里容错一下
-      defaultTargetDatabase: null,
-      tableTriggerCountMap: {},
-    };
+    return { databaseList, databaseMap, tableTypeMap };
   }
 
   async recycleTableSyncConfig({ id }) {
