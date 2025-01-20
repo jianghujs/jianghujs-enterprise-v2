@@ -242,7 +242,7 @@ class TableSyncService extends Service {
     const INSERTTriggerCreateSql = `CREATE TRIGGER \`${sourceDatabase}\`.\`${INSERTTriggerName}\` AFTER INSERT
         ON \`${sourceDatabase}\`.\`${sourceTable}\` FOR EACH ROW
         ${INSERTTriggerContentSql}`;
-    if (!allTriggerContentMap[INSERTTriggerName] || allTriggerContentMap[INSERTTriggerName] !== INSERTTriggerContentSql) {
+    if (!allTriggerContentMap[`${sourceDatabase}.${INSERTTriggerName}`] || allTriggerContentMap[`${sourceDatabase}.${INSERTTriggerName}`] !== INSERTTriggerContentSql) {
       await jianghuKnex.raw(`DROP TRIGGER IF EXISTS ${sourceDatabase}.${INSERTTriggerName};`);
       await jianghuKnex.raw(INSERTTriggerCreateSql);
       logger.warn('[createMysqlTrigger]', `创建触发器 ${sourceDatabase}.${INSERTTriggerName}`);
@@ -257,7 +257,7 @@ class TableSyncService extends Service {
     const UPDATETriggerCreateSql = `CREATE TRIGGER \`${sourceDatabase}\`.\`${UPDATETriggerName}\` AFTER UPDATE
         ON \`${sourceDatabase}\`.\`${sourceTable}\` FOR EACH ROW
         ${UPDATETriggerContentSql}`;
-    if (!allTriggerContentMap[UPDATETriggerName] || allTriggerContentMap[UPDATETriggerName] !== UPDATETriggerContentSql) {
+    if (!allTriggerContentMap[`${sourceDatabase}.${UPDATETriggerName}`] || allTriggerContentMap[`${sourceDatabase}.${UPDATETriggerName}`] !== UPDATETriggerContentSql) {
       await jianghuKnex.raw(`DROP TRIGGER IF EXISTS ${sourceDatabase}.${UPDATETriggerName};`);
       await jianghuKnex.raw(UPDATETriggerCreateSql);
       logger.warn('[createMysqlTrigger]', `创建触发器 ${sourceDatabase}.${UPDATETriggerName}`);
@@ -270,7 +270,7 @@ class TableSyncService extends Service {
     const DELETETriggerCreateSql = `CREATE TRIGGER \`${sourceDatabase}\`.\`${DELETETriggerName}\` AFTER DELETE
         ON \`${sourceDatabase}\`.\`${sourceTable}\` FOR EACH ROW
         ${DELETETriggerContentSql}`;
-    if (!allTriggerContentMap[DELETETriggerName] || allTriggerContentMap[DELETETriggerName] !== DELETETriggerContentSql) {
+    if (!allTriggerContentMap[`${sourceDatabase}.${DELETETriggerName}`] || allTriggerContentMap[`${sourceDatabase}.${DELETETriggerName}`] !== DELETETriggerContentSql) {
       await jianghuKnex.raw(`DROP TRIGGER IF EXISTS ${sourceDatabase}.${DELETETriggerName};`);
       await jianghuKnex.raw(DELETETriggerCreateSql);
       logger.warn('[createMysqlTrigger]', `创建触发器 ${sourceDatabase}.${DELETETriggerName}`);
