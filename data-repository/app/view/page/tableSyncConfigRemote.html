@@ -273,6 +273,10 @@
                 <div ></div>
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="4">
+                <span class="jh-input-label">同步-源MYSQL</span>
+                <v-combobox :items="constantObj.databaseList" :return-object="false" class="jh-v-input" dense single-line filled v-model="updateItem.sourceRemoteName" :rules="validationRules.requireRules"></v-combobox>
+              </v-col>
+              <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">同步-源库</span>
                 <v-combobox :items="constantObj.databaseList" :return-object="false" class="jh-v-input" dense single-line filled v-model="updateItem.sourceDatabase" :rules="validationRules.requireRules"></v-combobox>
               </v-col>
@@ -288,8 +292,9 @@
               </span>
                 <v-combobox :items="constantObj.tableListMap[updateItem.sourceDatabase]||[]" item-text="sourceTable" item-value="sourceTable" :return-object="false" class="jh-v-input" dense single-line filled v-model="updateItem.sourceTable" :rules="validationRules.requireRules"></v-combobox>
               </v-col>
-              <v-col cols="12" sm="12" md="3" :md="12"class="pa-0">
-                <div ></div>
+              <v-col cols="12" sm="12" md="3" :md="4">
+                <span class="jh-input-label">同步-目标MYSQL</span>
+                <v-combobox :items="constantObj.databaseList" :return-object="false" class="jh-v-input" dense single-line filled v-model="updateItem.targetRemoteName" :rules="validationRules.requireRules"></v-combobox>
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">同步-目标库</span>
@@ -468,7 +473,9 @@ new Vue({
           { text: "源表", value: "sourceTable", width: 80, sortable: true, class: "fixed", cellClass: "fixed truncate max-w-[300px]" },
           { text: "源表类型", value: "tableType", width: 80, sortable: true, cellClass: "truncate max-w-[300px]"  },
           { text: "ID", value: "id", width: 50, sortable: true, cellClass: "truncate max-w-[300px]" },
-          { text: "源库(别名)", value: "sourceDatabase", width: 80, sortable: true, cellClass: "truncate max-w-[300px]"  },
+          { text: "源MYSQL", value: "sourceRemoteName", width: 80, sortable: true, cellClass: "truncate max-w-[300px]"  },
+          { text: "源库", value: "sourceDatabase", width: 80, sortable: true, cellClass: "truncate max-w-[300px]"  },
+          { text: "目标MYSQL", value: "targetRemoteName", width: 80, sortable: true, cellClass: "truncate max-w-[300px]"  },
           { text: "目标表", value: "targetTableText", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
           { text: "同步组", value: "syncGroup",  width: 120, sortable: true, class: "", cellClass: "truncate max-w-[300px]"  },
           { text: "定时检查", value: "syncTimeSlot", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
@@ -483,8 +490,10 @@ new Vue({
       return [
         { text: "同步组", value: "syncGroup",  width: 120, sortable: true, class: "fixed", cellClass: "fixed truncate max-w-[300px]"  },
         { text: "ID", value: "id", width: 50, sortable: true, cellClass: "truncate max-w-[300px]" },
+        { text: "源MYSQL", value: "sourceRemoteName", width: 80, sortable: true, cellClass: "truncate max-w-[300px]"  },
         { text: "源表", value: "sourceTableText", width: 80, sortable: true, cellClass: "truncate max-w-[400px]" },
         { text: "源表类型", value: "tableType", width: 80, sortable: true, cellClass: "truncate max-w-[300px]"  },
+        { text: "目标MYSQL", value: "targetRemoteName", width: 80, sortable: true, cellClass: "truncate max-w-[300px]"  },
         { text: "目标表", value: "targetTableText", width: 80, sortable: true, cellClass: "truncate max-w-[400px]" },
         { text: "定时检查", value: "syncTimeSlot", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
         { text: "同步状态", value: "syncStatus", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
@@ -723,8 +732,10 @@ new Vue({
       this.updateActionData = {
         syncGroup: data.syncGroup,
         syncTimeSlot: data.syncTimeSlot,
+        sourceRemoteName: data.sourceRemoteName,
         sourceDatabase: data.sourceDatabase,
         sourceTable: data.sourceTable,
+        targetRemoteName: data.targetRemoteName,
         targetDatabase: data.targetDatabase,
         targetTable: data.targetTable,
       };
