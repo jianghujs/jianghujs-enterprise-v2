@@ -28,40 +28,40 @@ function getCreateTableSqlFromView({targetTable,columnsDefinition,viewDefinition
 
 class TableSyncRemoteService extends Service {
 
+  // TODO: tableSyncConfig.js 也参考优化
   async getDatabaseInfo() {
     const { jianghuKnex, config, logger } = this.app;
     const remoteDatabaseList = config.remoteDatabaseList;
 
     const databaseList = [];
-    const databaseMap = {};
+    const tableListMap = {};
     const tableTypeMap = {};
 
     for(const remoteDatabase of remoteDatabaseList){
-      const { sourceDatabase, ...connection } = remoteDatabase;
-      const sourceDatabaseReal = connection.database;
+      const { remoteName, ...connection } = remoteDatabase;
+      const databaseName = remoteName;
+      const databaseNameReal = connection.database;
       try {
         const knex = Knex({ client: 'mysql2', connection });
         const tableList = await knex.select('TABLE_NAME').from('information_schema.TABLES')
-          .where('TABLE_SCHEMA', sourceDatabaseReal)
+          .where('TABLE_SCHEMA', databaseNameReal)
         .orderBy('table_name', 'desc')
         .select('table_name as sourceTable', 'table_schema as sourceDatabase', 'table_type as tableType');
         knex.destroy();
-        // 注意: 不要把数据库密码暴露出去
-        databaseList.push({ sourceDatabase, tableList });
-        databaseMap[sourceDatabase] = tableList;
+        databaseList.push(databaseName);
+        tableListMap[databaseName] = tableList;
         tableList.forEach(item => {
-          tableTypeMap[`${sourceDatabase}.${item.sourceTable}`] = item.tableType;
+          tableTypeMap[`${databaseName}.${item.sourceTable}`] = item.tableType;
         });
       } catch (error) {
-        // 注意: 不要把数据库密码暴露出去
-        databaseList.push({ sourceDatabase, tableList: [] });
-        databaseMap[sourceDatabase] = [];
-        logger.error('[getDatabaseInfo]', `remoteDatabase: ${sourceDatabase}`, error);
+        databaseList.push(databaseName);
+        tableListMap[databaseName] = [];
+        logger.error('[getDatabaseInfo]', `remoteName: ${remoteName}`, error);
         continue;
       }
     }
    
-    return { databaseList, databaseMap, tableTypeMap };
+    return { databaseList, tableListMap, tableTypeMap };
   }
 
   async recycleTableSyncConfig({ id }) {
@@ -78,18 +78,34 @@ class TableSyncRemoteService extends Service {
   }
 
   async doSyncTableRemoteByIdList({ idList }) {
-    const { knex,jianghuKnex, logger } = this.app;
+    const { knex, jianghuKnex, config, logger } = this.app;
     const syncList = await jianghuKnex('_table_sync_config_remote')
       .where({ rowStatus: '正常' })
       .whereIn("id", idList)
       .select('id', 'sourceDatabase', 'sourceTable', 'targetDatabase', 'targetTable');
     const tableCount = syncList.length;
     const startTime = new Date().getTime();
+
+    const remoteConnectionMap = config.remoteDatabaseList.reduce((acc, { remoteName, ...connection }) => {
+      acc[remoteName] = connection;
+      return acc;
+    }, {});
+
     for (const [index, syncObj] of syncList.entries()) { 
       try {
-        await this.doTargetTableDDL(syncObj);
-        await this.doSyncTable(syncObj);
+        const sourceConnection = remoteConnectionMap[syncObj.sourceDatabase];
+        const targetConnection = remoteConnectionMap[syncObj.targetDatabase];
+        const sourceDatabase = sourceConnection?.database;
+        const targetDatabase = targetConnection?.database;
+        const sourceTable = syncObj.sourceTable;
+        const targetTable = syncObj.targetTable;
+        const sourceKnex = Knex({ client: 'mysql2', connection: sourceConnection });
+        const targetKnex = Knex({ client: 'mysql2', connection: targetConnection });
+        await this.doTargetTableDDL({ sourceDatabase, sourceTable, targetDatabase, targetTable, sourceKnex, targetKnex });
+        // await this.doSyncTable(syncObj);
         logger.info(`[doSyncTableRemoteByIdList] ${index + 1}/${tableCount} ID:${syncObj.id} 成功`);
+        sourceKnex.destroy();
+        targetKnex.destroy();
       } catch (error) {
         await jianghuKnex('_table_sync_config_remote').where({ id: syncObj.id })
           .update({ 
@@ -101,11 +117,62 @@ class TableSyncRemoteService extends Service {
         logger.error(`[doSyncTableRemoteByIdList] ID:${syncObj.id} 失败`, error);
       }
     }
-    await this.clearMysqlTrigger({});
     logger.warn('[doSyncTableRemoteByIdList] end', { tableCount: idList.length, useTime: `${new Date().getTime() - startTime}/ms` });
-
   }
 
+  async doTargetTableDDL({ sourceDatabase, sourceTable, targetDatabase, targetTable, sourceKnex, targetKnex }) {
+    const {knex, logger} = this.app;
+
+    const columnsDefinition = (await sourceKnex.raw(`SELECT COLUMN_NAME,IS_NULLABLE,COLUMN_TYPE,CHARACTER_SET_NAME,COLLATION_NAME,COLUMN_COMMENT FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = '${sourceDatabase}' AND TABLE_NAME = '${sourceTable}';`))[0];
+    const viewDefinition = (await targetKnex.raw(`SELECT CHARACTER_SET_CLIENT,COLLATION_CONNECTION FROM INFORMATION_SCHEMA.VIEWS 
+      WHERE TABLE_SCHEMA = '${sourceDatabase}' AND TABLE_NAME = '${sourceTable}';`))[0][0];
+
+    let targetTableDDL = null;
+    let targetTableDDLExcept = null;
+    const tableTypeResult = await sourceKnex.raw(`SELECT TABLE_TYPE FROM INFORMATION_SCHEMA.TABLES 
+      WHERE TABLE_SCHEMA = '${sourceDatabase}' AND TABLE_NAME = '${sourceTable}';`);
+    const tableType = tableTypeResult[0]?.[0]?.TABLE_TYPE;
+    if (tableType === 'VIEW') {
+      targetTableDDLExcept = getCreateTableSqlFromView({ targetTable, columnsDefinition, viewDefinition });
+      targetTableDDLExcept = targetTableDDLExcept
+        .replace(/AUTO_INCREMENT=\d+ ?/, '')
+        .replace(/\n\s*/g, '')
+        .replace(/[\r\n]+/g, '');
+    } 
+
+    if(tableType === "BASE TABLE"){
+      const sourceTableDDLResult = await sourceKnex.raw(`SHOW CREATE TABLE ${sourceDatabase}.${sourceTable};`);
+      const sourceTableDDL = sourceTableDDLResult[0][0]['Create Table'];
+      targetTableDDLExcept = sourceTableDDL
+        .replace(`CREATE TABLE \`${sourceTable}\``, `CREATE TABLE \`${targetTable}\``)
+        .replace(/AUTO_INCREMENT=\d+ ?/, '')
+        .replace(/\n\s*/g, '')
+        .replace(/[\r\n]+/g, '');
+    }
+
+    if(!targetTableDDLExcept){
+      logger.error(`[syncTable.targetTableDDL] ${sourceDatabase}.${sourceTable} 不存在`);
+      throw new Error(`${sourceDatabase}.${sourceTable} 源表不存在` );
+    }
+
+    const tableExists = await targetKnex.schema.hasTable(targetTable);
+    if (tableExists) {
+      const targetTableDDLResult = await targetKnex.raw(`SHOW CREATE TABLE ${targetDatabase}.${targetTable};`);
+      targetTableDDL = targetTableDDLResult[0][0]['Create Table']
+        .replace(/AUTO_INCREMENT=\d+ ?/, '')
+        .replace(/\n\s*/g, '')
+        .replace(/[\r\n]+/g, '');
+    }
+
+    if (targetTableDDL !== targetTableDDLExcept) {
+      logger.warn('[doTargetTableDDL]', `${targetDatabase}.${targetTable}`, 'DDL有改动, 重新生成同步表');
+      await targetKnex.raw(`DROP TABLE IF EXISTS ${targetDatabase}.${targetTable};`);
+      targetTableDDLExcept = targetTableDDLExcept
+        .replace(`CREATE TABLE \`${targetTable}\``, `CREATE TABLE \`${targetDatabase}\`.\`${targetTable}\``);
+      await targetKnex.raw(targetTableDDLExcept);
+    }
+  }
 
 }
 

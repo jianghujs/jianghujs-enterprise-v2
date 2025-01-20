@@ -30,12 +30,12 @@ const content = {
       }
     },
     {
-      actionId: "doSyncTableByIdList",
+      actionId: "doSyncTableRemoteByIdList",
       resourceType: "service",
       desc: "✅数据库管理页-触发同步",
       resourceData: {
         service: "tableSyncRemote",
-        serviceFunction: "doSyncTableByIdList"
+        serviceFunction: "doSyncTableRemoteByIdList"
       }
     },
     {
@@ -69,7 +69,7 @@ const content = {
       cardAttrs: { class: 'rounded-lg elevation-0' },
       headActionList: [
         { tag: 'v-btn', value: '新增同步表', attrs: { color: 'success', class: 'mr-2', '@click': 'doUiAction("startCreateItem")' }, quickAttrs: ['small'] },
-        { tag: 'v-btn', value: '同步全部', attrs: { color: 'success', class: 'mr-2', '@click': "doUiAction('doSyncTableByIdList', { idList: tableData.map(item => item.id) })" }, quickAttrs: ['small'] },
+        { tag: 'v-btn', value: '同步全部', attrs: { color: 'success', class: 'mr-2', '@click': "doUiAction('doSyncTableRemoteByIdList', { idList: tableData.map(item => item.id) })" }, quickAttrs: ['small'] },
         { tag: 'v-btn', value: '清除同步次数', attrs: { color: 'success', class: 'mr-2', '@click': "doUiAction('clearSyncTimesCount', {})" }, quickAttrs: ['small'] },
         { tag: 'v-spacer' },
         /*html*/`
@@ -104,7 +104,7 @@ const content = {
             <v-chip small :class="item.syncStatus == '正常' ? 'jh-status-tag-success' : 'jh-status-tag-error'"> 
               {{ item.syncStatus }} 
             </v-chip>
-            <span role="button" @click="doUiAction('doSyncTableByIdList', { idList: [item.id] })" title="同步" class="translate-y-[2px]">
+            <span role="button" @click="doUiAction('doSyncTableRemoteByIdList', { idList: [item.id] })" title="同步" class="translate-y-[2px]">
               <v-icon size="18" color="success">mdi-sync</v-icon>
             </span>
           </div>
@@ -156,8 +156,7 @@ const content = {
             },
             { tag: 'div', colAttrs: { md: 12, class: 'pa-0'} },
             { label: "同步-源库", model: "sourceDatabase", tag: "v-combobox", rules: "validationRules.requireRules", 
-              attrs: { ':items': 'constantObj.databaseList', 
-                'item-text': 'sourceDatabase', 'item-value': 'sourceDatabase', 'return-object': false },
+              attrs: { ':items': 'constantObj.databaseList', 'return-object': false },
               colAttrs: { md: 4 },
             },
             { label: /*html*/`
@@ -170,14 +169,13 @@ const content = {
                 </span>
                 `, 
               model: "sourceTable", tag: "v-combobox", rules: "validationRules.requireRules", 
-              attrs: { ':items': 'constantObj.databaseMap[createItem.sourceDatabase]||[]', 
+              attrs: { ':items': 'constantObj.tableListMap[createItem.sourceDatabase]||[]', 
                   'item-text': 'sourceTable', 'item-value': 'sourceTable', 'return-object': false},
               colAttrs: { md: 4 },
             },
             { tag: 'div', colAttrs: { md: 12, class: 'pa-0'} },
             { label: "同步-目标库", model: "targetDatabase", tag: "v-combobox", rules: "validationRules.requireRules", 
-              attrs: { ':items': 'constantObj.databaseList', 
-                'item-text': 'sourceDatabase', 'item-value': 'sourceDatabase', 'return-object': false },
+              attrs: { ':items': 'constantObj.databaseList', 'return-object': false },
               colAttrs: { md: 4 },
             },
             { label: "同步-目标表", model: "targetTable", tag: "v-text-field", rules: "validationRules.targetTableRules", 
@@ -221,8 +219,7 @@ const content = {
             },
             { tag: 'div', colAttrs: { md: 12, class: 'pa-0'} },
             { label: "同步-源库", model: "sourceDatabase", tag: "v-combobox", rules: "validationRules.requireRules", 
-              attrs: { ':items': 'constantObj.databaseList', 
-                'item-text': 'sourceDatabase', 'item-value': 'sourceDatabase', 'return-object': false },
+              attrs: { ':items': 'constantObj.databaseList', 'return-object': false },
               colAttrs: { md: 4 },
             },
             { label: /*html*/`
@@ -235,14 +232,13 @@ const content = {
               </span>
               `, 
               model: "sourceTable", tag: "v-combobox", rules: "validationRules.requireRules", 
-              attrs: { ':items': 'constantObj.databaseMap[updateItem.sourceDatabase]||[]', 
+              attrs: { ':items': 'constantObj.tableListMap[updateItem.sourceDatabase]||[]', 
                 'item-text': 'sourceTable', 'item-value': 'sourceTable', 'return-object': false },
               colAttrs: { md: 4 },
             },
             { tag: 'div', colAttrs: { md: 12, class: 'pa-0'} },
             { label: "同步-目标库", model: "targetDatabase", tag: "v-combobox", rules: "validationRules.requireRules", 
-              attrs: { ':items': 'constantObj.databaseList', 
-                'item-text': 'sourceDatabase', 'item-value': 'sourceDatabase', 'return-object': false },
+              attrs: { ':items': 'constantObj.databaseList', 'return-object': false },
               colAttrs: { md: 4 },
             },
             { label: "同步-目标表", model: "targetTable", tag: "v-text-field", rules: "validationRules.targetTableRules", 
@@ -292,8 +288,8 @@ const content = {
           720: '12小时',
           1440: '24小时',
         },
-        databaseMap: {},
         databaseList: [],
+        tableListMap: {},
         tableTypeMap: {},
       },
       validationRules: {
@@ -335,7 +331,7 @@ const content = {
             { text: "源表", value: "sourceTable", width: 80, sortable: true, class: "fixed", cellClass: "fixed truncate max-w-[300px]" },
             { text: "源表类型", value: "tableType", width: 80, sortable: true, cellClass: "truncate max-w-[300px]"  },
             { text: "ID", value: "id", width: 50, sortable: true, cellClass: "truncate max-w-[300px]" },
-            { text: "源库", value: "sourceDatabase", width: 80, sortable: true, cellClass: "truncate max-w-[300px]"  },
+            { text: "源库(别名)", value: "sourceDatabase", width: 80, sortable: true, cellClass: "truncate max-w-[300px]"  },
             { text: "目标表", value: "targetTableText", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
             { text: "同步组", value: "syncGroup",  width: 120, sortable: true, class: "", cellClass: "truncate max-w-[300px]"  },
             { text: "定时检查", value: "syncTimeSlot", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
@@ -369,7 +365,7 @@ const content = {
     doUiAction: {
       getTableData: ['prepareTableParamsDefault', 'prepareTableParams', 'getTableData', 'formatTableData', 'initConstantObjData'],
  
-      doSyncTableByIdList: ['doSyncTableByIdList', 'doUiAction.getTableData'],
+      doSyncTableRemoteByIdList: ['doSyncTableRemoteByIdList', 'doUiAction.getTableData'],
       syncGroupSelectDailog: ['syncGroupSelectDailog'],
       initConstantObjData: ['initConstantObjData'],
       recycleItem: ['recycleItem', 'doUiAction.getTableData'],
@@ -441,13 +437,13 @@ const content = {
 
 
       // ---------- 同步相关 uiAction >>>>>>>>>>>> --------
-      async doSyncTableByIdList({ idList }) {
+      async doSyncTableRemoteByIdList({ idList }) {
         window.vtoast.loading({ message: `${idList.length}个表同步`, time: -1 });
         await window.jianghuAxios({
           data: {
             appData: {
               pageId: 'tableSyncConfigRemote',
-              actionId: 'doSyncTableByIdList',
+              actionId: 'doSyncTableRemoteByIdList',
               actionData: {
                 idList,
               }
@@ -502,9 +498,9 @@ const content = {
             }
           }
         });
-        const { databaseMap, databaseList, tableTypeMap } = result.data.appData.resultData;
-        this.constantObj.databaseMap = databaseMap;
+        const { databaseList, tableListMap, tableTypeMap } = result.data.appData.resultData;
         this.constantObj.databaseList = databaseList;
+        this.constantObj.tableListMap = tableListMap;
         this.constantObj.tableTypeMap = tableTypeMap;
         if (showTip) { window.vtoast.success("查询表"); }
       },

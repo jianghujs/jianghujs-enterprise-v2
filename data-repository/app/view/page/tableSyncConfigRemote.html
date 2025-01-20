@@ -40,7 +40,7 @@
               <v-btn color="success" class="mr-2" @click="doUiAction('startCreateItem')" small>
             新增同步表
           </v-btn>
-              <v-btn color="success" class="mr-2" @click="doUiAction('doSyncTableByIdList', { idList: tableData.map(item => item.id) })" small>
+              <v-btn color="success" class="mr-2" @click="doUiAction('doSyncTableRemoteByIdList', { idList: tableData.map(item => item.id) })" small>
             同步全部
           </v-btn>
               <v-btn color="success" class="mr-2" @click="doUiAction('clearSyncTimesCount', {})" small>
@@ -93,7 +93,7 @@
             <v-chip small :class="item.syncStatus == '正常' ? 'jh-status-tag-success' : 'jh-status-tag-error'"> 
               {{ item.syncStatus }} 
             </v-chip>
-            <span role="button" @click="doUiAction('doSyncTableByIdList', { idList: [item.id] })" title="同步" class="translate-y-[2px]">
+            <span role="button" @click="doUiAction('doSyncTableRemoteByIdList', { idList: [item.id] })" title="同步" class="translate-y-[2px]">
               <v-icon size="18" color="success">mdi-sync</v-icon>
             </span>
           </div>
@@ -203,7 +203,7 @@
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">同步-源库</span>
-                <v-combobox :items="constantObj.databaseList" item-text="sourceDatabase" item-value="sourceDatabase" :return-object="false" class="jh-v-input" dense single-line filled v-model="createItem.sourceDatabase" :rules="validationRules.requireRules"></v-combobox>
+                <v-combobox :items="constantObj.databaseList" :return-object="false" class="jh-v-input" dense single-line filled v-model="createItem.sourceDatabase" :rules="validationRules.requireRules"></v-combobox>
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">
@@ -215,14 +215,14 @@
                   查询<v-icon size="18" color="success">mdi-sync</v-icon>
                 </span>
                 </span>
-                <v-combobox :items="constantObj.databaseMap[createItem.sourceDatabase]||[]" item-text="sourceTable" item-value="sourceTable" :return-object="false" class="jh-v-input" dense single-line filled v-model="createItem.sourceTable" :rules="validationRules.requireRules"></v-combobox>
+                <v-combobox :items="constantObj.tableListMap[createItem.sourceDatabase]||[]" item-text="sourceTable" item-value="sourceTable" :return-object="false" class="jh-v-input" dense single-line filled v-model="createItem.sourceTable" :rules="validationRules.requireRules"></v-combobox>
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="12"class="pa-0">
                 <div ></div>
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">同步-目标库</span>
-                <v-combobox :items="constantObj.databaseList" item-text="sourceDatabase" item-value="sourceDatabase" :return-object="false" class="jh-v-input" dense single-line filled v-model="createItem.targetDatabase" :rules="validationRules.requireRules"></v-combobox>
+                <v-combobox :items="constantObj.databaseList" :return-object="false" class="jh-v-input" dense single-line filled v-model="createItem.targetDatabase" :rules="validationRules.requireRules"></v-combobox>
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">同步-目标表</span>
@@ -274,7 +274,7 @@
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">同步-源库</span>
-                <v-combobox :items="constantObj.databaseList" item-text="sourceDatabase" item-value="sourceDatabase" :return-object="false" class="jh-v-input" dense single-line filled v-model="updateItem.sourceDatabase" :rules="validationRules.requireRules"></v-combobox>
+                <v-combobox :items="constantObj.databaseList" :return-object="false" class="jh-v-input" dense single-line filled v-model="updateItem.sourceDatabase" :rules="validationRules.requireRules"></v-combobox>
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">
@@ -286,14 +286,14 @@
                 查询<v-icon size="18" color="success">mdi-sync</v-icon>
               </span>
               </span>
-                <v-combobox :items="constantObj.databaseMap[updateItem.sourceDatabase]||[]" item-text="sourceTable" item-value="sourceTable" :return-object="false" class="jh-v-input" dense single-line filled v-model="updateItem.sourceTable" :rules="validationRules.requireRules"></v-combobox>
+                <v-combobox :items="constantObj.tableListMap[updateItem.sourceDatabase]||[]" item-text="sourceTable" item-value="sourceTable" :return-object="false" class="jh-v-input" dense single-line filled v-model="updateItem.sourceTable" :rules="validationRules.requireRules"></v-combobox>
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="12"class="pa-0">
                 <div ></div>
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">同步-目标库</span>
-                <v-combobox :items="constantObj.databaseList" item-text="sourceDatabase" item-value="sourceDatabase" :return-object="false" class="jh-v-input" dense single-line filled v-model="updateItem.targetDatabase" :rules="validationRules.requireRules"></v-combobox>
+                <v-combobox :items="constantObj.databaseList" :return-object="false" class="jh-v-input" dense single-line filled v-model="updateItem.targetDatabase" :rules="validationRules.requireRules"></v-combobox>
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">同步-目标表</span>
@@ -407,8 +407,8 @@ new Vue({
         720: "12小时",
         1440: "24小时"
       },
-      databaseMap: {},
       databaseList: [],
+      tableListMap: {},
       tableTypeMap: {}
     },
     validationRules: {
@@ -468,7 +468,7 @@ new Vue({
           { text: "源表", value: "sourceTable", width: 80, sortable: true, class: "fixed", cellClass: "fixed truncate max-w-[300px]" },
           { text: "源表类型", value: "tableType", width: 80, sortable: true, cellClass: "truncate max-w-[300px]"  },
           { text: "ID", value: "id", width: 50, sortable: true, cellClass: "truncate max-w-[300px]" },
-          { text: "源库", value: "sourceDatabase", width: 80, sortable: true, cellClass: "truncate max-w-[300px]"  },
+          { text: "源库(别名)", value: "sourceDatabase", width: 80, sortable: true, cellClass: "truncate max-w-[300px]"  },
           { text: "目标表", value: "targetTableText", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
           { text: "同步组", value: "syncGroup",  width: 120, sortable: true, class: "", cellClass: "truncate max-w-[300px]"  },
           { text: "定时检查", value: "syncTimeSlot", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
@@ -534,8 +534,8 @@ new Vue({
             await this.formatTableData(uiActionData);
             await this.initConstantObjData(uiActionData);
             break;
-          case 'doSyncTableByIdList':
-            await this.doSyncTableByIdList(uiActionData);
+          case 'doSyncTableRemoteByIdList':
+            await this.doSyncTableRemoteByIdList(uiActionData);
             await this.doUiAction('getTableData', uiActionData);
             break;
           case 'syncGroupSelectDailog':
@@ -818,13 +818,13 @@ new Vue({
       });
       window.vtoast.success(`${item.id} 移入回收站`);
     },
-    async doSyncTableByIdList({ idList }) {
+    async doSyncTableRemoteByIdList({ idList }) {
       window.vtoast.loading({ message: `${idList.length}个表同步`, time: -1 });
       await window.jianghuAxios({
         data: {
           appData: {
             pageId: 'tableSyncConfigRemote',
-            actionId: 'doSyncTableByIdList',
+            actionId: 'doSyncTableRemoteByIdList',
             actionData: {
               idList,
             }
@@ -879,9 +879,9 @@ new Vue({
           }
         }
       });
-      const { databaseMap, databaseList, tableTypeMap } = result.data.appData.resultData;
-      this.constantObj.databaseMap = databaseMap;
+      const { databaseList, tableListMap, tableTypeMap } = result.data.appData.resultData;
       this.constantObj.databaseList = databaseList;
+      this.constantObj.tableListMap = tableListMap;
       this.constantObj.tableTypeMap = tableTypeMap;
       if (showTip) { window.vtoast.success("查询表"); }
     },
