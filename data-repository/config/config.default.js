@@ -21,6 +21,8 @@ module.exports = appInfo => {
       tableSyncRemoteSchedule: false,
       mergeTableSchedule: false,
     },
+    remoteDatabaseList: [],
+    
     appId,
     appTitle: '数据中心',
     appLogo: `${appId}/public/img/logo.png`,

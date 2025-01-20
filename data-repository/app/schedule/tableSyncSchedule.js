@@ -9,7 +9,7 @@ module.exports = app => {
   return {
     schedule: {
       immediate: true, // 应用启动后触发
-      interval: '3min', // 每3min执行一次
+      interval: '2min', // 每2min执行一次
       type: 'worker', // worker: 只有一个worker执行
       disable: !app.config.schedule.tableSyncSchedule,
     },

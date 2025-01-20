@@ -16,7 +16,7 @@ const content = {
     },
   ], // { actionId: '', resourceType: '', resourceData: {}, resourceHook: {}, desc: '' }
   headContent: [
-    { tag: 'jh-page-title', value: "MySQL触发器", attrs: { cols: 12, sm: 6, md:4 }, helpBtn: true, slot: [] },
+    { tag: 'jh-page-title', value: "MySQL触发器", attrs: { cols: 12, sm: 6, md:4 }, helpBtn: false, slot: [] },
   ],
   pageContent: [
     {

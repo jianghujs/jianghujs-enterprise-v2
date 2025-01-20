@@ -43,7 +43,7 @@ class TableSyncService extends Service {
     const tableList = await jianghuKnex('information_schema.TABLES')
       .whereNotIn('table_schema', ['sys', 'information_schema', 'performance_schema', 'mysql'])
       .orderBy('table_name', 'desc')
-      .select('table_name as sourceTable', 'table_schema as sourceDatabase', 'table_type as tableType');
+      .select('table_schema as sourceDatabase', 'table_name as sourceTable', 'table_type as tableType');
     
     const triggerListAll = await jianghuKnex('information_schema.triggers')
       .whereNotIn('TRIGGER_SCHEMA', ['sys', 'information_schema', 'performance_schema', 'mysql'])
@@ -53,9 +53,9 @@ class TableSyncService extends Service {
     const tableTriggerCountMap = Object.fromEntries(Object.entries(tableTriggerGroupMap).map(([key, value]) => [key, value.length]));
       
     const tableTypeMap = Object.fromEntries(tableList.map(item => [`${item.sourceDatabase}.${item.sourceTable}`, item.tableType]));
-    const databaseMap = _.groupBy(tableList, 'sourceDatabase');
-    const databaseList = Object.keys(databaseMap).map(key => ({ sourceDatabase: key, tableList: databaseMap[key] }));
-    return { defaultTargetDatabase, databaseMap, databaseList, tableTriggerCountMap, tableTypeMap};
+    const tableListMap = _.groupBy(tableList, 'sourceDatabase');
+    const databaseList = Object.keys(tableListMap);
+    return { defaultTargetDatabase, databaseList, tableListMap, tableTriggerCountMap, tableTypeMap};
   }
 
   async recycleTableSyncConfig({ id }) {

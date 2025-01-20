@@ -165,8 +165,7 @@ const content = {
               colAttrs: { md: 4 },
             },
             { label: "同步-源库", model: "sourceDatabase", tag: "v-combobox", rules: "validationRules.requireRules", 
-              attrs: { ':items': 'constantObj.databaseList', 
-                'item-text': 'sourceDatabase', 'item-value': 'sourceDatabase', 'return-object': false },
+              attrs: { ':items': 'constantObj.databaseList', 'return-object': false },
               colAttrs: { md: 4 },
             },
             { label: /*html*/`
@@ -179,14 +178,13 @@ const content = {
                 </span>
                 `, 
               model: "sourceTable", tag: "v-combobox", rules: "validationRules.requireRules", 
-              attrs: { ':items': 'constantObj.databaseMap[createItem.sourceDatabase]||[]', 
+              attrs: { ':items': 'constantObj.tableListMap[createItem.sourceDatabase]||[]', 
                 'item-text': 'sourceTable', 'item-value': 'sourceTable', 'return-object': false },
               colAttrs: { md: 4 },
             },
             { tag: 'div', colAttrs: { md: 12, class: 'pa-0'} },
             { label: "同步-目标库", model: "targetDatabase", tag: "v-combobox", rules: "validationRules.requireRules", 
-              attrs: { ':items': 'constantObj.databaseList', 
-                'item-text': 'sourceDatabase', 'item-value': 'sourceDatabase', 'return-object': false },
+              attrs: { ':items': 'constantObj.databaseList', 'return-object': false },
               colAttrs: { md: 4 },
             },
             { label: "同步-目标表", model: "targetTable", tag: "v-text-field", rules: "validationRules.targetTableRules", 
@@ -233,8 +231,7 @@ const content = {
               colAttrs: { md: 4 },
             },
             { label: "同步-源库", model: "sourceDatabase", tag: "v-combobox", rules: "validationRules.requireRules", 
-              attrs: { ':items': 'constantObj.databaseList', 
-                'item-text': 'sourceDatabase', 'item-value': 'sourceDatabase', 'return-object': false },
+              attrs: { ':items': 'constantObj.databaseList', 'return-object': false },
               colAttrs: { md: 4 },
             },
             { label: /*html*/`
@@ -247,14 +244,13 @@ const content = {
               </span>
               `, 
               model: "sourceTable", tag: "v-combobox", rules: "validationRules.requireRules", 
-              attrs: { ':items': 'constantObj.databaseMap[updateItem.sourceDatabase]||[]', 
+              attrs: { ':items': 'constantObj.tableListMap[updateItem.sourceDatabase]||[]', 
                 'item-text': 'sourceTable', 'item-value': 'sourceTable', 'return-object': false },
               colAttrs: { md: 4 },
             },
             { tag: 'div', colAttrs: { md: 12, class: 'pa-0'} },
             { label: "同步-目标库", model: "targetDatabase", tag: "v-combobox", rules: "validationRules.requireRules", 
-              attrs: { ':items': 'constantObj.databaseList', 
-                'item-text': 'sourceDatabase', 'item-value': 'sourceDatabase', 'return-object': false },
+              attrs: { ':items': 'constantObj.databaseList', 'return-object': false },
               colAttrs: { md: 4 },
             },
             { label: "同步-目标表", model: "targetTable", tag: "v-text-field", rules: "validationRules.targetTableRules", 
@@ -304,8 +300,8 @@ const content = {
           720: '12小时',
           1440: '24小时',
         },
-        databaseMap: {},
         databaseList: [],
+        tableListMap: {},
         tableTriggerCountMap: {},
         tableTypeMap: {},
       },
@@ -519,8 +515,8 @@ const content = {
             }
           }
         });
-        const { defaultTargetDatabase, databaseMap, databaseList, tableTriggerCountMap, tableTypeMap } = result.data.appData.resultData;
-        this.constantObj.databaseMap = databaseMap;
+        const { defaultTargetDatabase, databaseList, tableListMap, tableTriggerCountMap, tableTypeMap } = result.data.appData.resultData;
+        this.constantObj.tableListMap = tableListMap;
         this.constantObj.databaseList = databaseList;
         this.defaultTargetDatabase = defaultTargetDatabase;
         this.constantObj.tableTriggerCountMap = tableTriggerCountMap;
