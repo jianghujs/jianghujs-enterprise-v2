@@ -105,7 +105,7 @@ class TableSyncService extends Service {
           .update({ 
             syncStatus: '失败', 
             lastSyncTime: dayjs().format(), 
-            lastSyncInfo: error.message,
+            lastSyncInfo: `ERROR: ${error.message}`,
             syncTimesCount: knex.raw('syncTimesCount + 1'),
           });
         logger.error(`[doSyncTableByIdList] ID:${syncObj.id} 失败`, error);
@@ -200,6 +200,7 @@ class TableSyncService extends Service {
 
     if (id) {
       await jianghuKnex('_table_sync_config').where({ id }).update({ syncStatus: '正常' });
+      await jianghuKnex('_table_sync_config').where({ id }).where('lastSyncInfo', 'like', 'ERROR%').update({lastSyncInfo: ''});
       if(diffCount > 0){
         await jianghuKnex('_table_sync_config').where({ id })
           .update({ 
