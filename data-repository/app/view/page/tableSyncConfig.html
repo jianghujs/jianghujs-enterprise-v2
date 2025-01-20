@@ -96,7 +96,7 @@
         </template>
         <template v-slot:item.syncStatus="{ item }">
           <div class="d-flex justify-space-between ">
-            <v-chip small :class="item.syncStatus == '正常' ? 'jh-status-tag-success' : 'jh-status-tag-error'"> 
+            <v-chip small :class="item.syncStatus == '成功' ? 'jh-status-tag-success' : 'jh-status-tag-error'"> 
               {{ item.syncStatus }} 
             </v-chip>
             <span role="button" @click="doUiAction('doSyncTableByIdList', { idList: [item.id] })" title="同步" class="translate-y-[2px]">
