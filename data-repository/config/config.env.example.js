@@ -6,7 +6,6 @@ require('dotenv').config({path: path.resolve(__dirname, '../../../.env')});
 module.exports = appInfo => {
 
   return {
-    dataSyncStatus: '启用', // 是否启用同步，启用/禁用
     knex: {
       client: {
         dialect: 'mysql',
