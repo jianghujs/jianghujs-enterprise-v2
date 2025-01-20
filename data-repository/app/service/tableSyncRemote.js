@@ -102,7 +102,10 @@ class TableSyncRemoteService extends Service {
         const sourceKnex = Knex({ client: 'mysql2', connection: sourceConnection });
         const targetKnex = Knex({ client: 'mysql2', connection: targetConnection });
         await this.doTargetTableDDL({ sourceDatabase, sourceTable, targetDatabase, targetTable, sourceKnex, targetKnex });
-        // await this.doSyncTable(syncObj);
+        await this.doSyncTable({ id: syncObj.id, 
+          sourceDatabase, sourceTable, targetDatabase, targetTable, 
+          sourceConnection, targetConnection, sourceKnex, targetKnex 
+        });
         logger.info(`[doSyncTableRemoteByIdList] ${index + 1}/${tableCount} ID:${syncObj.id} 成功`);
         sourceKnex.destroy();
         targetKnex.destroy();
@@ -121,7 +124,7 @@ class TableSyncRemoteService extends Service {
   }
 
   async doTargetTableDDL({ sourceDatabase, sourceTable, targetDatabase, targetTable, sourceKnex, targetKnex }) {
-    const {knex, logger} = this.app;
+    const { logger } = this.app;
 
     const columnsDefinition = (await sourceKnex.raw(`SELECT COLUMN_NAME,IS_NULLABLE,COLUMN_TYPE,CHARACTER_SET_NAME,COLLATION_NAME,COLUMN_COMMENT FROM INFORMATION_SCHEMA.COLUMNS 
       WHERE TABLE_SCHEMA = '${sourceDatabase}' AND TABLE_NAME = '${sourceTable}';`))[0];
@@ -171,6 +174,54 @@ class TableSyncRemoteService extends Service {
       targetTableDDLExcept = targetTableDDLExcept
         .replace(`CREATE TABLE \`${targetTable}\``, `CREATE TABLE \`${targetDatabase}\`.\`${targetTable}\``);
       await targetKnex.raw(targetTableDDLExcept);
+    }
+  }
+
+  async doSyncTable({ id, sourceDatabase, sourceTable, targetDatabase, targetTable, 
+    sourceConnection, targetConnection,
+    sourceKnex, targetKnex,
+  }) {
+    const { jianghuKnex, knex, logger } = this.app;
+
+    const hyperDiffResult = await hyperDiff({
+      oldDatabaseConnectionConfig: {...targetConnection, database: targetDatabase},
+      oldTable: targetTable,
+      newDatabaseConnectionConfig: {...sourceConnection, database: sourceDatabase},
+      newTable: sourceTable,
+      splitCount: 2,
+      stopThreshold: 100,
+      ignoreColumns: [],
+    });
+    const { added, removed, changed } = hyperDiffResult;
+    const diffCount = added.length + removed.length + changed.length;
+    if (added.length > 0) {
+      await targetKnex(`${targetTable}`).insert(added);
+    }
+    if (removed.length > 0) {
+      const idList = removed.map(item => item.id);
+      await targetKnex(`${targetTable}`).whereIn('id', idList).delete();
+    }
+    if (changed.length > 0) {
+      for (const item of changed) {
+        const { id, ...updateParam } = item.new;
+        await targetKnex(`${targetTable}`).where({ id }).update(updateParam);
+      }
+    }
+
+    if (id) {
+      await jianghuKnex('_table_sync_config_remote').where({ id }).update({ syncStatus: '正常' });
+      if(diffCount > 0){
+        await jianghuKnex('_table_sync_config_remote').where({ id })
+          .update({ 
+            lastSyncTime: dayjs().format(),
+            lastSyncInfo: `${added.length}条新增, ${changed.length}条修改, ${removed.length}条删除`,
+            syncTimesCount: knex.raw('syncTimesCount + 1'),
+          });
+      }
+    }
+
+    if (diffCount > 0) {
+      logger.warn('[syncTableRemote.doSyncTable]', `${targetDatabase}.${targetTable}`, { added: added.length, removed: removed.length, changed: changed.length });
     }
   }
 

@@ -17,7 +17,7 @@ module.exports = app => {
       const { jianghuKnex, logger } = ctx.app;
       const syncList = await jianghuKnex('_table_sync_config')
         .where({ rowStatus: '正常' })
-        .where('id', 302)
+        // .where('id', 302)
         .select('id');
       const tableCount = syncList.length ;
       logger.warn('[tableSyncSchedule] start', { tableCount });
