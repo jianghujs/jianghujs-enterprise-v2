@@ -212,7 +212,7 @@
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">同步-目标表</span>
-                <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.targetTable" :rules="validationRules.requireRules"></v-text-field>
+                <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.targetTable" :rules="validationRules.targetTableRules"></v-text-field>
               </v-col>
             </v-row>
 
@@ -276,7 +276,7 @@
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">同步-目标表</span>
-                <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.targetTable" :rules="validationRules.requireRules"></v-text-field>
+                <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.targetTable" :rules="validationRules.targetTableRules"></v-text-field>
               </v-col>
             </v-row>
 
@@ -392,6 +392,10 @@ new Vue({
     validationRules: {
       requireRules: [
         v => !!v || '必填'
+      ],
+      targetTableRules: [
+        v => !!v || '必填',
+        v => (v && v.length <= 36) || '不能超过36位'
       ]
     },
     filterMap: {},

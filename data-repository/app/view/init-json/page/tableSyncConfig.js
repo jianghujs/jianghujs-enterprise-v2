@@ -165,7 +165,7 @@ const content = {
               attrs: { ':items': 'constantObj.databaseList', 'item-text': 'sourceDatabase', 'item-value': 'sourceDatabase'},
               colAttrs: { md: 4 },
             },
-            { label: "同步-目标表", model: "targetTable", tag: "v-text-field", rules: "validationRules.requireRules", 
+            { label: "同步-目标表", model: "targetTable", tag: "v-text-field", rules: "validationRules.targetTableRules", 
               colAttrs: { md: 4 },
             },
           ], 
@@ -222,7 +222,7 @@ const content = {
               attrs: { ':items': 'constantObj.databaseList', 'item-text': 'sourceDatabase', 'item-value': 'sourceDatabase'},
               colAttrs: { md: 4 },
             },
-            { label: "同步-目标表", model: "targetTable", tag: "v-text-field", rules: "validationRules.requireRules", 
+            { label: "同步-目标表", model: "targetTable", tag: "v-text-field", rules: "validationRules.targetTableRules", 
               colAttrs: { md: 4 },
             },
           ], 
@@ -275,6 +275,12 @@ const content = {
       validationRules: {
         requireRules: [
           v => !!v || '必填',
+        ],
+        // Tip：在源头限制tableName 不能让 triggerName 超过64
+        //  - `${syncTriggerPrefix}_${targetTable}_UPDATE`.slice(-64);
+        targetTableRules: [
+          v => !!v || '必填',
+          v => (v && v.length <= 36) || '不能超过36位',
         ],
       },
       filterMap: {}, // 结果筛选条件

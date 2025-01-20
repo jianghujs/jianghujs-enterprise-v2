@@ -52,31 +52,36 @@ class TableSyncService extends Service {
   }
 
   async recycleTableSyncConfig({ id }) {
-    const { jianghuKnex } = this.app;
+    const { jianghuKnex, knex } = this.app;
     const { syncTriggerPrefix } = this.getConfig();
-    const tableSyncConfig = await jianghuKnex('_table_sync_config').where({ id }).first();
-    if (!tableSyncConfig) {
+    const syncObj = await jianghuKnex('_table_sync_config').where({ id }).first();
+    if (!syncObj) {
       throw new BizError(errorInfoEnum.data_not_found);
     }
-    const { sourceDatabase } = tableSyncConfig;
+    const { sourceDatabase, sourceTable, targetDatabase, targetTable } = syncObj;
     await jianghuKnex('_table_sync_config')
       .where({id})
       .update({rowStatus: '回收站'});
 
-    const targetTable = tableSyncConfig.targetTable;
-    const DELETETriggerName = `${syncTriggerPrefix}_${targetTable}_DELETE`;
-    await jianghuKnex.raw(`DROP TRIGGER IF EXISTS ${sourceDatabase}.${DELETETriggerName};`);
-    const INSERTTriggerName = `${syncTriggerPrefix}_${targetTable}_INSERT`;
-    await jianghuKnex.raw(`DROP TRIGGER IF EXISTS ${sourceDatabase}.${INSERTTriggerName};`);
-    const UPDATETriggerName = `${syncTriggerPrefix}_${targetTable}_UPDATE`;
-    await jianghuKnex.raw(`DROP TRIGGER IF EXISTS ${sourceDatabase}.${UPDATETriggerName};`);
+
+    // const DELETETriggerName = `${syncTriggerPrefix}_${targetTable}_DELETE`;
+    // await jianghuKnex.raw(`DROP TRIGGER IF EXISTS ${sourceDatabase}.${DELETETriggerName};`);
+    // const INSERTTriggerName = `${syncTriggerPrefix}_${targetTable}_INSERT`;
+    // await jianghuKnex.raw(`DROP TRIGGER IF EXISTS ${sourceDatabase}.${INSERTTriggerName};`);
+    // const UPDATETriggerName = `${syncTriggerPrefix}_${targetTable}_UPDATE`;
+    // await jianghuKnex.raw(`DROP TRIGGER IF EXISTS ${sourceDatabase}.${UPDATETriggerName};`);
+
+    // 删除 targetDatabase.targetTable
+    if (targetDatabase === this.app.config.knex.client.connection.database) {
+      await knex.raw(`DROP TABLE IF EXISTS ${targetDatabase}.${targetTable};`);
+    }
     return;
   }
-
 
   async doSyncTableByIdList({ idList }) {
     const { knex,jianghuKnex, logger } = this.app;
     const syncList = await jianghuKnex('_table_sync_config')
+      .where({ rowStatus: '正常' })
       .whereIn("id", idList)
       .select('id', 'sourceDatabase', 'sourceTable', 'targetDatabase', 'targetTable');
     const tableCount = syncList.length;
@@ -85,6 +90,7 @@ class TableSyncService extends Service {
       try {
         await this.doTargetTableDDL(syncObj);
         await this.doSyncTable(syncObj);
+        await this.createMysqlTrigger(syncObj);
         logger.info(`[doSyncTableByIdList] ${index + 1}/${tableCount} ID:${syncObj.id} 成功`);
       } catch (error) {
         await jianghuKnex('_table_sync_config').where({ id: syncObj.id })
@@ -97,6 +103,7 @@ class TableSyncService extends Service {
         logger.error(`[doSyncTableByIdList] ID:${syncObj.id} 失败`, error);
       }
     }
+    await this.clearMysqlTrigger({});
     logger.warn('[doSyncTableByIdList] end', { tableCount: idList.length, useTime: `${new Date().getTime() - startTime}/ms` });
 
   }
@@ -197,6 +204,98 @@ class TableSyncService extends Service {
 
     if (diffCount > 0) {
       logger.warn('[syncTable.doSyncTable]', `${targetDatabase}.${targetTable}`, { added: added.length, removed: removed.length, changed: changed.length });
+    }
+  }
+
+  async createMysqlTrigger({ sourceDatabase, sourceTable, targetDatabase, targetTable } ) {
+    const {jianghuKnex, logger} = this.app;
+    const { syncTriggerPrefix } = this.getConfig();
+
+    const triggerListAll = await jianghuKnex('information_schema.triggers')
+      .whereNotIn('TRIGGER_SCHEMA', ['sys', 'information_schema', 'performance_schema', 'mysql'])
+      .where('TRIGGER_NAME', 'like', `${syncTriggerPrefix}_%`)
+      .select('TRIGGER_SCHEMA as sourceDatabase', 'TRIGGER_NAME as triggerName', 'EVENT_MANIPULATION as triggerEvent', 'ACTION_STATEMENT as triggerContent');
+    const allTriggerContentMap = Object.fromEntries(triggerListAll.map(tri => [`${tri.sourceDatabase}|${tri.triggerName}`, tri.triggerContent]));
+
+    const columnListSelect = await jianghuKnex('information_schema.COLUMNS')
+      .where({TABLE_SCHEMA: sourceDatabase, TABLE_NAME: sourceTable})
+      .select();
+    const columnList = columnListSelect.map(item => `\`${item.COLUMN_NAME}\``);
+    const NEWColumnList = columnListSelect.map(item => `NEW.\`${item.COLUMN_NAME}\``);
+    const updateColumnList = columnListSelect.map(item => `\`${item.COLUMN_NAME}\`=NEW.\`${item.COLUMN_NAME}\``);
+
+    const INSERTTriggerName = `${syncTriggerPrefix}_${targetTable}_INSERT`;
+    const INSERTTriggerContentSql = `BEGIN
+            INSERT INTO \`${targetDatabase}\`.\`${targetTable}\`
+            (${columnList.join(',')})
+            VALUES
+            (${NEWColumnList.join(',')});
+        END`;
+    const INSERTTriggerCreateSql = `CREATE TRIGGER \`${sourceDatabase}\`.\`${INSERTTriggerName}\` AFTER INSERT
+        ON \`${sourceDatabase}\`.\`${sourceTable}\` FOR EACH ROW
+        ${INSERTTriggerContentSql}`;
+    if (!allTriggerContentMap[INSERTTriggerName] || allTriggerContentMap[INSERTTriggerName] !== INSERTTriggerContentSql) {
+      await jianghuKnex.raw(`DROP TRIGGER IF EXISTS ${sourceDatabase}.${INSERTTriggerName};`);
+      await jianghuKnex.raw(INSERTTriggerCreateSql);
+      logger.warn('[createMysqlTrigger]', `创建触发器 ${sourceDatabase}|${INSERTTriggerName}`);
+    }
+
+    const UPDATETriggerName = `${syncTriggerPrefix}_${targetTable}_UPDATE`;
+    const UPDATETriggerContentSql = `BEGIN
+            UPDATE \`${targetDatabase}\`.\`${targetTable}\`
+            SET ${updateColumnList.join(',')}
+            where id=OLD.id;
+        END`;
+    const UPDATETriggerCreateSql = `CREATE TRIGGER \`${sourceDatabase}\`.\`${UPDATETriggerName}\` AFTER UPDATE
+        ON \`${sourceDatabase}\`.\`${sourceTable}\` FOR EACH ROW
+        ${UPDATETriggerContentSql}`;
+    if (!allTriggerContentMap[UPDATETriggerName] || allTriggerContentMap[UPDATETriggerName] !== UPDATETriggerContentSql) {
+      await jianghuKnex.raw(`DROP TRIGGER IF EXISTS ${sourceDatabase}.${UPDATETriggerName};`);
+      await jianghuKnex.raw(UPDATETriggerCreateSql);
+      logger.warn('[createMysqlTrigger]', `创建触发器 ${sourceDatabase}|${UPDATETriggerName}`);
+    }
+
+    const DELETETriggerName = `${syncTriggerPrefix}_${targetTable}_DELETE`;
+    const DELETETriggerContentSql = `BEGIN
+            DELETE FROM \`${targetDatabase}\`.\`${targetTable}\` WHERE id = OLD.id;
+        END`;
+    const DELETETriggerCreateSql = `CREATE TRIGGER \`${sourceDatabase}\`.\`${DELETETriggerName}\` AFTER DELETE
+        ON \`${sourceDatabase}\`.\`${sourceTable}\` FOR EACH ROW
+        ${DELETETriggerContentSql}`;
+    if (!allTriggerContentMap[DELETETriggerName] || allTriggerContentMap[DELETETriggerName] !== DELETETriggerContentSql) {
+      await jianghuKnex.raw(`DROP TRIGGER IF EXISTS ${sourceDatabase}.${DELETETriggerName};`);
+      await jianghuKnex.raw(DELETETriggerCreateSql);
+      logger.warn('[createMysqlTrigger]', `创建触发器 ${sourceDatabase}|${DELETETriggerName}`);
+    }
+
+  }
+
+  async clearMysqlTrigger({ }) {
+    const { jianghuKnex, logger } = this.app;
+    const { syncTriggerPrefix } = this.getConfig();
+
+    const tableListAll = await jianghuKnex('information_schema.TABLES')
+      .whereNotIn('table_schema', ['sys', 'information_schema', 'performance_schema', 'mysql'])
+      .where('table_type', 'BASE TABLE')
+      .orderBy('table_name', 'desc')
+      .select('table_name as sourceTable', 'table_schema as sourceDatabase', 'table_type as tableType');
+    const tableTypeMap = Object.fromEntries(tableListAll.map(item => [`${item.sourceDatabase}.${item.sourceTable}`, item.tableType]));
+
+    let syncList = await jianghuKnex('_table_sync_config').where({rowStatus: '正常', enableMysqlTrigger: '开启'}).select();
+    syncList = syncList.filter(x => tableTypeMap[`${x.sourceDatabase}.${x.sourceTable}`] === 'BASE TABLE');
+
+    const triggerList = await jianghuKnex('information_schema.triggers')
+      .whereNotIn('TRIGGER_SCHEMA', ['sys', 'information_schema', 'performance_schema', 'mysql'])
+      .where('TRIGGER_NAME', 'like', `${syncTriggerPrefix}_%`)
+      .select('TRIGGER_SCHEMA as sourceDatabase', 'TRIGGER_NAME as triggerName', 'EVENT_MANIPULATION as triggerEvent', 'ACTION_STATEMENT as triggerContent');
+
+    for (const trigger of triggerList) {
+      const { sourceDatabase, triggerName, triggerEvent } = trigger;
+      const triggerSourceExist = syncList.find(item => sourceDatabase === item.sourceDatabase && triggerName === `${syncTriggerPrefix}_${item.targetTable}_${triggerEvent}`);
+      if (!triggerSourceExist) {
+        await jianghuKnex.raw(`DROP TRIGGER IF EXISTS ${sourceDatabase}.${triggerName};`);
+        logger.warn(`[clearMysqlTrigger]`, `删除触发器 ${sourceDatabase}|${triggerName}`);
+      }
     }
   }
 
