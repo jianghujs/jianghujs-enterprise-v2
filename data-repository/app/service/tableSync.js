@@ -75,7 +75,7 @@ class TableSyncService extends Service {
 
 
   async doSyncTableByIdList({ idList }) {
-    const { jianghuKnex, logger } = this.app;
+    const { knex,jianghuKnex, logger } = this.app;
     const syncList = await jianghuKnex('_table_sync_config')
       .whereIn("id", idList)
       .select('id', 'sourceDatabase', 'sourceTable', 'targetDatabase', 'targetTable');
@@ -87,7 +87,13 @@ class TableSyncService extends Service {
         await this.doSyncTable(syncObj);
         logger.info(`[doSyncTableByIdList] ${index + 1}/${tableCount} ID:${syncObj.id} 成功`);
       } catch (error) {
-        await jianghuKnex('_table_sync_config').where({ id: syncObj.id }).update({ syncStatus: '失败', lastSyncTime: dayjs().format(), lastSyncInfo: error.message });
+        await jianghuKnex('_table_sync_config').where({ id: syncObj.id })
+          .update({ 
+            syncStatus: '失败', 
+            lastSyncTime: dayjs().format(), 
+            lastSyncInfo: error.message,
+            syncTimesCount: knex.raw('syncTimesCount + 1'),
+          });
         logger.error(`[doSyncTableByIdList] ID:${syncObj.id} 失败`, error);
       }
     }

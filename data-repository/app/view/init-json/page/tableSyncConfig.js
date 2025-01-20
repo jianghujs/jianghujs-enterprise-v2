@@ -49,7 +49,7 @@ const content = {
     }
   ], // { actionId: '', resourceType: '', resourceData: {}, resourceHook: {}, desc: '' }
   headContent: [
-    { tag: 'jh-page-title', value: "<$ ctx.packagePage.pageName $>", attrs: { cols: 12, sm: 6, md:4 }, helpBtn: true, slot: [] },
+    { tag: 'jh-page-title', value: "<$ ctx.packagePage.pageName $>", attrs: { cols: 12, sm: 6, md:4 }, helpBtn: false, slot: [] },
     { tag: 'v-spacer'},
     /*html*/`
     <span class="w-[220px] inline-block mr-2">
@@ -303,8 +303,8 @@ const content = {
         if (this.viewMode == '源库模式') {
           return [
             { text: "ID", value: "id", width: 50, sortable: true, cellClass: "text-truncate max-width-300" },
-            { text: "源库", value: "sourceDatabase", width: 80, sortable: true, class: "fixed", cellClass: "fixed text-truncate max-width-300"  },
-            { text: "源表", value: "sourceTable", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
+            { text: "源库", value: "sourceDatabase", width: 80, sortable: true, cellClass: "text-truncate max-width-300"  },
+            { text: "源表", value: "sourceTable", width: 80, sortable: true, class: "fixed", cellClass: "fixed text-truncate max-width-300" },
             { text: "目标表", value: "targetTableText", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
             { text: "同步组", value: "syncGroup",  width: 120, sortable: true, class: "", cellClass: "text-truncate max-width-300"  },
             { text: "定时检查", value: "syncTimeSlot", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
@@ -427,7 +427,7 @@ const content = {
           },
           timeout: 360 * 1000,
         });
-        window.vtoast.success("同步成功");
+        window.vtoast.success("同步完成");
       },
       async syncGroupSelectDailog({ item }){
         const dailogTitle = "同步组设置"
