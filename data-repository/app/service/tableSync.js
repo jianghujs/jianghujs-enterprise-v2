@@ -199,7 +199,7 @@ class TableSyncService extends Service {
     }
 
     if (id) {
-      await jianghuKnex('_table_sync_config').where({ id }).update({ syncStatus: '正常' });
+      await jianghuKnex('_table_sync_config').where({ id }).update({ syncStatus: '成功' });
       await jianghuKnex('_table_sync_config').where({ id }).where('lastSyncInfo', 'like', 'ERROR%').update({lastSyncInfo: ''});
       if(diffCount > 0){
         await jianghuKnex('_table_sync_config').where({ id })
