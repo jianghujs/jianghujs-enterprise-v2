@@ -21,12 +21,12 @@ const content = {
       resourceData: { table: "_table_sync_config", operation: "update" }
     },
     {
-      actionId: "selectSourceDatabase",
+      actionId: "getDatabaseInfo",
       resourceType: "service",
-      desc: "✅数据库管理页-查询源数据库列表",
+      desc: "✅数据库管理页-查询当前数据库信息",
       resourceData: {
         service: "tableSync",
-        serviceFunction: "selectSourceDatabase"
+        serviceFunction: "getDatabaseInfo"
       }
     },
     {
@@ -97,7 +97,10 @@ const content = {
           </div>
         </template>
         <template v-slot:item.enableMysqlTrigger="{ item }">
+        <div class="d-flex justify-space-between">
           <span :class="item.enableMysqlTrigger == '开启' ? 'success--text' : 'grey--text'">{{ item.enableMysqlTrigger }}</span>
+          <span v-if="constantObj.tableTriggerCountMap[item.sourceDatabase + '.' + item.sourceTable]">{{ constantObj.tableTriggerCountMap[item.sourceDatabase + '.' + item.sourceTable] || 0 }}个</span>
+        </div>
         </template>
         <template v-slot:item.syncTimeSlot="{ item }">
           <span>{{ constantObj.syncTimeSlotMap[item.syncTimeSlot] || item.syncTimeSlot + '分钟' }}</span>
@@ -114,6 +117,16 @@ const content = {
         </template>
         <template v-slot:item.lastSyncInfo="{ item }">
           <span :title="item.lastSyncInfo">{{ item.lastSyncInfo }}</span>
+        </template>
+        <template v-slot:item.sourceTableText="{ item }">
+          <span :title="item.sourceTableText">{{ item.sourceTableText }}</span>
+        </template>
+        <template v-slot:item.targetTableText="{ item }">
+          <span :title="item.targetTableText">{{ item.targetTableText }}</span>
+        </template>
+
+        <template v-slot:item.tableType="{ item }">
+          <span :title="item.tableType">{{ constantObj.tableTypeMap[item.sourceDatabase + '.' + item.sourceTable] || '' }}</span>
         </template>
         `
       ],
@@ -155,7 +168,12 @@ const content = {
               attrs: { ':items': 'constantObj.databaseList', 'item-text': 'sourceDatabase', 'item-value': 'sourceDatabase'},
               colAttrs: { md: 4 },
             },
-            { label: '同步-源表 <span role="button" @click="initConstantObjData({ showTip: true })" class="success--text ml-1">查询<v-icon size="18" color="success">mdi-sync</v-icon></span>', 
+            { label: /*html*/`
+                同步-源表 
+                <span role="button" @click="initConstantObjData({ showTip: true })" class="success--text ml-1">
+                  查询<v-icon size="18" color="success">mdi-sync</v-icon>
+                </span>
+                `, 
               model: "sourceTable", tag: "v-autocomplete", rules: "validationRules.requireRules", 
               attrs: { ':items': 'constantObj.databaseMap[createItem.sourceDatabase]||[]', 'item-text': 'sourceTable', 'item-value': 'sourceTable'},
               colAttrs: { md: 4 },
@@ -249,7 +267,7 @@ const content = {
       pageId: '<$ ctx.packagePage.pageId $>',
       viewMode: null,
       constantObj: {
-        viewMode: ["同步组模式", "源库模式"],
+        viewMode: ["同步组模式", "源表模式"],
         syncGroup: ['Enterprise', 'HR', 'USER', 'test'],
         syncTimeSlot: [
           { text: '2分钟', value: 2 }, 
@@ -271,12 +289,14 @@ const content = {
         },
         databaseMap: {},
         databaseList: [],
+        tableTriggerCountMap: {},
+        tableTypeMap: {},
       },
       validationRules: {
         requireRules: [
           v => !!v || '必填',
         ],
-        // Tip：在源头限制tableName 不能让 triggerName 超过64
+        // Tip：在源头限制 targetTable, 不能让 triggerName 超过64
         //  - `${syncTriggerPrefix}_${targetTable}_UPDATE`.slice(-64);
         targetTableRules: [
           v => !!v || '必填',
@@ -306,35 +326,37 @@ const content = {
         }
       },
       headers() {
-        if (this.viewMode == '源库模式') {
+        if (this.viewMode == '源表模式') {
           return [
-            { text: "ID", value: "id", width: 50, sortable: true, cellClass: "text-truncate max-width-300" },
-            { text: "源库", value: "sourceDatabase", width: 80, sortable: true, cellClass: "text-truncate max-width-300"  },
-            { text: "源表", value: "sourceTable", width: 80, sortable: true, class: "fixed", cellClass: "fixed text-truncate max-width-300" },
-            { text: "目标表", value: "targetTableText", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-            { text: "同步组", value: "syncGroup",  width: 120, sortable: true, class: "", cellClass: "text-truncate max-width-300"  },
-            { text: "定时检查", value: "syncTimeSlot", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-            { text: "实时同步", value: "enableMysqlTrigger", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-            { text: "同步状态", value: "syncStatus", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-            { text: "数据同步次数", value: "syncTimesCount", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-            { text: "数据同步时间(最后一次)", value: "lastSyncTime", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-            { text: "数据同步详情(最后一次)", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-            { text: "操作", value: "action", type: "action", width: 80, align: "center", class: "fixed", cellClass: "fixed text-truncate max-width-300" },
+            { text: "源表", value: "sourceTable", width: 80, sortable: true, class: "fixed", cellClass: "fixed truncate max-w-[300px]" },
+            { text: "源表类型", value: "tableType", width: 80, sortable: true, cellClass: "truncate max-w-[300px]"  },
+            { text: "ID", value: "id", width: 50, sortable: true, cellClass: "truncate max-w-[300px]" },
+            { text: "源库", value: "sourceDatabase", width: 80, sortable: true, cellClass: "truncate max-w-[300px]"  },
+            { text: "目标表", value: "targetTableText", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+            { text: "同步组", value: "syncGroup",  width: 120, sortable: true, class: "", cellClass: "truncate max-w-[300px]"  },
+            { text: "定时检查", value: "syncTimeSlot", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+            { text: "实时同步/触发器", value: "enableMysqlTrigger", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+            { text: "同步状态", value: "syncStatus", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+            { text: "数据同步次数", value: "syncTimesCount", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+            { text: "数据同步时间(最后一次)", value: "lastSyncTime", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+            { text: "数据同步详情(最后一次)", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+            { text: "操作", value: "action", type: "action", width: 80, align: "center", class: "fixed", cellClass: "fixed truncate max-w-[300px]" },
           ]
         }
 
         return [
-          { text: "ID", value: "id", width: 50, sortable: true, cellClass: "text-truncate max-width-300" },
-          { text: "同步组", value: "syncGroup",  width: 120, sortable: true, class: "fixed", cellClass: "fixed text-truncate max-width-300"  },
-          { text: "源表", value: "sourceTableText", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-          { text: "目标表", value: "targetTableText", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-          { text: "定时检查", value: "syncTimeSlot", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-          { text: "实时同步", value: "enableMysqlTrigger", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-          { text: "同步状态", value: "syncStatus", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-          { text: "数据同步次数", value: "syncTimesCount", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-          { text: "数据同步时间(最后一次)", value: "lastSyncTime", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-          { text: "数据同步详情(最后一次)", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "text-truncate max-width-300" },
-          { text: "操作", value: "action", type: "action", width: 80, align: "center", class: "fixed", cellClass: "fixed text-truncate max-width-300" },
+          { text: "同步组", value: "syncGroup",  width: 120, sortable: true, class: "fixed", cellClass: "fixed truncate max-w-[300px]"  },
+          { text: "ID", value: "id", width: 50, sortable: true, cellClass: "truncate max-w-[300px]" },
+          { text: "源表", value: "sourceTableText", width: 80, sortable: true, cellClass: "truncate max-w-[400px]" },
+          { text: "源表类型", value: "tableType", width: 80, sortable: true, cellClass: "truncate max-w-[300px]"  },
+          { text: "目标表", value: "targetTableText", width: 80, sortable: true, cellClass: "truncate max-w-[400px]" },
+          { text: "定时检查", value: "syncTimeSlot", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+          { text: "实时同步/触发器", value: "enableMysqlTrigger", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+          { text: "同步状态", value: "syncStatus", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+          { text: "数据同步次数", value: "syncTimesCount", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+          { text: "数据同步时间(最后一次)", value: "lastSyncTime", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+          { text: "数据同步详情(最后一次)", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+          { text: "操作", value: "action", type: "action", width: 80, align: "center", class: "fixed", cellClass: "fixed truncate max-w-[300px]" },
         ];
       }
     },
@@ -361,7 +383,7 @@ const content = {
           { column: 'sourceDatabase', order: 'asc' },
           { column: 'sourceTable', order: 'asc' },
         ];
-        if (this.viewMode == '源库模式') {
+        if (this.viewMode == '源表模式') {
           orderBy = [
             { column: 'sourceDatabase', order: 'asc' },
             { column: 'syncGroup', order: 'asc' },
@@ -475,14 +497,16 @@ const content = {
           data: {
             appData: {
               pageId: 'tableSyncConfig',
-              actionId: 'selectSourceDatabase',
+              actionId: 'getDatabaseInfo',
             }
           }
         });
-        const { defaultTargetDatabase, databaseMap, databaseList } = result.data.appData.resultData;
+        const { defaultTargetDatabase, databaseMap, databaseList, tableTriggerCountMap, tableTypeMap } = result.data.appData.resultData;
         this.constantObj.databaseMap = databaseMap;
         this.constantObj.databaseList = databaseList;
         this.defaultTargetDatabase = defaultTargetDatabase;
+        this.constantObj.tableTriggerCountMap = tableTriggerCountMap;
+        this.constantObj.tableTypeMap = tableTypeMap;
         if (showTip) { window.vtoast.success("查询表"); }
       },
       async clearSyncTimesCount({ item }) {
