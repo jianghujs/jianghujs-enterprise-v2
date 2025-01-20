@@ -170,6 +170,9 @@ const content = {
             },
             { label: /*html*/`
                 同步-源表 
+                <span v-if="createItem.sourceTable">
+                  (源表类型: {{ constantObj.tableTypeMap[createItem.sourceDatabase + '.' + createItem.sourceTable] || '' }})
+                </span>
                 <span role="button" @click="initConstantObjData({ showTip: true })" class="success--text ml-1">
                   查询<v-icon size="18" color="success">mdi-sync</v-icon>
                 </span>
@@ -230,7 +233,15 @@ const content = {
               attrs: { ':items': 'constantObj.databaseList', 'item-text': 'sourceDatabase', 'item-value': 'sourceDatabase'},
               colAttrs: { md: 4 },
             },
-            { label: '同步-源表 <span role="button" @click="initConstantObjData({ showTip: true })" class="success--text ml-1">查询<v-icon size="18" color="success">mdi-sync</v-icon></span>', 
+            { label: /*html*/`
+              同步-源表 
+              <span v-if="updateItem.sourceTable">
+                (源表类型: {{ constantObj.tableTypeMap[updateItem.sourceDatabase + '.' + updateItem.sourceTable] || '' }})
+              </span>
+              <span role="button" @click="initConstantObjData({ showTip: true })" class="success--text ml-1">
+                查询<v-icon size="18" color="success">mdi-sync</v-icon>
+              </span>
+              `, 
               model: "sourceTable", tag: "v-autocomplete", rules: "validationRules.requireRules", 
               attrs: { ':items': 'constantObj.databaseMap[updateItem.sourceDatabase]||[]', 'item-text': 'sourceTable', 'item-value': 'sourceTable'},
               colAttrs: { md: 4 },
@@ -362,13 +373,13 @@ const content = {
     },
     async created() {
       this.viewMode = window.localStorage.getItem(`${window.appInfo.appId}_${this.pageId}_viewMode`) || '同步组模式';
-      this.doUiAction('initConstantObjData', {});
       await this.doUiAction('getTableData');
     },
     doUiAction: {
+      getTableData: ['prepareTableParamsDefault', 'prepareTableParams', 'getTableData', 'formatTableData', 'initConstantObjData'],
+ 
       doSyncTableByIdList: ['doSyncTableByIdList', 'doUiAction.getTableData'],
       syncGroupSelectDailog: ['syncGroupSelectDailog'],
-
       initConstantObjData: ['initConstantObjData'],
       recycleItem: ['recycleItem', 'doUiAction.getTableData'],
       clearSyncTimesCount: ['clearSyncTimesCount', 'doUiAction.getTableData'],
@@ -491,7 +502,8 @@ const content = {
           },
         });
       },
-      async initConstantObjData({ showTip = false }) {
+      async initConstantObjData(funObj) {
+        const { showTip= false } = funObj||{};
         if (showTip) { window.vtoast.loading("查询表"); }
         const result = await window.jianghuAxios({
           data: {

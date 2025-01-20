@@ -215,6 +215,9 @@
               <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">
                 同步-源表 
+                <span v-if="createItem.sourceTable">
+                  (源表类型: {{ constantObj.tableTypeMap[createItem.sourceDatabase + '.' + createItem.sourceTable] || '' }})
+                </span>
                 <span role="button" @click="initConstantObjData({ showTip: true })" class="success--text ml-1">
                   查询<v-icon size="18" color="success">mdi-sync</v-icon>
                 </span>
@@ -282,7 +285,15 @@
                 <v-autocomplete :items="constantObj.databaseList" item-text="sourceDatabase" item-value="sourceDatabase" class="jh-v-input" dense single-line filled v-model="updateItem.sourceDatabase" :rules="validationRules.requireRules"></v-autocomplete>
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="4">
-                <span class="jh-input-label">同步-源表 <span role="button" @click="initConstantObjData({ showTip: true })" class="success--text ml-1">查询<v-icon size="18" color="success">mdi-sync</v-icon></span></span>
+                <span class="jh-input-label">
+              同步-源表 
+              <span v-if="updateItem.sourceTable">
+                (源表类型: {{ constantObj.tableTypeMap[updateItem.sourceDatabase + '.' + updateItem.sourceTable] || '' }})
+              </span>
+              <span role="button" @click="initConstantObjData({ showTip: true })" class="success--text ml-1">
+                查询<v-icon size="18" color="success">mdi-sync</v-icon>
+              </span>
+              </span>
                 <v-autocomplete :items="constantObj.databaseMap[updateItem.sourceDatabase]||[]" item-text="sourceTable" item-value="sourceTable" class="jh-v-input" dense single-line filled v-model="updateItem.sourceTable" :rules="validationRules.requireRules"></v-autocomplete>
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="12"class="pa-0">
@@ -497,19 +508,12 @@ new Vue({
   },
   async created() {
     this.viewMode = window.localStorage.getItem(`${window.appInfo.appId}_${this.pageId}_viewMode`) || '同步组模式';
-    this.doUiAction('initConstantObjData', {});
     await this.doUiAction('getTableData');
   },
   methods: {
     async doUiAction(uiActionId, uiActionData) {
       try {
         switch (uiActionId) {
-          case 'getTableData':
-            await this.prepareTableParamsDefault(uiActionData);
-            await this.prepareTableParams(uiActionData);
-            await this.getTableData(uiActionData);
-            await this.formatTableData(uiActionData);
-            break;
           case 'startCreateItem':
             await this.prepareCreateFormData(uiActionData);
             await this.openCreateDrawer(uiActionData);
@@ -533,6 +537,13 @@ new Vue({
             await this.doUpdateItem(uiActionData);
             await this.closeUpdateDrawer(uiActionData);
             await this.doUiAction('getTableData', uiActionData);
+            break;
+          case 'getTableData':
+            await this.prepareTableParamsDefault(uiActionData);
+            await this.prepareTableParams(uiActionData);
+            await this.getTableData(uiActionData);
+            await this.formatTableData(uiActionData);
+            await this.initConstantObjData(uiActionData);
             break;
           case 'doSyncTableByIdList':
             await this.doSyncTableByIdList(uiActionData);
@@ -873,7 +884,8 @@ new Vue({
         },
       });
     },
-    async initConstantObjData({ showTip = false }) {
+    async initConstantObjData(funObj) {
+      const { showTip= false } = funObj||{};
       if (showTip) { window.vtoast.loading("查询表"); }
       const result = await window.jianghuAxios({
         data: {
