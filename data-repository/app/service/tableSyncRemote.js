@@ -39,7 +39,6 @@ class TableSyncRemoteService extends Service {
     for(const remoteDatabase of remoteDatabaseList){
       const { sourceDatabase, ...connection } = remoteDatabase;
       const sourceDatabaseReal = connection.database;
-
       try {
         const knex = Knex({ client: 'mysql2', connection });
         const tableList = await knex.select('TABLE_NAME').from('information_schema.TABLES')
@@ -47,12 +46,14 @@ class TableSyncRemoteService extends Service {
         .orderBy('table_name', 'desc')
         .select('table_name as sourceTable', 'table_schema as sourceDatabase', 'table_type as tableType');
         knex.destroy();
+        // 注意: 不要把数据库密码暴露出去
         databaseList.push({ sourceDatabase, tableList });
         databaseMap[sourceDatabase] = tableList;
         tableList.forEach(item => {
           tableTypeMap[`${sourceDatabase}.${item.sourceTable}`] = item.tableType;
         });
       } catch (error) {
+        // 注意: 不要把数据库密码暴露出去
         databaseList.push({ sourceDatabase, tableList: [] });
         databaseMap[sourceDatabase] = [];
         logger.error('[getDatabaseInfo]', `remoteDatabase: ${sourceDatabase}`, error);
