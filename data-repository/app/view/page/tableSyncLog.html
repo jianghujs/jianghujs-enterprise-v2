@@ -12,8 +12,39 @@
     <div class="jh-page-second-bar px-3 px-sm-8">
       <v-row class="align-center" no-gutters>
         <v-col cols="12" sm="12" md="4" xl="3" :cols="12" :sm="6" :md="4" >
-          <div class="py-4 text-body-1 font-weight-bold align-center d-flex align-center">同步日志【待重构】
+          <div class="py-4 text-body-1 font-weight-bold align-center d-flex align-center">同步日志
           </div>
+        </v-col>
+          <!-- 自定义搜索内容 -->
+          <v-spacer ></v-spacer>
+        <!-- 服务端搜索 -->
+        <v-col cols="12" xs="12" sm="12" md="8" xl="9" class="pl-md-2 mb-2 mb-md-0 flex justify-space-between" :cols="12" :sm="6" :md="8" >
+          <v-row class="jh-backend-form-container justify-end py-md-3" no-gutters>
+            <v-col cols="12" sm="4" md="3" xl="2" class="pl-md-2 " :cols="12":md="5">
+              <v-text-field :disabled="keywordFieldList.length == 0" :placeholder="_.compact(keywordFieldList.map(e => headers.find(h => h.value == e)?.text)).join('/')" class="jh-v-input" dense single-line filled v-model="keyword">
+        <template v-slot:prepend-inner>
+          <!-- 下拉选择模糊搜索字段 v-menu, 外只显示缩略 -->
+          <v-menu :close-on-content-click="false" transition="scale-transition" offset-y min-width="290">
+            <template v-slot:activator="{ on, attrs }">
+              <div v-bind="attrs" v-on="on" class="text-nowrap pt-1">
+                赛选<span class="bg-green-500 text-white ml-0.5 px-1 rounded">{{keywordFieldList.length}}</span>
+              </div>
+            </template>
+            <div class="pa-2 w-[300px]">
+              <v-chip v-for="header in headers.filter(e => e.value != 'action')" :key="header.value" class="ma-1" :color=" keywordFieldList.includes(header.value) ? 'primary' : 'default'" label outlined small @click="keywordFieldList = keywordFieldList.includes(header.value) ? keywordFieldList.filter(field => field !== header.value) : [...keywordFieldList, header.value]">
+                {{ header.text }}
+              </v-chip>
+            </div>
+          </v-menu>
+        </template>
+        </v-text-field>
+            </v-col>
+            <div class="jh-backend-search-btn ml-2">
+              <v-btn class="elevation-0 float-right mt-2 mt-sm-0" color="success" small @click="tableOptions.page = 1; doUiAction('getTableData')">
+                查询
+              </v-btn>
+            </div>
+          </v-row>
         </v-col>
       </v-row>
     </div>
@@ -23,7 +54,7 @@
       <v-row class="pa-0 ma-0">
         <v-col class="pa-0"  :clos="12">
           <!-- 表格顶部栏 -->
-          <v-card  class="rounded-lg elevation-0">
+          <div  class="rounded-lg elevation-0">
             <!-- 表格 -->
             <v-data-table
               :headers="headers"
@@ -38,11 +69,25 @@
               checkbox-color="success"
               :class="{'zebraLine': true }"
               fixed-header
+              :footer-props="{ itemsPerPageOptions: [20, 50, 200, 500, -1], itemsPerPageText: '每页', itemsPerPageAllText: '所有'}"
+              :items-per-page="200"
               class="jh-fixed-table-height elevation-0 mt-0 mb-xs-4"
             >
 
               <!-- 表格插槽 -->
-              
+              <template v-slot:item.sourceTableInfo="{ item }">
+          <span :title="item.sourceTableInfo">{{ item.sourceTableInfo }}</span>
+        </template>
+        <template v-slot:item.targetTableInfo="{ item }">
+          <span :title="item.targetTableInfo">{{ item.targetTableInfo }}</span>
+        </template>
+        <template v-slot:item.syncInfo="{ item }">
+          <span :title="item.syncInfo">{{ item.syncInfo }}</span>
+        </template>
+        <template v-slot:item.syncStatus="{ item }">
+          <span :class="item.syncStatus == '成功' ? 'success--text' : 'error--text'">{{ item.syncStatus }}</span>
+        </template>
+        
 
               <!-- 自定义渲染列 -->
               <!-- 没有数据 -->
@@ -59,9 +104,12 @@
               <template v-slot:footer.page-text="pagination">
                 <span>{{pagination.pageStart}}-{{pagination.pageStop}}</span>
                 <span class="ml-1">共{{pagination.itemsLength}}条</span>
+                <span class="ml-1" v-if="tableDataComputed.length > 0 && !isTableLoading && tableDataComputed.length < (pagination.pageStop - pagination.pageStart + 1)">
+                  筛选出{{tableDataComputed.length}}条
+                </span>
               </template>
             </v-data-table>
-          </v-card>
+          </div>
         </v-col>
       </v-row>
     </div>
@@ -91,11 +139,12 @@ new Vue({
     isMobile: window.innerWidth < 500,
     // ================================ 表格相关 ================================
     headers: [
-      { text: "数据库", value: "sourceDatabase", width: 140 },
-      { text: "表格", value: "sourceTable", width: 140 },
-      { text: "同步动作", value: "syncAction", width: 200 },
-      { text: "同步状态", value: "syncDesc", width: 300 },
-      { text: "同步时间", value: "syncTime", width: 200 },
+      { text: "同步类型", value: "logType", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+      { text: "源表", value: "sourceTableInfo", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+      { text: "目标表", value: "targetTableInfo", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+      { text: "同步状态", value: "syncStatus", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+      { text: "同步时间", value: "syncTime", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+      { text: "同步详情", value: "syncInfo", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
     ],
     tableData: [],
     tableParams: {},
@@ -113,6 +162,20 @@ new Vue({
       sortBy: [],
       sortDesc: [],
     },
+    // ============================== 服务端搜索 ===============================
+    serverSearchWhere: {},
+    serverSearchWhereIn: {},
+    serverSearchWhereLike: {},
+    keyword: '',
+    keywordFieldList: [
+      "logType",
+      "sourceTableInfo",
+      "targetTableInfo",
+      "syncStatus",
+      "syncTime",
+      "syncInfo"
+    ],
+    
 
     // ================================ common ================================
     constantObj: {},
@@ -121,12 +184,12 @@ new Vue({
         v => !!v || '必填'
       ]
     },
-    serverSearchWhereLike: {
-      className: ""
-    },
-    serverSearchWhere: {},
-    serverSearchWhereIn: {},
     filterMap: {},
+    tableOptions: {
+      page: 1,
+      limit: 200,
+      totalCount: 0
+    },
     isMobile: window.innerWidth < 500,
 
     // ================================ 其他抽屉列表 ================================
@@ -190,7 +253,7 @@ new Vue({
     },
   },
   async created() {
-    this.doUiAction('getTableData');
+    await this.doUiAction('getTableData');
   },
   methods: {
     async doUiAction(uiActionId, uiActionData) {
@@ -217,8 +280,12 @@ new Vue({
       const where = {};
       const whereLike = {};
       const whereIn = {};
-      for (const fieldKey in this.serverSearchWhere) {
-        const fieldValue = this.serverSearchWhere[fieldKey];
+      const serverSearchWhere = _.cloneDeep(this.serverSearchWhere || {});
+      const serverSearchWhereIn = _.cloneDeep(this.serverSearchWhereIn || {});
+      const serverSearchWhereLike = _.cloneDeep(this.serverSearchWhereLike || {});
+
+      for (const fieldKey in serverSearchWhere) {
+        const fieldValue = serverSearchWhere[fieldKey];
         if(!!fieldValue && fieldValue != '全部') {
           if (_.isString(fieldValue)) {
             where[fieldKey] = fieldValue.trim();
@@ -227,8 +294,8 @@ new Vue({
           }
         }
       }
-      for (const fieldKey in this.serverSearchWhereLike) {
-        const fieldValue = this.serverSearchWhereLike[fieldKey];
+      for (const fieldKey in serverSearchWhereLike) {
+        const fieldValue = serverSearchWhereLike[fieldKey];
         if(!!fieldValue && fieldValue != '全部') {
           if (_.isString(fieldValue)) {
             whereLike[fieldKey] = '%' + fieldValue.trim() + '%';
@@ -237,8 +304,8 @@ new Vue({
           }
         }
       }
-      for (const fieldKey in this.serverSearchWhereIn) {
-        const fieldValue = this.serverSearchWhereIn[fieldKey];
+      for (const fieldKey in serverSearchWhereIn) {
+        const fieldValue = serverSearchWhereIn[fieldKey];
         if(!!fieldValue && _.isArray(fieldValue) && fieldValue.length > 0) {
           whereIn[fieldKey] = fieldValue;
         }
@@ -267,7 +334,6 @@ new Vue({
       }
       limit = this.tableOptions.itemsPerPage === -1 ? 10000 : this.tableOptions.itemsPerPage;
       offset = (this.tableOptions.page - 1) * limit;
-
       this.tableParams = { where, whereLike, whereIn, limit, offset, orderBy, whereOrOptions };
     },
     // 准备请求参数-自定义
@@ -306,12 +372,11 @@ new Vue({
     // ---------- 抽屉列表 uiAction >>>>>>>>>>>> --------
     // ---------- Custom uiAction >>>>>>>>>>>> --------
     formatTableData() {
-      this.tableData = this.tableDataFromBackend.map(item => {
-        return {
-          ...item,
-          syncTime: item.syncTime ? dayjs(item.syncTime).format('YYYY-MM-DD HH:mm:ss') : '',
-        };
-      })
+      let tableData = this.tableDataFromBackend.map(row => {
+        row.syncTime = row.syncTime ? dayjs(row.syncTime).format('YYYY-MM-DD HH:mm:ss') : '';
+        return row;
+      });
+      this.tableData = tableData;
     },
     // ---------- <<<<<<<<<<< Custom uiAction ---------
 

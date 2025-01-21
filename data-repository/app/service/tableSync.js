@@ -108,6 +108,14 @@ class TableSyncService extends Service {
             lastSyncInfo: `ERROR: ${error.message}`,
             syncTimesCount: knex.raw('syncTimesCount + 1'),
           });
+        await jianghuKnex('_table_log').insert({
+          logType: '表同步',
+          sourceTableInfo: `${syncObj.sourceDatabase}.${syncObj.sourceTable}`,
+          targetTableInfo: `${syncObj.targetDatabase}.${syncObj.targetTable}`,
+          syncStatus: '失败',
+          syncTime: dayjs().format(),
+          syncInfo: `ERROR: ${error.message}`,
+        });
         logger.error(`[doSyncTableByIdList] ID:${syncObj.id} 失败`, error);
       }
     }
@@ -208,6 +216,14 @@ class TableSyncService extends Service {
             lastSyncInfo: `${added.length}条新增, ${changed.length}条修改, ${removed.length}条删除`,
             syncTimesCount: knex.raw('syncTimesCount + 1'),
           });
+        await jianghuKnex('_table_log').insert({
+          logType: '表同步',
+          sourceTableInfo: `${sourceDatabase}.${sourceTable}`,
+          targetTableInfo: `${targetDatabase}.${targetTable}`,
+          syncStatus: '成功',
+          syncTime: dayjs().format(),
+          syncInfo: `${added.length}条新增, ${changed.length}条修改, ${removed.length}条删除`,
+        });
       }
     }
 
