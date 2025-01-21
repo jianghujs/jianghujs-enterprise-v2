@@ -211,7 +211,7 @@ new Vue({
     tableDataOrder: [{column: 'operationAt', order: 'desc'}],
     tableOptions: {
       page: 1,
-      limit: 10,
+      limit: 50,
       totalCount: 0,
     },
     
@@ -454,7 +454,7 @@ new Vue({
         row.scheduleAt = row.scheduleAt ? dayjs(row.scheduleAt).format('YYYY-MM-DD HH:mm:ss') : '';
         return row;
       });
-      this.tableData = tableData;
+      this.tableData = _.orderBy(tableData, ['syncGroup', 'sourceRemoteName', 'targetTableText'], ['asc', 'asc', 'asc']);
     },
     async doSyncTableRemoteByIdList({ idList }) {
       window.vtoast.loading({ message: `${idList.length}个表同步`, time: -1 });

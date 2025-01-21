@@ -27,7 +27,7 @@ const content = {
     {
       tag: 'jh-list',
       props: {
-        limit: 10,
+        limit: 50,
       },
       attrs: { cols: 12, class: 'p-0 pb-7', ':style': '`height: calc(100vh - 140px); overflow-y: auto;overscroll-behavior: contain`' },
       headers: [
@@ -116,7 +116,7 @@ const content = {
           row.scheduleAt = row.scheduleAt ? dayjs(row.scheduleAt).format('YYYY-MM-DD HH:mm:ss') : '';
           return row;
         });
-        this.tableData = tableData;
+        this.tableData = _.orderBy(tableData, ['syncGroup', 'sourceRemoteName', 'targetTableText'], ['asc', 'asc', 'asc']);
       },
 
       // ---------- 同步相关 uiAction >>>>>>>>>>>> --------
