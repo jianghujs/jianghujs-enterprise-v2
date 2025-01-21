@@ -25,7 +25,8 @@ module.exports = app => {
       const idList = syncList
         .filter(obj => syncTimeMinute%obj.syncTimeSlot === 0)
         .map(obj => obj.id);
-      const tableCount = idList.length ;
+      const tableCount = idList.length;
+      await jianghuKnex('_table_sync_config').whereIn('id', idList).update({ scheduleAt: dayjs().format() });
       logger.warn('[tableSyncSchedule] start', { tableCount, syncTimeMinute });
       await ctx.service.tableSync.doSyncTableByIdList({ idList });
     },

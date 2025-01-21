@@ -384,12 +384,20 @@ new Vue({
           value: 2
         },
         {
+          text: "3分钟",
+          value: 3
+        },
+        {
           text: "5分钟",
           value: 5
         },
         {
           text: "10分钟",
           value: 10
+        },
+        {
+          text: "30分钟",
+          value: 30
         },
         {
           text: "1小时",
@@ -410,8 +418,10 @@ new Vue({
       ],
       syncTimeSlotMap: {
         2: "2分钟",
+        3: "3分钟",
         5: "5分钟",
         10: "10分钟",
+        30: "30分钟",
         60: "1小时",
         360: "6小时",
         720: "12小时",
@@ -489,6 +499,7 @@ new Vue({
           { text: "数据同步次数", value: "syncTimesCount", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
           { text: "数据同步时间(最后一次)", value: "lastSyncTime", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
           { text: "数据同步详情(最后一次)", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+          { text: "定时执行时间", value: "scheduleAt", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
           { text: "操作", value: "action", type: "action", width: 80, align: "center", class: "fixed", cellClass: "fixed truncate max-w-[300px]" },
         ]
       }
@@ -506,6 +517,7 @@ new Vue({
         { text: "数据同步次数", value: "syncTimesCount", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
         { text: "数据同步时间(最后一次)", value: "lastSyncTime", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
         { text: "数据同步详情(最后一次)", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+        { text: "定时执行时间", value: "scheduleAt", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
         { text: "操作", value: "action", type: "action", width: 80, align: "center", class: "fixed", cellClass: "fixed truncate max-w-[300px]" },
       ];
     },
@@ -814,6 +826,7 @@ new Vue({
         row.sourceTableText = `${row.sourceDatabase}.${row.sourceTable}`;
         row.targetTableText = `${row.targetDatabase}.${row.targetTable}`;
         row.lastSyncTime = row.lastSyncTime ? dayjs(row.lastSyncTime).format('YYYY-MM-DD HH:mm:ss') : '';
+        row.scheduleAt = row.scheduleAt ? dayjs(row.scheduleAt).format('YYYY-MM-DD HH:mm:ss') : '';
         return row;
       });
       this.tableData = tableData;

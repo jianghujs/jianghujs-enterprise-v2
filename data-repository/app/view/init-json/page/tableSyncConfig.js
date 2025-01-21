@@ -357,6 +357,7 @@ const content = {
             { text: "数据同步次数", value: "syncTimesCount", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
             { text: "数据同步时间(最后一次)", value: "lastSyncTime", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
             { text: "数据同步详情(最后一次)", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+            { text: "定时执行时间", value: "scheduleAt", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
             { text: "操作", value: "action", type: "action", width: 80, align: "center", class: "fixed", cellClass: "fixed truncate max-w-[300px]" },
           ]
         }
@@ -373,6 +374,7 @@ const content = {
           { text: "数据同步次数", value: "syncTimesCount", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
           { text: "数据同步时间(最后一次)", value: "lastSyncTime", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
           { text: "数据同步详情(最后一次)", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+          { text: "定时执行时间", value: "scheduleAt", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
           { text: "操作", value: "action", type: "action", width: 80, align: "center", class: "fixed", cellClass: "fixed truncate max-w-[300px]" },
         ];
       }
@@ -429,6 +431,7 @@ const content = {
           row.sourceTableText = `${row.sourceDatabase}.${row.sourceTable}`;
           row.targetTableText = `${row.targetDatabase}.${row.targetTable}`;
           row.lastSyncTime = row.lastSyncTime ? dayjs(row.lastSyncTime).format('YYYY-MM-DD HH:mm:ss') : '';
+          row.scheduleAt = row.scheduleAt ? dayjs(row.scheduleAt).format('YYYY-MM-DD HH:mm:ss') : '';
           return row;
         });
         this.tableData = tableData;
