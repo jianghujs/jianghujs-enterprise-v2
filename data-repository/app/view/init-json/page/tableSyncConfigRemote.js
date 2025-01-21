@@ -292,8 +292,10 @@ const content = {
         syncGroup: ['账号', '业务01数据', '业务02数据', '临时测试'],
         syncTimeSlot: [
           { text: '2分钟', value: 2 }, 
+          { text: '3分钟', value: 3 }, 
           { text: '5分钟', value: 5 }, 
           { text: '10分钟', value: 10 }, 
+          { text: '30分钟', value: 30 }, 
           { text: '1小时', value: 60 }, 
           { text: '6小时', value: 360 }, 
           { text: '12小时', value: 720 }, 
@@ -301,8 +303,10 @@ const content = {
         ],
         syncTimeSlotMap: {
           2: '2分钟',
+          3: '3分钟',
           5: '5分钟',
           10: '10分钟',
+          30: '30分钟',
           60: '1小时',
           360: '6小时',
           720: '12小时',

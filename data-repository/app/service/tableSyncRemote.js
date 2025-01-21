@@ -49,9 +49,12 @@ class TableSyncRemoteService extends Service {
           .select('table_schema as databaseName', 'table_name as tableName', 'table_type as tableType');
         knex.destroy();
         databaseListMap[remoteName] = [...new Set(tableList.map(item => item.databaseName))];
-        Object.entries(_.groupBy(tableList, 'databaseName')).forEach(([databaseName, databaseTableList]) => {
-          tableListMap[`${remoteName}.${databaseName}`] = databaseTableList;
-        })
+        
+        const groupedTables = _.groupBy(tableList, 'databaseName');
+        Object.keys(groupedTables).forEach(databaseName => {
+          tableListMap[`${remoteName}.${databaseName}`] = groupedTables[databaseName];
+        });
+
         tableList.forEach(item => {
           tableTypeMap[`${remoteName}.${item.databaseName}.${item.tableName}`] = item.tableType;
         });

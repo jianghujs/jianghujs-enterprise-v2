@@ -6,6 +6,9 @@ class AppBootHook {
     this.app = app;
   }
 
+  async configWillLoad() {
+  }
+
   async serverDidReady() {
   }
 
