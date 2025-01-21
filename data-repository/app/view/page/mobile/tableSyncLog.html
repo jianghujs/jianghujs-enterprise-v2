@@ -55,19 +55,18 @@
         <div class="flex p-3 border-b relative items-center" v-for="(item, index) in tableDataComputed" @click="viewMode == 'simple' && doUiAction('startDetailItem', item)">
           <div class="flex-1">
             <div class="flex items-center items-center">
-              <span class="font-medium text-base">{{ item.sourceTable }}</span>
+              <span class="font-medium text-base">{{ item.logType }}</span>
               
             </div>
             <div v-show="viewMode != 'detail'" class="text-sm pt-2">
-              <div class="text-gray-500 pr-8 flex items-center" >数据库：{{ item.sourceDatabase }}</div>
-              <div class="text-gray-500 pr-8 flex items-center" >同步动作：{{ item.syncAction }}</div>
             </div>
 
             <div v-show="viewMode == 'detail'" class="text-sm pt-2">
-              <div class="text-gray-500 pr-8 flex items-center" >数据库：{{ item.sourceDatabase }}</div>
-              <div class="text-gray-500 pr-8 flex items-center" >同步动作：{{ item.syncAction }}</div>
-              <div class="text-gray-500 pr-8 flex items-center" >同步状态：{{ item.syncDesc }}</div>
+              <div class="text-gray-500 pr-8 flex items-center" >源表：{{ item.sourceTableInfo }}</div>
+              <div class="text-gray-500 pr-8 flex items-center" >目标表：{{ item.targetTableInfo }}</div>
+              <div class="text-gray-500 pr-8 flex items-center" >同步状态：{{ item.syncStatus }}</div>
               <div class="text-gray-500 pr-8 flex items-center" >同步时间：{{ item.syncTime }}</div>
+              <div class="text-gray-500 pr-8 flex items-center" >同步详情：{{ item.syncInfo }}</div>
               <!-- action 操作按钮显示 -->
             </div>
           </div>
@@ -392,12 +391,11 @@ new Vue({
     },
     // ---------- Custom uiAction >>>>>>>>>>>> --------
     formatTableData() {
-      this.tableData = this.tableDataFromBackend.map(item => {
-        return {
-          ...item,
-          syncTime: item.syncTime ? dayjs(item.syncTime).format('YYYY-MM-DD HH:mm:ss') : '',
-        };
-      })
+      let tableData = this.tableDataFromBackend.map(row => {
+        row.syncTime = row.syncTime ? dayjs(row.syncTime).format('YYYY-MM-DD HH:mm:ss') : '';
+        return row;
+      });
+      this.tableData = tableData;
     },
     // ---------- <<<<<<<<<<< Custom uiAction ---------
 

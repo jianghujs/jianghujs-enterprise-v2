@@ -1,15 +1,6 @@
 const content = {
   pageType: "jh-mobile-page", pageId: "mobile/tableSyncConfig", pageName: "同步表管理", version: 'v2', template: 'jhMobileTemplateV4',
   resourceList: [
-    /**
-     * 	tableSyncConfig	selectSourceDatabase	✅数据库管理页-查询源数据库列表	service		{"service": "tableSync", "serviceFunction": "selectSourceDatabase"}
-	tableSyncConfig	selectSourceTable	✅数据库管理页-查询源数据库中的table列表	service		{"service": "tableSync", "serviceFunction": "selectSourceTable"}
-	tableSyncConfig	deleteTable	✅数据库管理页-删除同步表	service		{"service": "tableSync", "serviceFunction": "deleteTableSyncConfig"}
-	tableSyncConfig	selectItemList	✅数据库管理页-查询同步表	sql		{"table": "_table_sync_config", "operation": "select"}
-	tableSyncConfig	syncTable	✅数据库管理页-手动同步表	service		{"service": "tableSync", "serviceFunction": "syncTable"}
-	tableSyncConfig	insertTable	✅数据库管理页-创建同步表	sql		{"table": "_table_sync_config", "operation": "insert"}
-	tableSyncConfig	updateTable	✅数据库管理页-更新同步表	sql		{"table": "_table_sync_config", "operation": "update"}
-     */
     {
       actionId: "selectItemList",
       resourceType: "sql",

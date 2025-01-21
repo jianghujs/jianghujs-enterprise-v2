@@ -10,7 +10,7 @@ const content = {
       resourceHook: {},
       desc: "✅获取同步日志",
       resourceData: {
-        table: "_table_sync_log",
+        table: "_table_log",
         operation: "select"
       }
     },
@@ -29,11 +29,12 @@ const content = {
       },
       attrs: { cols: 12, class: 'p-0 pb-7', ':style': '`height: calc(100vh - 140px); overflow-y: auto;overscroll-behavior: contain`' },
       headers: [
-        {text: "数据库", value: "sourceDatabase", isSimpleMode: true, width: 140},
-        {text: "表格", value: "sourceTable", isTitle: true, width: 140},
-        {text: "同步动作", value: "syncAction", isSimpleMode: true, width: 200},
-        {text: "同步状态", value: "syncDesc", width: 300},
-        {text: "同步时间", value: "syncTime", width: 200},
+        { text: "同步类型", value: "logType", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+        { text: "源表", value: "sourceTableInfo", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+        { text: "目标表", value: "targetTableInfo", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+        { text: "同步状态", value: "syncStatus", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+        { text: "同步时间", value: "syncTime", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+        { text: "同步详情", value: "syncInfo", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
         // width 表达式需要使用字符串包裹
       ],
     }
@@ -96,13 +97,12 @@ const content = {
     }, // 额外uiAction { [key]: [action1, action2]}
     methods: {
       formatTableData() {
-        this.tableData = this.tableDataFromBackend.map(item => {
-          return {
-            ...item,
-            syncTime: item.syncTime ? dayjs(item.syncTime).format('YYYY-MM-DD HH:mm:ss') : '',
-          };
-        })
-      }
+        let tableData = this.tableDataFromBackend.map(row => {
+          row.syncTime = row.syncTime ? dayjs(row.syncTime).format('YYYY-MM-DD HH:mm:ss') : '';
+          return row;
+        });
+        this.tableData = tableData;
+      },
     }
   },
   
