@@ -9,7 +9,7 @@
   <jh-menu>
     <template v-slot:title>
       <!-- 高级搜索 -->
-      同步日志
+      <$ ctx.packagePage.pageName $>
     </template>
   </jh-menu>
   <v-main class="mt-13">
@@ -52,7 +52,7 @@
     <div class="jh-page-body-container px-sm-8">
       <v-row class="pa-0 ma-0">
       <v-col :cols="12" :cols="12" class="p-0 pb-7" :style="`height: calc(100vh - 140px); overflow-y: auto;overscroll-behavior: contain`" >
-        <div class="flex p-3 border-b relative items-center" v-for="(item, index) in tableDataComputed" @click="viewMode == 'simple' && doUiAction('startDetailItem', item)">
+        <div class="flex p-3 border-b relative" v-for="(item, index) in tableDataComputed" @click="viewMode == 'simple' && doUiAction('startDetailItem', item)">
           <div class="flex-1">
             <div class="flex items-center items-center">
               <span class="font-medium text-base">{{ item.logType }}</span>
@@ -69,17 +69,21 @@
               <div class="text-gray-500 pr-8 flex items-center" >同步详情：{{ item.syncInfo }}</div>
               <!-- action 操作按钮显示 -->
             </div>
+            <!-- value 插槽 -->
+            
           </div>
+          
           <div v-if="viewMode == 'simple'" class="h-full flex absolute top-0 right-3 items-center text-gray-500">
             
             <v-icon size="20" class="text-gray-500">mdi-chevron-right</v-icon>
           </div>
+          
         </div>
+
         <div class="fixed left-0 bottom-0 py-2 px-3 bg-white border-t w-full" v-if="tableDataComputed.length > 0">
           <div class=" flex justify-space-between items-center">
             每页 {{ tableOptions.limit }} 项，
             共 {{ tableOptions.totalCount == tableDataComputed.length ? tableOptions.totalCount : tableDataComputed.length + '/' + tableOptions.totalCount }} 项
-
             <div>
               <!-- 上一页 icon -->
               <v-icon v-if="tableOptions.page > 1" @click="tableOptions.page--; doUiAction('getTableData')">mdi-chevron-left</v-icon>
@@ -171,6 +175,15 @@ new Vue({
     isHelpPageDrawerLoaded: false,
 
     isMobile: window.innerWidth < 500,
+    // ================================ 列表相关 ================================
+    headers: [
+      { text: "同步类型", value: "logType", width: 80, sortable: true, cellClass: "truncate max-w-[300px]", isTitle: true, isSimpleMode: true },
+      { text: "源表", value: "sourceTableInfo", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+      { text: "目标表", value: "targetTableInfo", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+      { text: "同步状态", value: "syncStatus", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+      { text: "同步时间", value: "syncTime", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+      { text: "同步详情", value: "syncInfo", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+    ],
     tableData: [],
     tableParams: {},
     tableDataFromBackend: [],
@@ -182,12 +195,32 @@ new Vue({
       limit: 10,
       totalCount: 0,
     },
-
-    viewMode: 'simple',
+    
+    // ============================== 排序相关 ===============================
     isPageOrderDrawerShown: false,
     usePageOrder: false,
-
-    // ================================ common ================================
+    tableDataOrder: [
+      {
+        column: "operationAt",
+        order: "desc"
+      }
+    ],
+    tableDataOrderList: [
+      {
+        text: "最新更新↓",
+        value: [
+          {
+            column: "operationAt",
+            order: "desc"
+          }
+        ]
+      }
+    ],
+    
+    // ============================== 模式相关 ===============================
+    
+    viewMode: 'simple',
+    // ================================ custom data ================================
     constantObj: {},
     validationRules: {
       requireRules: [
@@ -219,8 +252,6 @@ new Vue({
     ],
     viewMode: 'detail',
     isMobile: window.innerWidth < 500,
-
-    // ================================ 其他抽屉列表 ================================
 
   }),
   watch: {
@@ -278,7 +309,6 @@ new Vue({
           case 'getTableData':
             await this.getTableData();
             break;
-
           default:
             console.error("[doUiAction] uiActionId not find", {uiActionId});
             break;
@@ -294,8 +324,12 @@ new Vue({
       const where = {};
       const whereLike = {};
       const whereIn = {};
-      for (const fieldKey in this.serverSearchWhere) {
-        const fieldValue = this.serverSearchWhere[fieldKey];
+      const serverSearchWhere = _.cloneDeep(this.serverSearchWhere || {});
+      const serverSearchWhereIn = _.cloneDeep(this.serverSearchWhereIn || {});
+      const serverSearchWhereLike = _.cloneDeep(this.serverSearchWhereLike || {});
+
+      for (const fieldKey in serverSearchWhere) {
+        const fieldValue = serverSearchWhere[fieldKey];
         if(!!fieldValue && fieldValue != '全部') {
           if (_.isString(fieldValue)) {
             where[fieldKey] = fieldValue.trim();
@@ -304,8 +338,8 @@ new Vue({
           }
         }
       }
-      for (const fieldKey in this.serverSearchWhereLike) {
-        const fieldValue = this.serverSearchWhereLike[fieldKey];
+      for (const fieldKey in serverSearchWhereLike) {
+        const fieldValue = serverSearchWhereLike[fieldKey];
         if(!!fieldValue && fieldValue != '全部') {
           if (_.isString(fieldValue)) {
             whereLike[fieldKey] = '%' + fieldValue.trim() + '%';
@@ -314,8 +348,8 @@ new Vue({
           }
         }
       }
-      for (const fieldKey in this.serverSearchWhereIn) {
-        const fieldValue = this.serverSearchWhereIn[fieldKey];
+      for (const fieldKey in serverSearchWhereIn) {
+        const fieldValue = serverSearchWhereIn[fieldKey];
         if(!!fieldValue && _.isArray(fieldValue) && fieldValue.length > 0) {
           whereIn[fieldKey] = fieldValue;
         }
@@ -337,7 +371,6 @@ new Vue({
       }
       const limit = this.tableOptions.limit === -1 ? 10000 : this.tableOptions.limit;
       const offset = (this.tableOptions.page - 1) * limit;
-
       this.tableParams = { where, whereLike, whereIn, limit, offset, orderBy, whereOrOptions };
     },
     // 准备请求参数-自定义

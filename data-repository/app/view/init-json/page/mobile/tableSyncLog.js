@@ -1,5 +1,6 @@
 const content = {
-  pageType: "jh-mobile-page", pageId: "mobile/tableSyncLog", pageName: "同步日志", version: 'v2', template: 'jhMobileTemplateV4',
+  pageType: "jh-mobile-page", pageId: "mobile/tableSyncLog", pageName: "同步日志", 
+  version: 'v3', template: 'jhMobileTemplateV4',
   resourceList: [
     /**
      * 	tableSyncLog	selectItemList	✅获取同步日志	sql		{"table": "_table_sync_log", "operation": "select"}
@@ -16,7 +17,7 @@ const content = {
     },
   ], // { actionId: '', resourceType: '', resourceData: {}, resourceHook: {}, desc: '' }
   headContent: [
-    { tag: 'jh-page-title', value: "同步日志", attrs: { cols: 12, sm: 6, md:4 }, helpBtn: true, slot: [] },
+    { tag: 'jh-page-title', value: "<$ ctx.packagePage.pageName $>", attrs: { cols: 12, sm: 6, md:4 }, helpBtn: true, slot: [] },
     { tag: 'jh-order' },
     { tag: 'v-spacer' },
     { tag: 'jh-mode' }

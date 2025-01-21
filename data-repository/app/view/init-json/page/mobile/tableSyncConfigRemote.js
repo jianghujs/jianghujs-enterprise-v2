@@ -1,5 +1,5 @@
 const content = {
-  pageType: "jh-mobile-page", pageId: "mobile/tableSyncConfig", pageName: "同步表管理",
+  pageType: "jh-mobile-page", pageId: "mobile/tableSyncConfigRemote", pageName: "远程同步管理",
   version: 'v3', template: 'jhMobileTemplateV4',
   resourceList: [
     {
@@ -8,7 +8,7 @@ const content = {
       resourceHook: {},
       desc: "✅获取同步日志",
       resourceData: {
-        table: "_table_sync_config",
+        table: "_table_sync_config_remote",
         operation: "select"
       }
     },
@@ -17,7 +17,7 @@ const content = {
     { tag: 'jh-page-title', value: "<$ ctx.packagePage.pageName $>", attrs: { cols: 12, sm: 6, md:4 }, helpBtn: true, slot: [] },
     { tag: 'jh-order' },
     /*html*/
-    `<v-btn color="success" class="mr-2" @click="doUiAction('doSyncTableByIdList', { idList: tableData.map(item => item.id) })" small>
+    `<v-btn color="success" class="mr-2" @click="doUiAction('doSyncTableRemoteByIdList', { idList: tableData.map(item => item.id) })" small>
       同步全部
     </v-btn>`,
     { tag: 'v-spacer' },
@@ -33,15 +33,20 @@ const content = {
       headers: [
         { text: "同步组", value: "syncGroup",  width: 120, sortable: true, class: "", cellClass: "truncate max-w-[300px]"  },
         { text: "ID", value: "id", width: 50, sortable: true, cellClass: "truncate max-w-[300px]" },
+        { text: "源MYSQL", value: "sourceRemoteName", width: 80, sortable: true, cellClass: "truncate max-w-[300px]"  },
         { text: "源表", value: "sourceTableText", width: 80, sortable: true, class: "fixed", cellClass: "fixed truncate max-w-[300px]" },
+        // { text: "源表类型", value: "tableType", width: 80, sortable: true, cellClass: "truncate max-w-[300px]"  },
+        // { text: "源库", value: "sourceDatabase", width: 80, sortable: true, cellClass: "truncate max-w-[300px]"  },
+        { text: "目标MYSQL", value: "targetRemoteName", width: 80, sortable: true, cellClass: "truncate max-w-[300px]"  },
         { text: "目标表", value: "targetTableText", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
         { text: "定时检查", value: "syncTimeSlot", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
-        { text: "实时同步/触发器", value: "enableMysqlTrigger", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
         { text: "同步状态", value: "syncStatus", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
         { text: "数据同步次数", value: "syncTimesCount", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
         { text: "数据同步时间(最后一次)", value: "lastSyncTime", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
         { text: "数据同步详情(最后一次)", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
         { text: "定时执行时间", value: "scheduleAt", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+        { text: "操作", value: "action", type: "action", width: 80, align: "center", class: "fixed", cellClass: "fixed truncate max-w-[300px]" },
+        // width 表达式需要使用字符串包裹
       ],
     }
   ],
@@ -100,7 +105,7 @@ const content = {
     },
     doUiAction: {
       startDetailItem: [],
-      doSyncTableByIdList: ['doSyncTableByIdList', 'doUiAction.getTableData'],
+      doSyncTableRemoteByIdList: ['doSyncTableRemoteByIdList', 'doUiAction.getTableData'],
     }, // 额外uiAction { [key]: [action1, action2]}
     methods: {
       formatTableData() {
@@ -115,13 +120,13 @@ const content = {
       },
 
       // ---------- 同步相关 uiAction >>>>>>>>>>>> --------
-      async doSyncTableByIdList({ idList }) {
+      async doSyncTableRemoteByIdList({ idList }) {
         window.vtoast.loading({ message: `${idList.length}个表同步`, time: -1 });
         await window.jianghuAxios({
           data: {
             appData: {
-              pageId: 'tableSyncConfig',
-              actionId: 'doSyncTableByIdList',
+              pageId: 'tableSyncConfigRemote',
+              actionId: 'doSyncTableRemoteByIdList',
               actionData: {
                 idList,
               }
@@ -138,3 +143,4 @@ const content = {
 };
 
 module.exports = content;
+

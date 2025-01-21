@@ -22,7 +22,7 @@
           排序
         </div>
         <!-- 自定义搜索内容 -->
-        <v-btn color="success" class="mr-2" @click="doUiAction('doSyncTableByIdList', { idList: tableData.map(item => item.id) })" small>
+        <v-btn color="success" class="mr-2" @click="doUiAction('doSyncTableRemoteByIdList', { idList: tableData.map(item => item.id) })" small>
       同步全部
     </v-btn>
         <!-- 自定义搜索内容 -->
@@ -67,15 +67,18 @@
 
             <div v-show="viewMode == 'detail'" class="text-sm pt-2">
               <div class="text-gray-500 pr-8 flex items-center" >ID：{{ item.id }}</div>
+              <div class="text-gray-500 pr-8 flex items-center" >源MYSQL：{{ item.sourceRemoteName }}</div>
               <div class="text-gray-500 pr-8 flex items-center" >源表：{{ item.sourceTableText }}</div>
+              <div class="text-gray-500 pr-8 flex items-center" >目标MYSQL：{{ item.targetRemoteName }}</div>
               <div class="text-gray-500 pr-8 flex items-center" >目标表：{{ item.targetTableText }}</div>
               <div class="text-gray-500 pr-8 flex items-center" >定时检查：{{ item.syncTimeSlot }}</div>
-              <div class="text-gray-500 pr-8 flex items-center" >实时同步/触发器：{{ item.enableMysqlTrigger }}</div>
               <div class="text-gray-500 pr-8 flex items-center" >同步状态：{{ item.syncStatus }}</div>
               <div class="text-gray-500 pr-8 flex items-center" >数据同步次数：{{ item.syncTimesCount }}</div>
               <div class="text-gray-500 pr-8 flex items-center" >数据同步时间(最后一次)：{{ item.lastSyncTime }}</div>
               <div class="text-gray-500 pr-8 flex items-center" >数据同步详情(最后一次)：{{ item.lastSyncInfo }}</div>
               <div class="text-gray-500 pr-8 flex items-center" >定时执行时间：{{ item.scheduleAt }}</div>
+              <div class="flex justify-end items-center">
+              </div>
               <!-- action 操作按钮显示 -->
             </div>
             <!-- value 插槽 -->
@@ -153,7 +156,7 @@
     </v-bottom-sheet>
     <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
     <v-navigation-drawer v-if="isHelpPageDrawerLoaded" v-model="isHelpPageDrawerShown" :permanent="isHelpPageDrawerShown" fixed temporary right width="80%" class="elevation-24">
-      <iframe style="border: 0" :src="`/${appInfo.appId}/pageDoc#mobile/tableSyncConfig.md`" width="100%" height="100%"></iframe>
+      <iframe style="border: 0" :src="`/${appInfo.appId}/pageDoc#mobile/tableSyncConfigRemote.md`" width="100%" height="100%"></iframe>
       <v-btn elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn" @click="isHelpPageDrawerShown = false">
           <v-icon>mdi-close</v-icon>
       </v-btn>
@@ -188,15 +191,17 @@ new Vue({
     headers: [
       { text: "同步组", value: "syncGroup", width: 120, sortable: true, class: "", cellClass: "truncate max-w-[300px]", isTitle: true, isSimpleMode: true },
       { text: "ID", value: "id", width: 50, sortable: true, cellClass: "truncate max-w-[300px]" },
+      { text: "源MYSQL", value: "sourceRemoteName", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
       { text: "源表", value: "sourceTableText", width: 80, sortable: true, class: "fixed", cellClass: "fixed truncate max-w-[300px]" },
+      { text: "目标MYSQL", value: "targetRemoteName", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
       { text: "目标表", value: "targetTableText", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
       { text: "定时检查", value: "syncTimeSlot", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
-      { text: "实时同步/触发器", value: "enableMysqlTrigger", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
       { text: "同步状态", value: "syncStatus", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
       { text: "数据同步次数", value: "syncTimesCount", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
       { text: "数据同步时间(最后一次)", value: "lastSyncTime", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
       { text: "数据同步详情(最后一次)", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
       { text: "定时执行时间", value: "scheduleAt", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+      { text: "操作", value: "action", type: "action", width: 80, align: "center", class: "fixed", cellClass: "fixed truncate max-w-[300px]" },
     ],
     tableData: [],
     tableParams: {},
@@ -320,8 +325,8 @@ new Vue({
             break;
           case 'startDetailItem':
             break;
-          case 'doSyncTableByIdList':
-            await this.doSyncTableByIdList(uiActionData);
+          case 'doSyncTableRemoteByIdList':
+            await this.doSyncTableRemoteByIdList(uiActionData);
             await this.doUiAction('getTableData', uiActionData);
             break;
           case 'getTableData':
@@ -402,7 +407,7 @@ new Vue({
       const result = await window.jianghuAxios({
         data: {
           appData: {
-            pageId: 'mobile/tableSyncConfig',
+            pageId: 'mobile/tableSyncConfigRemote',
             actionId: "selectItemList",
             actionData: {},
             ...this.tableParams
@@ -451,13 +456,13 @@ new Vue({
       });
       this.tableData = tableData;
     },
-    async doSyncTableByIdList({ idList }) {
+    async doSyncTableRemoteByIdList({ idList }) {
       window.vtoast.loading({ message: `${idList.length}个表同步`, time: -1 });
       await window.jianghuAxios({
         data: {
           appData: {
-            pageId: 'tableSyncConfig',
-            actionId: 'doSyncTableByIdList',
+            pageId: 'tableSyncConfigRemote',
+            actionId: 'doSyncTableRemoteByIdList',
             actionData: {
               idList,
             }
