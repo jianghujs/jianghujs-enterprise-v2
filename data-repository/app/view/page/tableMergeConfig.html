@@ -66,10 +66,10 @@
                     <v-icon size="16" class="success--text">mdi-sync</v-icon>合并
                   </span>
                   <span role="button" class="success--text font-weight-medium font-size-2 mr-2" @click="doUiAction('startUpdateItem', item)">
-                    <v-icon size="16" class="success--text">mdi-note-edit-outline</v-icon>修改
+                    <v-icon size="16" class="success--text">mdi-note-edit-outline</v-icon>编辑
                   </span>
                   <span role="button" class="red--text text--accent-2 font-weight-medium font-size-2" @click="doUiAction('deleteItem', item)">
-                    <v-icon size="16" class="red--text text--accent-2">mdi-trash-can-outline</v-icon>删除
+                    <v-icon size="16" class="red--text text--accent-2">mdi-trash-can-outline</v-icon>回收站
                   </span>
                 </template>
                 <!-- 手机端 -->
@@ -392,6 +392,7 @@ new Vue({
           appData: {
             pageId: 'tableMergeConfig',
             actionId: 'selectItemList',
+            where: {rowStatus: '正常'},
             orderBy: [{column: 'targetTable', order: 'asc'}]
           }
         }
@@ -530,23 +531,22 @@ new Vue({
       this.deleteItemId = funObj.id;
     },
     async confirmDeleteItemDialog() {
-      if (await window.confirmDialog({title: "删除", content: "确定删除吗？"}) === false) {
+      if (await window.confirmDialog({title: "移入回收站", content: "确定移入回收站吗？"}) === false) {
         throw new Error("[confirmDeleteItemDialog] 否");
       }
     },
     async doDeleteItem() {
-      await window.vtoast.loading("删除数据");
+      await window.vtoast.loading("移入回收站");
       await window.jianghuAxios({
         data: {
           appData: {
             pageId: 'tableMergeConfig',
-            actionId: 'deleteTable',
-            actionData: {},
-            where: {id: this.deleteItemId}
+            actionId: 'recycleTableMergeConfig',
+            actionData: {id: this.deleteItemId},
           }
         }
       });
-      await window.vtoast.success("删除数据成功");
+      await window.vtoast.success("移入回收站");
       this.deleteItemId = null;
     },
     // ---------- <<<<<<<<<<< 删除数据 uiAction  --------

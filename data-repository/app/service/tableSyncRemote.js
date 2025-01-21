@@ -28,7 +28,6 @@ function getCreateTableSqlFromView({targetTable,columnsDefinition,viewDefinition
 
 class TableSyncRemoteService extends Service {
 
-  // TODO: tableSyncConfig.js 也参考优化
   async getDatabaseInfo() {
     const { jianghuKnex, config, logger } = this.app;
     const remoteDatabaseList = config.remoteDatabaseList;
@@ -68,7 +67,6 @@ class TableSyncRemoteService extends Service {
     // return { databaseList, tableListMap, tableTypeMap };
   }
 
-  // TODO: 待完善
   async recycleTableSyncConfig({ id }) {
     const { jianghuKnex, knex } = this.app;
     const syncObj = await jianghuKnex('_table_sync_config_remote').where({ id }).first();

@@ -108,7 +108,16 @@ class UtilService extends Service {
   }
 
 
-  async deleteTableMergeConfig() {
+  async recycleTableMergeConfig({ id }) {
+    const { jianghuKnex, knex } = this.app;
+    const syncObj = await jianghuKnex('_table_merge_config').where({ id }).first();
+    if (!syncObj) {
+      throw new BizError(errorInfoEnum.data_not_found);
+    }
+    await jianghuKnex('_table_merge_config')
+      .where({id})
+      .update({rowStatus: '回收站'});
+    return;
   }
 
 
