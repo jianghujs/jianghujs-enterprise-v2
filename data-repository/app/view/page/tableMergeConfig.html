@@ -60,11 +60,6 @@
               <template>
                 <!-- pc端 -->
                 <template v-if="!isMobile">
-                  <span
-                    role="button" class="success--text font-weight-medium font-size-2 mr-2"
-                    @click="doUiAction('manualSyncOneTable', item)">
-                    <v-icon size="16" class="success--text">mdi-sync</v-icon>合并
-                  </span>
                   <span role="button" class="success--text font-weight-medium font-size-2 mr-2" @click="doUiAction('startUpdateItem', item)">
                     <v-icon size="16" class="success--text">mdi-note-edit-outline</v-icon>编辑
                   </span>
@@ -81,9 +76,6 @@
                     </span>
                   </template>
                   <v-list dense>
-                    <v-list-item @click="doUiAction('manualSyncOneTable', item)">
-                      <v-list-item-title>合并</v-list-item-title>
-                    </v-list-item>
                     <v-list-item @click="doUiAction('startUpdateItem', item)">
                       <v-list-item-title>修改</v-list-item-title>
                     </v-list-item>
@@ -109,10 +101,25 @@
               <span>{{pagination.pageStart}}-{{pagination.pageStop}}</span>
               <span class="ml-1">共{{pagination.itemsLength}}条</span>
             </template>
-            <template v-slot:item.lastMergeTime="{ item }">
-              {{ item.lastMergeTime && dayjs(item.lastMergeTime).format('YYYY-MM-DD HH:mm:ss') }}
+            <template v-slot:item.lastSyncTime="{ item }">
+              {{ item.lastSyncTime && dayjs(item.lastSyncTime).format('YYYY-MM-DD HH:mm:ss') }}
             </template>
-
+            <template v-slot:item.scheduleAt="{ item }">
+              {{ item.scheduleAt && dayjs(item.scheduleAt).format('YYYY-MM-DD HH:mm:ss') }}
+            </template>
+            <template v-slot:item.lastSyncInfo="{ item }">
+              <span :title="item.lastSyncInfo">{{ item.lastSyncInfo }}</span>
+            </template>
+            <template v-slot:item.syncStatus="{ item }">
+              <div class="d-flex justify-space-between ">
+                <v-chip small :class="item.syncStatus == '成功' ? 'jh-status-tag-success' : 'jh-status-tag-error'"> 
+                  {{ item.syncStatus }} 
+                </v-chip>
+                <span role="button" @click="doUiAction('manualSyncOneTable', item)" title="合并" class="translate-y-[2px]">
+                  <v-icon size="18" color="success">mdi-sync</v-icon>
+                </span>
+              </div>
+            </template>
           </v-data-table>
         </v-card>
 
@@ -327,11 +334,14 @@ new Vue({
     isTableLoading: true,
     tableData: [],
     headers: [
-      {text: "合并-源表", value: "sourceList"},
-      {text: "合并-目标库", value: "targetDatabase"},
-      {text: "合并-目标表", value: "targetTable"},
-      {text: "合并状态", value: "mergeDesc", width: 120},
-      {text: "合并触发时间", value: "lastMergeTime", width: 150},
+      {text: "合并-源表", value: "sourceList", cellClass: "truncate max-w-[400px]"},
+      {text: "合并-目标库", value: "targetDatabase", width: 80, sortable: true, cellClass: "truncate max-w-[300px]"},
+      {text: "合并-目标表", value: "targetTable", width: 80, sortable: true, cellClass: "truncate max-w-[300px]"},
+      {text: "合并状态", value: "syncStatus", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+      {text: "数据合并次数", value: "syncTimesCount", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+      {text: "数据合并时间(最后一次)", value: "lastSyncTime", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+      {text: "数据合并详情(最后一次)", value: "lastSyncInfo", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
+      {text: "定时执行时间", value: "scheduleAt", width: 80, sortable: true, cellClass: "truncate max-w-[300px]" },
       {text: '操作', value: 'action', align: 'center', sortable: false, width: window.innerWidth < 500 ? 80 : 180, class: 'fixed', cellClass: 'fixed'},
     ],
     // 新增数据

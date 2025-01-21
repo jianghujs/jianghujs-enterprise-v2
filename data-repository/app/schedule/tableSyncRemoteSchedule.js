@@ -23,9 +23,11 @@ module.exports = app => {
         .filter(obj => syncTimeMinute%obj.syncTimeSlot === 0)
         .map(obj => obj.id);
       const tableCount = idList.length ;
-      await jianghuKnex('_table_sync_config_remote').whereIn('id', idList).update({ scheduleAt: dayjs().format() });
-      logger.warn('[tableSyncRemoteSchedule] start', { tableCount, syncTimeMinute });
-      await ctx.service.tableSyncRemote.doSyncTableRemoteByIdList({ idList });
+      if (tableCount > 0) {
+        await jianghuKnex('_table_sync_config_remote').whereIn('id', idList).update({ scheduleAt: dayjs().format() });
+        logger.warn('[tableSyncRemoteSchedule] start', { tableCount, syncTimeMinute });
+        await ctx.service.tableSyncRemote.doSyncTableRemoteByIdList({ idList });
+      }
     },
     
   }

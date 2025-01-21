@@ -23,9 +23,11 @@ module.exports = app => {
         .filter(obj => syncTimeMinute%obj.syncTimeSlot === 0)
         .map(obj => obj.id);
       const tableCount = idList.length ;
-      await jianghuKnex('_table_merge_config').whereIn('id', idList).update({ scheduleAt: dayjs().format() });
-      logger.warn('[tableMergeSchedule] start', { tableCount, syncTimeMinute });
-      await ctx.service.tableMerge.doTableMerge({ idList });
+      if (tableCount > 0) {
+        await jianghuKnex('_table_merge_config').whereIn('id', idList).update({ scheduleAt: dayjs().format() });
+        logger.warn('[tableMergeSchedule] start', { tableCount, syncTimeMinute });
+        await ctx.service.tableMerge.doTableMerge({ idList });
+      }
     },
   };
 };

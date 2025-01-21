@@ -122,7 +122,8 @@ class UtilService extends Service {
 
 
   async doTableMerge({ idList }) {
-    const {jianghuKnex, logger} = this.app;
+    const {jianghuKnex, knex, logger} = this.app;
+    const startTime = new Date().getTime();
     const allTable = await jianghuKnex('information_schema.tables').select('table_schema as database', 'table_name as tableName');
     const allTableMap = Object.fromEntries(allTable.map(obj => [`${obj.database}.${obj.tableName}`, obj]));
 
@@ -131,134 +132,7 @@ class UtilService extends Service {
       .select();
     tableMergeConfigList.forEach(item => { item.sourceList = JSON.parse(item.sourceList || '[]');})
     tableMergeConfigList = tableMergeConfigList.filter(item => item.sourceList.length > 0);
-    tableMergeConfigList = await this.tableMergeCheck({tableMergeConfigList, allTableMap});
-    await this.tableConsistentCheckAndSync({tableMergeConfigList, allTableMap});
-    await this.tableMysqlTriggerCheckAndSync({tableMergeConfigList});
-    await this.clearUselessMysqlTrigger({allTableMap});
-  }
 
-  async tableMergeCheck({tableMergeConfigList, allTableMap}) {
-    const {jianghuKnex, logger} = this.app;
-
-    tableMergeConfigList.forEach(item => item.sourceList=item.sourceList.filter(source => allTableMap[`${source.database}.${source.tableName}`]));
-    tableMergeConfigList = tableMergeConfigList.filter(item => item.sourceList.length > 0);
-    const tableMergeConfigListNew = [];
-    for (const tableConfig of tableMergeConfigList) {
-      const sourceList = tableConfig.sourceList;
-      if (sourceList.length == 1) { continue; }
-      const masterSource = sourceList[0];
-      const masterSourceDDLResult = await jianghuKnex.raw(`SHOW CREATE TABLE ${masterSource.database}.${masterSource.tableName};`);
-      let masterSourceDDL = masterSourceDDLResult[0][0]['Create Table'];
-      masterSourceDDL = masterSourceDDL.replace(/AUTO_INCREMENT=\d+ ?/, '');
-      let mergeDesc = '';
-      for (let i = 1; i < sourceList.length; i++) {
-        const currentSource = sourceList[i];
-        const currentSourceDDLResult = await jianghuKnex.raw(`SHOW CREATE TABLE ${currentSource.database}.${currentSource.tableName};`);
-        let currentSourceDDL = currentSourceDDLResult[0][0]['Create Table'];
-        currentSourceDDL = currentSourceDDL
-          .replace(`CREATE TABLE \`${currentSource.tableName}\``, `CREATE TABLE \`${masterSource.tableName}\``)
-          .replace(/AUTO_INCREMENT=\d+ ?/, '');
-        if (masterSourceDDL != currentSourceDDL) {
-          mergeDesc += `${currentSource.database}.${currentSource.tableName}和主表结构不一致; `;
-        }
-      }
-      if (mergeDesc) {
-        await jianghuKnex('_table_merge_config').update({ mergeDesc }).where({ id: tableConfig.id });
-      }
-      if (!mergeDesc) {
-        tableMergeConfigListNew.push(tableConfig);
-      }
-    }
-    return tableMergeConfigListNew;
-  }
-
-  async tableConsistentCheckAndSync({tableMergeConfigList, allTableMap}) {
-    const {knex, logger} = this.app;
-    const lastMergeTime = dayjs().format();
-    for (const tableConfig of tableMergeConfigList) {
-      if (tableConfig.sourceList.length === 0) { continue; }
-      await knex('_table_merge_config').where({ id: tableConfig.id }).update({ lastMergeTime, mergeDesc: '开始' });
-      const { targetDatabase, targetTable } = tableConfig;
-      const sourceDatabase = tableConfig.sourceList[0].database;
-      const sourceTable = tableConfig.sourceList[0].tableName;
-      const targetTableExist = allTableMap[`${targetDatabase}.${targetTable}`];
-      const sourceTableDDLResult = await knex.raw(`SHOW CREATE TABLE ${sourceDatabase}.${sourceTable};`);
-      const sourceTableDDL = sourceTableDDLResult[0][0]['Create Table'];
-      const exceptTargetTableDDL = sourceTableDDL
-        .replace(`CREATE TABLE \`${sourceTable}\``, `CREATE TABLE \`${targetDatabase}\`.\`${targetTable}\``)
-        .replace(/AUTO_INCREMENT=\d+ ?/, '');
-      let targetTableDDL = null;
-      if (targetTableExist) {
-        const targetTableDDLResult = await knex.raw(`SHOW CREATE TABLE ${targetDatabase}.${targetTable};`);
-        targetTableDDL = targetTableDDLResult[0][0]['Create Table'].replace(/AUTO_INCREMENT=\d+ ?/, '');
-      }
-      const isDiff = compareTableForMerge(targetTableDDL, exceptTargetTableDDL);
-      if (isDiff) {
-        await knex.raw(`DROP TABLE IF EXISTS \`${targetDatabase}\`.\`${targetTable}\`;`);
-        await knex.raw(exceptTargetTableDDL);
-        await knex.raw(`ALTER TABLE \`${targetDatabase}\`.\`${targetTable}\`
-          ADD COLUMN \`incrementId\` int(11) NOT NULL AUTO_INCREMENT FIRST,
-          ADD COLUMN \`appId\` varchar(255) DEFAULT NULL AFTER \`incrementId\`,
-          MODIFY COLUMN \`id\` int(11) NULL DEFAULT NULL AFTER \`appId\`,
-          DROP PRIMARY KEY,
-          ADD PRIMARY KEY (\`incrementId\`) USING BTREE;`);
-        const selectDataSql = tableConfig.sourceList
-          .map(source => `select null as incrementId, '${source.appId}' as appId, a.* from \`${source.database}\`.\`${source.tableName}\` as a`)
-          .join(' UNION ');
-        await knex.raw(`REPLACE INTO \`${targetDatabase}\`.\`${targetTable}\` ${selectDataSql};`);
-        logger.info(`[merge][${targetTable}]`, '结构不一致; 创建成功;');
-      }
-
-      const targetConnection = {...this.app.config.knex.client.connection, database: targetDatabase};
-      let hasHyperDiff = false;
-      const appIdList = tableConfig.sourceList.map(source => source.appId);
-      for (const source of tableConfig.sourceList) {
-        const { appId } = source; 
-        const sourceConnection = {...this.app.config.knex.client.connection, database: source.database};
-        const hyperDiffResult = await hyperDiffMerge({
-          oldDatabaseConnectionConfig: targetConnection,
-          oldTable: targetTable, oldDataWhere: { appId },
-          newDatabaseConnectionConfig: sourceConnection,
-          newTable: source.tableName,
-          splitCount: 2,
-          stopThreshold: 10,
-          ignoreColumns: ['incrementId', 'appId'],
-        });
-        let hyperDiffIsConsistent = hyperDiffResult.added.length === 0 && hyperDiffResult.removed.length === 0 && hyperDiffResult.changed.length === 0;
-        if (!hyperDiffIsConsistent) {
-          hasHyperDiff = true;
-          const {added, removed, changed} = hyperDiffResult;
-          added.forEach(item => { item.appId = appId; })
-          changed.forEach(item => { item.appId = appId; })
-          if (added.length > 0) {
-            await knex(`${targetDatabase}.${targetTable}`).insert(added);
-          }
-          if (removed.length > 0) {
-            const idList = removed.map(item => item.id);
-            await knex(`${targetDatabase}.${targetTable}`).where({ appId }).whereIn('id', idList).delete();
-          }
-          if (changed.length > 0) {
-            for (const item of changed) {
-              const {id, ...updateParam} = item.new;
-              await knex(`${targetDatabase}.${targetTable}`).where({ appId }).where({id}).update(updateParam);
-            }
-          }
-        }  
-      }    
-      await knex(`${targetDatabase}.${targetTable}`).whereNotIn('appId', appIdList).delete();
-      if (hasHyperDiff) {
-        logger.info(`[merge][${targetTable}]`, '数据不一致; 同步成功;');
-      } 
-      if (!hasHyperDiff) {
-        logger.info(`[merge][${targetTable}]`, '数据一致; 无需同步;');
-      } 
-    
-      await knex('_table_merge_config').where({ id: tableConfig.id }).update({ mergeDesc: '成功' });
-    }
-  }
-
-  async tableMysqlTriggerCheckAndSync({tableMergeConfigList}) {
-    const {jianghuKnex} = this.app;
     const { mergeTriggerPrefix } = this.getConfig();
     const triggerList = await jianghuKnex('information_schema.triggers')
       .whereNotIn('TRIGGER_SCHEMA', ['sys'])
@@ -266,9 +140,146 @@ class UtilService extends Service {
       .select('TRIGGER_NAME as triggerName', 'ACTION_STATEMENT as triggerContent');
     const allTriggerContentMap = Object.fromEntries(triggerList.map(obj => [obj.triggerName, obj.triggerContent]));
 
-    for (const tableConfig of tableMergeConfigList) {
-      if (tableConfig.sourceList.length === 0) { continue; }
-      await this.createMysqlTriggerForSourceTable({tableConfig, allTriggerContentMap, mergeTriggerPrefix});
+    const tableCount = tableMergeConfigList.length;
+    for (const [index, tableConfig] of tableMergeConfigList.entries()) {
+      try { 
+        await this.tableMergeCheck({tableConfig, allTableMap});
+        await this.tableConsistentCheckAndSync({tableConfig, allTableMap});
+        await this.createMysqlTriggerForSourceTable({tableConfig, allTriggerContentMap, mergeTriggerPrefix});
+        logger.info(`[tableMerge.doTableMerge] ${index + 1}/${tableCount} ID:${tableConfig.id} 成功`);
+      } catch (error) {
+        await jianghuKnex('_table_merge_config').where({ id: tableConfig.id })
+          .update({ 
+            syncStatus: '失败', 
+            syncTimesCount: knex.raw('syncTimesCount + 1'),
+            lastSyncTime: dayjs().format(), 
+            lastSyncInfo: `ERROR: ${error.message}`,
+          });
+        logger.error('[tableMerge] ERROR', `${tableConfig.targetDatabase}.${tableConfig.targetTable}`, { error: error.message });
+      }
+    }
+    await this.clearUselessMysqlTrigger({allTableMap});
+    logger.warn('[tableMerge.doTableMerge] end', { tableCount: idList.length, useTime: `${new Date().getTime() - startTime}/ms` });
+  }
+
+  async tableMergeCheck({tableConfig, allTableMap}) {
+    const {jianghuKnex, logger} = this.app;
+
+    tableConfig.sourceList = tableConfig.sourceList.filter(source => allTableMap[`${source.database}.${source.tableName}`]);
+    if (tableConfig.sourceList.length === 0) { 
+      throw new Error('源数据为空');
+    }
+
+    const masterSource = tableConfig.sourceList[0];
+    const masterSourceDDLResult = await jianghuKnex.raw(`SHOW CREATE TABLE ${masterSource.database}.${masterSource.tableName};`);
+    let masterSourceDDL = masterSourceDDLResult[0][0]['Create Table'];
+    masterSourceDDL = masterSourceDDL.replace(/AUTO_INCREMENT=\d+ ?/, '');
+
+    let errorMessage = '';
+    for (let i = 1; i < tableConfig.sourceList.length; i++) {
+      const currentSource = tableConfig.sourceList[i];
+      const currentSourceDDLResult = await jianghuKnex.raw(`SHOW CREATE TABLE ${currentSource.database}.${currentSource.tableName};`);
+      let currentSourceDDL = currentSourceDDLResult[0][0]['Create Table'];
+      currentSourceDDL = currentSourceDDL
+        .replace(`CREATE TABLE \`${currentSource.tableName}\``, `CREATE TABLE \`${masterSource.tableName}\``)
+        .replace(/AUTO_INCREMENT=\d+ ?/, '');
+      if (masterSourceDDL != currentSourceDDL) {
+        errorMessage += `${currentSource.database}.${currentSource.tableName}和主表结构不一致; `;
+      }
+    }
+    if (errorMessage) {
+      logger.warn(`[tableMerge.tableMergeCheck] ${tableConfig.id}`, errorMessage);
+      throw new Error(errorMessage);
+    }
+  }
+
+  async tableConsistentCheckAndSync({tableConfig, allTableMap}) {
+    const { jianghuKnex, knex, logger } = this.app;
+    if (tableConfig.sourceList.length === 0) { return; }
+    const { targetDatabase, targetTable } = tableConfig;
+    const sourceDatabase = tableConfig.sourceList[0].database;
+    const sourceTable = tableConfig.sourceList[0].tableName;
+    const targetTableExist = allTableMap[`${targetDatabase}.${targetTable}`];
+    const sourceTableDDLResult = await knex.raw(`SHOW CREATE TABLE ${sourceDatabase}.${sourceTable};`);
+    const sourceTableDDL = sourceTableDDLResult[0][0]['Create Table'];
+    const exceptTargetTableDDL = sourceTableDDL
+      .replace(`CREATE TABLE \`${sourceTable}\``, `CREATE TABLE \`${targetDatabase}\`.\`${targetTable}\``)
+      .replace(/AUTO_INCREMENT=\d+ ?/, '');
+    let targetTableDDL = null;
+    if (targetTableExist) {
+      const targetTableDDLResult = await knex.raw(`SHOW CREATE TABLE ${targetDatabase}.${targetTable};`);
+      targetTableDDL = targetTableDDLResult[0][0]['Create Table'].replace(/AUTO_INCREMENT=\d+ ?/, '');
+    }
+    const isDiff = compareTableForMerge(targetTableDDL, exceptTargetTableDDL);
+    if (isDiff) {
+      await knex.raw(`DROP TABLE IF EXISTS \`${targetDatabase}\`.\`${targetTable}\`;`);
+      await knex.raw(exceptTargetTableDDL);
+      await knex.raw(`ALTER TABLE \`${targetDatabase}\`.\`${targetTable}\`
+        ADD COLUMN \`incrementId\` int(11) NOT NULL AUTO_INCREMENT FIRST,
+        ADD COLUMN \`appId\` varchar(255) DEFAULT NULL AFTER \`incrementId\`,
+        MODIFY COLUMN \`id\` int(11) NULL DEFAULT NULL AFTER \`appId\`,
+        DROP PRIMARY KEY,
+        ADD PRIMARY KEY (\`incrementId\`) USING BTREE;`);
+      const selectDataSql = tableConfig.sourceList
+        .map(source => `select null as incrementId, '${source.appId}' as appId, a.* from \`${source.database}\`.\`${source.tableName}\` as a`)
+        .join(' UNION ');
+      await knex.raw(`REPLACE INTO \`${targetDatabase}\`.\`${targetTable}\` ${selectDataSql};`);
+      logger.info(`[merge][${targetTable}]`, '结构不一致; 创建成功;');
+    }
+
+    const targetConnection = {...this.app.config.knex.client.connection, database: targetDatabase};
+    const appIdList = tableConfig.sourceList.map(source => source.appId);
+    let diffCountTotal = 0, addedTotal = 0, removedTotal = 0, changedTotal = 0;
+    for (const source of tableConfig.sourceList) {
+      const { appId } = source; 
+      const sourceConnection = {...this.app.config.knex.client.connection, database: source.database};
+      const hyperDiffResult = await hyperDiffMerge({
+        oldDatabaseConnectionConfig: targetConnection,
+        oldTable: targetTable, oldDataWhere: { appId },
+        newDatabaseConnectionConfig: sourceConnection,
+        newTable: source.tableName,
+        splitCount: 2,
+        stopThreshold: 10,
+        ignoreColumns: ['incrementId', 'appId'],
+      });
+      const { added, removed, changed } = hyperDiffResult;
+      const diffCount = added.length + removed.length + changed.length;
+      diffCountTotal += diffCount;
+      addedTotal += added.length;
+      removedTotal += removed.length;
+      changedTotal += changed.length;
+      if (diffCount > 0) {
+        added.forEach(item => { item.appId = appId; })
+        changed.forEach(item => { item.appId = appId; })
+        if (added.length > 0) {
+          await knex(`${targetDatabase}.${targetTable}`).insert(added);
+        }
+        if (removed.length > 0) {
+          const idList = removed.map(item => item.id);
+          await knex(`${targetDatabase}.${targetTable}`).where({ appId }).whereIn('id', idList).delete();
+        }
+        if (changed.length > 0) {
+          for (const item of changed) {
+            const {id, ...updateParam} = item.new;
+            await knex(`${targetDatabase}.${targetTable}`).where({ appId }).where({id}).update(updateParam);
+          }
+        }
+      } 
+    }    
+    
+    if (diffCountTotal > 0) {
+      logger.warn('[mergeTable.doTableMerge]', `${targetDatabase}.${targetTable}`, { addedTotal, removedTotal, changedTotal });
+    } 
+    await knex(`${targetDatabase}.${targetTable}`).whereNotIn('appId', appIdList).delete();
+    await knex('_table_merge_config').where({ id: tableConfig.id }).update({ syncStatus: '成功' });
+    await jianghuKnex('_table_merge_config').where({ id: tableConfig.id }).where('lastSyncInfo', 'like', 'ERROR%').update({lastSyncInfo: ''});
+    if(diffCountTotal > 0){
+      await jianghuKnex('_table_merge_config').where({ id: tableConfig.id })
+        .update({ 
+          lastSyncTime: dayjs().format(),
+          lastSyncInfo: `${addedTotal}条新增, ${changedTotal}条修改, ${removedTotal}条删除`,
+          syncTimesCount: knex.raw('syncTimesCount + 1'),
+        });
     }
   }
 
@@ -301,9 +312,8 @@ class UtilService extends Service {
         await jianghuKnex.raw(INSERTTriggerCreateSql);
         const syncDesc = 'insert 触发器覆盖';
         logger.warn(`[merge][${targetTable}]`, syncDesc);
-      } else {
-        logger.info(`[merge][${targetTable}]`, 'insert触发器已存在; 无需覆盖');
-      }
+      } 
+      
 
       const UPDATETriggerName = `${mergeTriggerPrefix}_${appId}_${targetTable}_UPDATE`;
       const UPDATETriggerContentSql = `BEGIN
@@ -319,9 +329,7 @@ class UtilService extends Service {
         await jianghuKnex.raw(UPDATETriggerCreateSql);
         const syncDesc = 'update 触发器覆盖';
         logger.warn(`[merge][${targetTable}]`, syncDesc);
-      } else {
-        logger.info(`[merge][${targetTable}]`, 'update触发器已存在; 无需覆盖');
-      }
+      } 
 
 
       const DELETETriggerName = `${mergeTriggerPrefix}_${appId}_${targetTable}_DELETE`;
@@ -336,9 +344,7 @@ class UtilService extends Service {
         await jianghuKnex.raw(DELETETriggerCreateSql);
         const syncDesc = 'delete 触发器覆盖';
         logger.warn(`[merge][${targetTable}]`, syncDesc);
-      } else {
-        logger.info(`[merge][${targetTable}]`, 'delete触发器已存在; 无需覆盖');
-      }
+      } 
     }
     
   }
