@@ -82,6 +82,32 @@ class UtilService extends Service {
     return { defaultTargetDatabase, mergeTriggerPrefix };
   }
 
+// {"service": "tableSync", "serviceFunction": "selectSourceDatabase"}
+// {"service": "tableSync", "serviceFunction": "selectSourceTable"}
+
+  async getDatabaseInfo() {
+    const { jianghuKnex, config } = this.app;
+    const { defaultTargetDatabase, syncTriggerPrefix } = this.getConfig();
+
+    const tableList = await jianghuKnex('information_schema.TABLES')
+      .whereNotIn('table_schema', ['sys', 'information_schema', 'performance_schema', 'mysql'])
+      .orderBy('table_name', 'desc')
+      .select('table_schema as sourceDatabase', 'table_name as sourceTable', 'table_type as tableType');
+    
+    const triggerListAll = await jianghuKnex('information_schema.triggers')
+      .whereNotIn('TRIGGER_SCHEMA', ['sys', 'information_schema', 'performance_schema', 'mysql'])
+      .where('TRIGGER_NAME', 'like', `${syncTriggerPrefix}_%`)
+      .select('TRIGGER_SCHEMA as sourceDatabase', 'EVENT_OBJECT_TABLE as sourceTable', 'TRIGGER_NAME as triggerName', 'EVENT_MANIPULATION as triggerEvent');
+    const tableTriggerGroupMap = _.groupBy(triggerListAll, (item) => `${item.sourceDatabase}.${item.sourceTable}`);
+    const tableTriggerCountMap = Object.fromEntries(Object.entries(tableTriggerGroupMap).map(([key, value]) => [key, value.length]));
+      
+    const tableTypeMap = Object.fromEntries(tableList.map(item => [`${item.sourceDatabase}.${item.sourceTable}`, item.tableType]));
+    const tableListMap = _.groupBy(tableList, 'sourceDatabase');
+    const databaseList = Object.keys(tableListMap);
+    return { defaultTargetDatabase, databaseList, tableListMap, tableTriggerCountMap, tableTypeMap};
+  }
+
+
   async deleteTableMergeConfig() {
   }
 
