@@ -17,9 +17,9 @@ module.exports = appInfo => {
       enableLoginCaptcha: true,
     },
     schedule: {
-      tableSyncSchedule: false,
+      tableMergeSchedule: false,
       tableSyncRemoteSchedule: false,
-      mergeTableSchedule: false,
+      tableSyncSchedule: false,
     },
     remoteDatabaseList: [],
     

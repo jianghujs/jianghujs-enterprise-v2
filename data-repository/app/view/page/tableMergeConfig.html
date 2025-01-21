@@ -133,13 +133,23 @@
               <template v-for="(source, index) in createItem.sourceList" :key="index">
                 <v-col cols="12" sm="6" md="3" class="pb-0 pt-0">
                   <span class="jh-input-label">合并-源库<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                  <v-autocomplete
-                    class="jh-v-input" dense filled single-line clearable label="数据库" :rules="validationRules.requireRules" v-model="source.database"
-                    :items="constantObj.sourceDatabase"></v-autocomplete>
+                  <v-combobox
+                    class="jh-v-input" dense filled single-line label="数据库" :rules="validationRules.requireRules" v-model="source.database"
+                    :items="constantObj.databaseList"></v-combobox>
                 </v-col>
                 <v-col cols="12" sm="6" md="3" class="pb-0 pt-0">
-                  <span class="jh-input-label">合并-源表<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                  <v-text-field class="jh-v-input" dense single-line filled v-model="source.tableName" :rules="validationRules.requireRules"></v-text-field>
+                  <span class="jh-input-label">
+                  合并-源表 
+                  <span v-if="createItem.sourceTable">
+                    (源表类型: {{ constantObj.tableTypeMap[source.database + '.' + source.tableName] || '' }})
+                  </span>
+                  <span role="button" @click="initConstantObjData({ showTip: true })" class="success--text ml-1">
+                    查询<v-icon size="18" color="success">mdi-sync</v-icon>
+                  </span>
+                  </span>
+                  <v-combobox :items="constantObj.tableListMap[source.database]||[]" 
+                    item-text="tableName" item-value="tableName" :return-object="false" class="jh-v-input" dense single-line filled 
+                    v-model="source.tableName" :rules="validationRules.requireRules"></v-combobox>
                 </v-col>
                 <v-col cols="12" sm="4" md="2" class="pb-0 pt-0">
                   <span class="jh-input-label">合并-源appId<span class="red--text text--accent-2 ml-1">*必填</span></span>
@@ -158,9 +168,9 @@
 
               <v-col cols="12" sm="12" md="4">
                 <span class="jh-input-label">合并-目标库<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-autocomplete
-                  class="jh-v-input" dense filled single-line clearable :rules="validationRules.requireRules" v-model="createItem.targetDatabase"
-                  :items="constantObj.sourceDatabase"></v-autocomplete>
+                <v-combobox
+                  class="jh-v-input" dense filled single-line :rules="validationRules.requireRules" v-model="createItem.targetDatabase"
+                  :items="constantObj.databaseList"></v-combobox>
               </v-col>
               <v-col cols="12" sm="12" md="4">
                 <span class="jh-input-label">合并-目标表<span class="red--text text--accent-2 ml-1">*必填</span></span>
@@ -197,13 +207,23 @@
               <template v-for="(source, index) in updateItem.sourceList" :key="index">
                 <v-col cols="12" sm="6" md="3" class="pb-0 pt-0">
                   <span class="jh-input-label">合并-源库<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                  <v-autocomplete
-                    class="jh-v-input" dense filled single-line clearable label="数据库" :rules="validationRules.requireRules" v-model="source.database"
-                    :items="constantObj.sourceDatabase"></v-autocomplete>
+                  <v-combobox :return-object="false"
+                    class="jh-v-input" dense filled single-line label="数据库" :rules="validationRules.requireRules" v-model="source.database"
+                    :items="constantObj.databaseList"></v-combobox>
                 </v-col>
                 <v-col cols="12" sm="6" md="3" class="pb-0 pt-0">
-                  <span class="jh-input-label">合并-源表<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                  <v-text-field class="jh-v-input" dense single-line filled v-model="source.tableName" :rules="validationRules.requireRules"></v-text-field>
+                  <span class="jh-input-label">
+                  合并-源表 
+                  <span v-if="createItem.sourceTable">
+                    (源表类型: {{ constantObj.tableTypeMap[source.database + '.' + source.tableName] || '' }})
+                  </span>
+                  <span role="button" @click="initConstantObjData({ showTip: true })" class="success--text ml-1">
+                    查询<v-icon size="18" color="success">mdi-sync</v-icon>
+                  </span>
+                  </span>
+                  <v-combobox :items="constantObj.tableListMap[source.database]||[]" 
+                    item-text="tableName" item-value="tableName" :return-object="false" class="jh-v-input" dense single-line filled 
+                    v-model="source.tableName" :rules="validationRules.requireRules"></v-combobox>
                 </v-col>
                 <v-col cols="12" sm="4" md="2" class="pb-0 pt-0">
                   <span class="jh-input-label">合并-源appId<span class="red--text text--accent-2 ml-1">*必填</span></span>
@@ -222,9 +242,9 @@
 
               <v-col cols="12" sm="12" md="4">
                 <span class="jh-input-label">合并-目标库<span class="red--text text--accent-2 ml-1">*必填</span></span>
-                <v-autocomplete
-                  class="jh-v-input" dense filled single-line clearable :rules="validationRules.requireRules" v-model="updateItem.targetDatabase"
-                  :items="constantObj.sourceDatabase"></v-autocomplete>
+                <v-combobox :return-object="false"
+                  class="jh-v-input" dense filled single-line :rules="validationRules.requireRules" v-model="updateItem.targetDatabase"
+                  :items="constantObj.databaseList"></v-combobox>
               </v-col>
               <v-col cols="12" sm="12" md="4">
                 <span class="jh-input-label">合并-目标表<span class="red--text text--accent-2 ml-1">*必填</span></span>
@@ -295,7 +315,12 @@ new Vue({
 
     constantObj: {
       sourceDatabase: [],
-      sourceTable: []
+      sourceTable: [],
+
+      databaseList: [],
+      tableListMap: {},
+      tableTriggerCountMap: {},
+      tableTypeMap: {},
     },
     isEditDrawerShow: false,
     searchInput: null,
@@ -335,9 +360,12 @@ new Vue({
   methods: {
     async doUiAction(uiActionId, uiActionData) {
       switch (uiActionId) {
+        case 'initConstantObjData':
+          await this.initConstantObjData(uiActionData);
+          break;
         case 'getTableData':
           await this.getTableData(uiActionData);
-          await this.getDatabaseInfo(uiActionData);
+          await this.initConstantObjData(uiActionData);
           break;
         case 'startCreateItem':
           await this.prepareCreateFormData();
@@ -403,7 +431,9 @@ new Vue({
       this.isTableLoading = false;
     },
     // ---------- 获取数据库列表 uiAction >>>>>>>>>> --------
-    async getDatabaseInfo() {
+    async initConstantObjData(funObj) {
+      const { showTip= false } = funObj||{};
+      if (showTip) { window.vtoast.loading("查询表"); }
       const result = await window.jianghuAxios({
         data: {
           appData: {
@@ -419,12 +449,14 @@ new Vue({
       this.defaultTargetDatabase = defaultTargetDatabase;
       this.constantObj.tableTriggerCountMap = tableTriggerCountMap;
       this.constantObj.tableTypeMap = tableTypeMap;
+      if (showTip) { window.vtoast.success("查询表"); }
     },
     // ---------- <<<<<<<<<<<< 获取数据库列表 uiAction --------
     // ---------- 新增数据 uiAction >>>>>>>>>> --------
     async prepareCreateFormData() {
       this.createItem = {
-        sourceList: [],
+        sourceList: [{},{}],
+        targetDatabase: this.defaultTargetDatabase,
       };
     },
 
@@ -568,7 +600,7 @@ new Vue({
             pageId: 'tableMergeConfig',
             actionId: 'doTableMerge',
             actionData: {
-              id: this.syncItem.id,
+              idList: [this.syncItem.id],
             }
           }
         }
@@ -589,7 +621,9 @@ new Vue({
           appData: {
             pageId: 'tableMergeConfig',
             actionId: 'doTableMerge',
-            actionData: {}
+            actionData: {
+              idList: this.tableData.map(item => item.id),
+            }
           }
         }
       });

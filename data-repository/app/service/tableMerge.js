@@ -92,17 +92,17 @@ class UtilService extends Service {
     const tableList = await jianghuKnex('information_schema.TABLES')
       .whereNotIn('table_schema', ['sys', 'information_schema', 'performance_schema', 'mysql'])
       .orderBy('table_name', 'desc')
-      .select('table_schema as sourceDatabase', 'table_name as sourceTable', 'table_type as tableType');
+      .select('table_schema as databaseName', 'table_name as tableName', 'table_type as tableType');
     
     const triggerListAll = await jianghuKnex('information_schema.triggers')
       .whereNotIn('TRIGGER_SCHEMA', ['sys', 'information_schema', 'performance_schema', 'mysql'])
       .where('TRIGGER_NAME', 'like', `${syncTriggerPrefix}_%`)
-      .select('TRIGGER_SCHEMA as sourceDatabase', 'EVENT_OBJECT_TABLE as sourceTable', 'TRIGGER_NAME as triggerName', 'EVENT_MANIPULATION as triggerEvent');
-    const tableTriggerGroupMap = _.groupBy(triggerListAll, (item) => `${item.sourceDatabase}.${item.sourceTable}`);
+      .select('TRIGGER_SCHEMA as databaseName', 'EVENT_OBJECT_TABLE as tableName', 'TRIGGER_NAME as triggerName', 'EVENT_MANIPULATION as triggerEvent');
+    const tableTriggerGroupMap = _.groupBy(triggerListAll, (item) => `${item.database}.${item.tableName}`);
     const tableTriggerCountMap = Object.fromEntries(Object.entries(tableTriggerGroupMap).map(([key, value]) => [key, value.length]));
       
-    const tableTypeMap = Object.fromEntries(tableList.map(item => [`${item.sourceDatabase}.${item.sourceTable}`, item.tableType]));
-    const tableListMap = _.groupBy(tableList, 'sourceDatabase');
+    const tableTypeMap = Object.fromEntries(tableList.map(item => [`${item.databaseName}.${item.tableName}`, item.tableType]));
+    const tableListMap = _.groupBy(tableList, 'databaseName');
     const databaseList = Object.keys(tableListMap);
     return { defaultTargetDatabase, databaseList, tableListMap, tableTriggerCountMap, tableTypeMap};
   }
@@ -121,19 +121,13 @@ class UtilService extends Service {
   }
 
 
-  async doTableMerge(actionData) {
-    // Tip: 适配schedule调用, actionData从入参取
-    validateUtil.validate(appDataSchema.mergeTable, actionData);
-    const {useSyncTimeSlotFilter} = actionData;
-    const tableMergeConfigWhere= _.pick(actionData, ['id']);
-    
+  async doTableMerge({ idList }) {
     const {jianghuKnex, logger} = this.app;
-
     const allTable = await jianghuKnex('information_schema.tables').select('table_schema as database', 'table_name as tableName');
     const allTableMap = Object.fromEntries(allTable.map(obj => [`${obj.database}.${obj.tableName}`, obj]));
 
     let tableMergeConfigList = await jianghuKnex('_table_merge_config')
-      .where(tableMergeConfigWhere)
+      .whereIn('id', idList)
       .select();
     tableMergeConfigList.forEach(item => { item.sourceList = JSON.parse(item.sourceList || '[]');})
     tableMergeConfigList = tableMergeConfigList.filter(item => item.sourceList.length > 0);
@@ -259,7 +253,7 @@ class UtilService extends Service {
         logger.info(`[merge][${targetTable}]`, '数据一致; 无需同步;');
       } 
     
-      await knex('_table_merge_config').where({ id: tableConfig.id }).update({ mergeDesc: '正常' });
+      await knex('_table_merge_config').where({ id: tableConfig.id }).update({ mergeDesc: '成功' });
     }
   }
 
@@ -292,7 +286,7 @@ class UtilService extends Service {
       const columnList = columnListSelect.map(item => `\`${item.COLUMN_NAME}\``);
       const NEWColumnList = columnListSelect.map(item => `NEW.\`${item.COLUMN_NAME}\``);
       const updateColumnList = columnListSelect.map(item => `\`${item.COLUMN_NAME}\`=NEW.\`${item.COLUMN_NAME}\``);
-      const INSERTTriggerName = `${mergeTriggerPrefix}_${appId}_${targetDatabase}_${targetTable}_INSERT`;
+      const INSERTTriggerName = `${mergeTriggerPrefix}_${appId}_${targetTable}_INSERT`;
       const INSERTTriggerContentSql = `BEGIN
               INSERT INTO \`${targetDatabase}\`.\`${targetTable}\`
               (\`appId\`,${columnList.join(',')})
@@ -311,7 +305,7 @@ class UtilService extends Service {
         logger.info(`[merge][${targetTable}]`, 'insert触发器已存在; 无需覆盖');
       }
 
-      const UPDATETriggerName = `${mergeTriggerPrefix}_${appId}_${targetDatabase}_${targetTable}_UPDATE`;
+      const UPDATETriggerName = `${mergeTriggerPrefix}_${appId}_${targetTable}_UPDATE`;
       const UPDATETriggerContentSql = `BEGIN
               UPDATE \`${targetDatabase}\`.\`${targetTable}\`
               SET ${updateColumnList.join(',')}
@@ -330,7 +324,7 @@ class UtilService extends Service {
       }
 
 
-      const DELETETriggerName = `${mergeTriggerPrefix}_${appId}_${targetDatabase}_${targetTable}_DELETE`;
+      const DELETETriggerName = `${mergeTriggerPrefix}_${appId}_${targetTable}_DELETE`;
       const DELETETriggerContentSql = `BEGIN
               DELETE FROM \`${targetDatabase}\`.\`${targetTable}\` WHERE id = OLD.id and appId="${appId}";
           END`;
@@ -360,9 +354,9 @@ class UtilService extends Service {
       const { sourceList, targetDatabase, targetTable } = tableConfig;
       for (const source of sourceList) {
         const appId = source.appId;
-        triggerCheckMap[`${mergeTriggerPrefix}_${appId}_${targetDatabase}_${targetTable}_INSERT`] = true;
-        triggerCheckMap[`${mergeTriggerPrefix}_${appId}_${targetDatabase}_${targetTable}_UPDATE`] = true;
-        triggerCheckMap[`${mergeTriggerPrefix}_${appId}_${targetDatabase}_${targetTable}_DELETE`] = true;
+        triggerCheckMap[`${mergeTriggerPrefix}_${appId}_${targetTable}_INSERT`] = true;
+        triggerCheckMap[`${mergeTriggerPrefix}_${appId}_${targetTable}_UPDATE`] = true;
+        triggerCheckMap[`${mergeTriggerPrefix}_${appId}_${targetTable}_DELETE`] = true;
       }
     })
 

@@ -222,7 +222,7 @@
                   查询<v-icon size="18" color="success">mdi-sync</v-icon>
                 </span>
                 </span>
-                <v-combobox :items="constantObj.tableListMap[createItem.sourceDatabase]||[]" item-text="sourceTable" item-value="sourceTable" :return-object="false" class="jh-v-input" dense single-line filled v-model="createItem.sourceTable" :rules="validationRules.requireRules"></v-combobox>
+                <v-combobox :items="constantObj.tableListMap[createItem.sourceDatabase]||[]" item-text="tableName" item-value="tableName" :return-object="false" class="jh-v-input" dense single-line filled v-model="createItem.sourceTable" :rules="validationRules.requireRules"></v-combobox>
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="12"class="pa-0">
                 <div ></div>
@@ -294,7 +294,7 @@
                 查询<v-icon size="18" color="success">mdi-sync</v-icon>
               </span>
               </span>
-                <v-combobox :items="constantObj.tableListMap[updateItem.sourceDatabase]||[]" item-text="sourceTable" item-value="sourceTable" :return-object="false" class="jh-v-input" dense single-line filled v-model="updateItem.sourceTable" :rules="validationRules.requireRules"></v-combobox>
+                <v-combobox :items="constantObj.tableListMap[updateItem.sourceDatabase]||[]" item-text="tableName" item-value="tableName" :return-object="false" class="jh-v-input" dense single-line filled v-model="updateItem.sourceTable" :rules="validationRules.requireRules"></v-combobox>
               </v-col>
               <v-col cols="12" sm="12" md="3" :md="12"class="pa-0">
                 <div ></div>

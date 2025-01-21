@@ -6,6 +6,11 @@ require('dotenv').config({path: path.resolve(__dirname, '../../../.env')});
 module.exports = appInfo => {
 
   return {
+    remoteDatabaseList: [
+      { remoteName: 'demo',      host: '127.0.0.1',       port: 3306, user: 'root', password: '123456' },
+      { remoteName: 'dev03',     host: '127.0.0.1',       port: 3307, user: 'root', password: '123456' },
+      { remoteName: 'dev05',     host: '127.0.0.1',       port: 3308, user: 'root', password: '123456' },
+    ],
     knex: {
       client: {
         dialect: 'mysql',
