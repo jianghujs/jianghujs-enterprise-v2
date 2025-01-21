@@ -1,9 +1,5 @@
 'use strict';
-const _ = require('lodash');
 const dayjs = require('dayjs');
-const diff = require('@jianghujs/jianghu/app/common/diffUtil');
-const hyperDiff = require('@jianghujs/jianghu/app/common/hyperDiff');
-const jianghu = require('@jianghujs/jianghu');
 
 module.exports = app => {
   return {
