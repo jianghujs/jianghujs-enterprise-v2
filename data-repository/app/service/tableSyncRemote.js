@@ -1,6 +1,7 @@
 'use strict';
 
 const Service = require('egg').Service;
+const { tableEnum } = require('../constant/constant');
 const dayjs = require('dayjs');
 const validateUtil = require('@jianghujs/jianghu/app/common/validateUtil');
 const hyperDiff = require('@jianghujs/jianghu/app/common/hyperDiff');
@@ -69,12 +70,12 @@ class TableSyncRemoteService extends Service {
 
   async recycleTableSyncConfig({ id }) {
     const { jianghuKnex, knex } = this.app;
-    const syncObj = await jianghuKnex('_table_sync_config_remote').where({ id }).first();
+    const syncObj = await jianghuKnex(tableEnum.view01_table_sync_config_remote).where({ id }).first();
     if (!syncObj) {
       throw new BizError(errorInfoEnum.data_not_found);
     }
     const { sourceDatabase, sourceTable, targetDatabase, targetTable } = syncObj;
-    await jianghuKnex('_table_sync_config_remote')
+    await jianghuKnex(tableEnum._table_sync_config_remote)
       .where({id})
       .update({rowStatus: '回收站'});
     return;
@@ -82,7 +83,7 @@ class TableSyncRemoteService extends Service {
 
   async doSyncTableRemoteByIdList({ idList }) {
     const { knex, jianghuKnex, config, logger } = this.app;
-    const syncList = await jianghuKnex('_table_sync_config_remote')
+    const syncList = await jianghuKnex(tableEnum.view01_table_sync_config_remote)
       .where({ rowStatus: '正常' })
       .whereIn("id", idList)
       .select('id', 'sourceRemoteName', 'targetRemoteName', 'sourceDatabase', 'sourceTable', 'targetDatabase', 'targetTable');
@@ -113,7 +114,7 @@ class TableSyncRemoteService extends Service {
         sourceKnex.destroy();
         targetKnex.destroy();
       } catch (error) {
-        await jianghuKnex('_table_sync_config_remote').where({ id: syncObj.id })
+        await jianghuKnex(tableEnum._table_sync_config_remote).where({ id: syncObj.id })
           .update({ 
             syncStatus: '失败', 
             lastSyncTime: dayjs().format(), 
@@ -220,10 +221,10 @@ class TableSyncRemoteService extends Service {
     }
 
     if (id) {
-      await jianghuKnex('_table_sync_config_remote').where({ id }).update({syncStatus: '成功'});
-      await jianghuKnex('_table_sync_config_remote').where({ id }).where('lastSyncInfo', 'like', 'ERROR%').update({lastSyncInfo: ''});
+      await jianghuKnex(tableEnum._table_sync_config_remote).where({ id }).update({syncStatus: '成功'});
+      await jianghuKnex(tableEnum._table_sync_config_remote).where({ id }).where('lastSyncInfo', 'like', 'ERROR%').update({lastSyncInfo: ''});
       if(diffCount > 0){
-        await jianghuKnex('_table_sync_config_remote').where({ id })
+        await jianghuKnex(tableEnum._table_sync_config_remote).where({ id })
           .update({ 
             lastSyncTime: dayjs().format(),
             lastSyncInfo: `${added.length}条新增, ${changed.length}条修改, ${removed.length}条删除`,
