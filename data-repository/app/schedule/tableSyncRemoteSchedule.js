@@ -11,7 +11,7 @@ module.exports = app => {
     },
     async task(ctx) {
       const { jianghuKnex, logger } = ctx.app;
-      const syncList = await jianghuKnex('_table_sync_config_remote')
+      const syncList = await jianghuKnex('view01_table_sync_config_remote')
         .where({ rowStatus: '正常' })
         .select('id', 'syncTimeSlot');
       
