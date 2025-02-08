@@ -28,6 +28,7 @@ function getCreateTableSqlFromView({targetTable, targetTableIndexList=[], column
   });
   for(const index in targetTableIndexList){
     const {COLUMN_NAME_LIST, INDEX_TYPE} = targetTableIndexList[index];
+    if (!COLUMN_NAME_LIST || COLUMN_NAME_LIST.length === 0) { continue;}
     sql += `KEY \`${COLUMN_NAME_LIST.join('_')}_index\` (\`${COLUMN_NAME_LIST.join('`,`')}\`) USING BTREE`
     sql += ",\n"
   }
