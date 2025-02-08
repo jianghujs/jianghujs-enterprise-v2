@@ -20,6 +20,11 @@ function getCreateTableSqlFromView({targetTable, targetTableIndexList=[], column
   if(columnsDefinition.some(columnObj => columnObj.COLUMN_NAME == 'id')){
     sql += "PRIMARY KEY (`id`),\n"
   }
+  targetTableIndexList = targetTableIndexList.filter(indexObj => {
+    return indexObj.COLUMN_NAME_LIST.every(columnName => {
+      return columnsDefinition.some(columnObj => columnObj.COLUMN_NAME === columnName);
+    });
+  });
   for(const index in targetTableIndexList){
     const {COLUMN_NAME_LIST, INDEX_TYPE} = targetTableIndexList[index];
     sql += `KEY \`${COLUMN_NAME_LIST.join('_')}_index\` (\`${COLUMN_NAME_LIST.join('`,`')}\`) USING BTREE`
