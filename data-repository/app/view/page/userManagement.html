@@ -369,6 +369,7 @@ new Vue({
     serverSearchWhere: {},
     serverSearchWhereIn: {},
     serverSearchWhereLike: {},
+    maxSearchDisplay: 5,
     
     // ================================ 新建抽屉 ================================
     isCreateDrawerShown: false,
@@ -728,6 +729,13 @@ new Vue({
     },
     async openResetPasswordDrawer() {
       this.isResetPasswordDrawerShown = true;
+      // 重新计算table
+      try {
+        resetTableMaxHeight()
+        reFixedTableCol()
+      } catch (error) {
+        console.error(error);
+      }
     },
     async closeResetPasswordDrawerCheck() {
       await this.closeResetPasswordDrawer();
