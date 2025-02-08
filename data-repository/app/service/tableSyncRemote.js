@@ -9,18 +9,25 @@ const _ = require('lodash');
 const {BizError, errorInfoEnum} = require('../constant/error');
 const Knex = require('knex');
 
-function getCreateTableSqlFromView({targetTable,columnsDefinition,viewDefinition}){
+function getCreateTableSqlFromView({targetTable, targetTableIndexList=[], columnsDefinition,viewDefinition}){
   // 构建sql语句
   let sql = `CREATE TABLE \`${targetTable}\` (\n`
   for(const index in columnsDefinition){
     const {COLUMN_NAME,IS_NULLABLE,COLUMN_TYPE,CHARACTER_SET_NAME,COLLATION_NAME,COLUMN_COMMENT} = columnsDefinition[index];
     // sql += `\`${COLUMN_NAME}\` ${COLUMN_TYPE}${CHARACTER_SET_NAME ? ` CHARACTER SET ${CHARACTER_SET_NAME}`:''}${COLLATION_NAME ? ` COLLATE ${COLLATION_NAME}`:''}${COLUMN_TYPE.includes("text") ? '' : (IS_NULLABLE==='YES'?' DEFAULT NULL':' NOT NULL')}${COLUMN_COMMENT?` COMMENT '${COLUMN_COMMENT}'`:''}`
     sql += `\`${COLUMN_NAME}\` ${COLUMN_TYPE}${COLUMN_TYPE.includes("text") ? '' : (IS_NULLABLE==='YES'?' DEFAULT NULL':' NOT NULL')}${COLUMN_COMMENT?` COMMENT '${COLUMN_COMMENT}'`:''}`
-    if(index != columnsDefinition.length - 1){
-      sql += ","
-    } 
-    sql += "\n"
+    sql += ",\n"
   }
+  if(columnsDefinition.some(columnObj => columnObj.COLUMN_NAME == 'id')){
+    sql += "PRIMARY KEY (`id`),\n"
+  }
+  for(const index in targetTableIndexList){
+    const {COLUMN_NAME_LIST, INDEX_TYPE} = targetTableIndexList[index];
+    sql += `KEY \`${COLUMN_NAME_LIST.join('_')}_index\` (\`${COLUMN_NAME_LIST.join('`,`')}\`) USING BTREE`
+    sql += ",\n"
+  }
+  sql = sql.slice(0, -2);
+  sql += "\n"
   const {CHARACTER_SET_CLIENT} = viewDefinition;
   // 数据表排序规则、字符定义
   sql += `) ENGINE=InnoDB DEFAULT CHARSET=${CHARACTER_SET_CLIENT}`
@@ -86,7 +93,7 @@ class TableSyncRemoteService extends Service {
     const syncList = await jianghuKnex(tableEnum.view01_table_sync_config_remote)
       .where({ rowStatus: '正常' })
       .whereIn("id", idList)
-      .select('id', 'sourceRemoteName', 'targetRemoteName', 'sourceDatabase', 'sourceTable', 'targetDatabase', 'targetTable');
+      .select();
     const tableCount = syncList.length;
     const startTime = new Date().getTime();
 
@@ -98,13 +105,14 @@ class TableSyncRemoteService extends Service {
     for (const [index, syncObj] of syncList.entries()) { 
       const { id, sourceDatabase, sourceTable, targetDatabase, targetTable} = syncObj;
       try {
+        const targetTableIndexList = JSON.parse(syncObj.targetTableIndexList||'[]');
         const sourceConnection = remoteConnectionMap[syncObj.sourceRemoteName] || {};
         const targetConnection = remoteConnectionMap[syncObj.targetRemoteName] || {};
         sourceConnection.database = sourceDatabase;
         targetConnection.database = targetDatabase;
         const sourceKnex = Knex({ client: 'mysql2', connection: sourceConnection });
         const targetKnex = Knex({ client: 'mysql2', connection: targetConnection });
-        await this.doTargetTableDDL({ sourceDatabase, sourceTable, targetDatabase, targetTable, sourceKnex, targetKnex });
+        await this.doTargetTableDDL({ sourceDatabase, sourceTable, targetDatabase, targetTable, targetTableIndexList, sourceKnex, targetKnex });
         await this.doSyncTable({ 
           id, 
           sourceDatabase, sourceTable, targetDatabase, targetTable, 
@@ -135,7 +143,7 @@ class TableSyncRemoteService extends Service {
     logger.warn('[doSyncTableRemoteByIdList] end', { tableCount: idList.length, useTime: `${new Date().getTime() - startTime}/ms` });
   }
 
-  async doTargetTableDDL({ sourceDatabase, sourceTable, targetDatabase, targetTable, sourceKnex, targetKnex }) {
+  async doTargetTableDDL({ sourceDatabase, sourceTable, targetDatabase, targetTable, targetTableIndexList, sourceKnex, targetKnex }) {
     const { logger } = this.app;
 
     const columnsDefinition = (await sourceKnex.raw(`SELECT COLUMN_NAME,IS_NULLABLE,COLUMN_TYPE,CHARACTER_SET_NAME,COLLATION_NAME,COLUMN_COMMENT FROM INFORMATION_SCHEMA.COLUMNS 
@@ -149,7 +157,7 @@ class TableSyncRemoteService extends Service {
       WHERE TABLE_SCHEMA = '${sourceDatabase}' AND TABLE_NAME = '${sourceTable}';`);
     const tableType = tableTypeResult[0]?.[0]?.TABLE_TYPE;
     if (tableType === 'VIEW') {
-      targetTableDDLExcept = getCreateTableSqlFromView({ targetTable, columnsDefinition, viewDefinition });
+      targetTableDDLExcept = getCreateTableSqlFromView({ targetTable, targetTableIndexList, columnsDefinition, viewDefinition });
       targetTableDDLExcept = targetTableDDLExcept
         .replace(/AUTO_INCREMENT=\d+ ?/, '')
         .replace(/\n\s*/g, '')

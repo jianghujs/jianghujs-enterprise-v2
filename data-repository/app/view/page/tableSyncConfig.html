@@ -235,6 +235,10 @@
                 <span class="jh-input-label">同步-目标表</span>
                 <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.targetTable" :rules="validationRules.targetTableRules"></v-text-field>
               </v-col>
+              <v-col cols="12" sm="12" md="3" :md="12">
+                <span class="jh-input-label">同步-目标表索引</span>
+                <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.targetTableIndexList"></v-text-field>
+              </v-col>
             </v-row>
 
              <!-- 抽屉内容组件 -->
@@ -306,6 +310,10 @@
               <v-col cols="12" sm="12" md="3" :md="4">
                 <span class="jh-input-label">同步-目标表</span>
                 <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.targetTable" :rules="validationRules.targetTableRules"></v-text-field>
+              </v-col>
+              <v-col cols="12" sm="12" md="3" :md="12">
+                <span class="jh-input-label">同步-目标表索引</span>
+                <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.targetTableIndexList"></v-text-field>
               </v-col>
             </v-row>
 
@@ -698,6 +706,7 @@ new Vue({
         sourceTable: data.sourceTable,
         targetDatabase: data.targetDatabase,
         targetTable: data.targetTable,
+        targetTableIndexList: data.targetTableIndexList,
       };
     },
     async doCreateItem() {
@@ -753,6 +762,7 @@ new Vue({
         sourceTable: data.sourceTable,
         targetDatabase: data.targetDatabase,
         targetTable: data.targetTable,
+        targetTableIndexList: data.targetTableIndexList,
       };
     },
     async doUpdateItem() {

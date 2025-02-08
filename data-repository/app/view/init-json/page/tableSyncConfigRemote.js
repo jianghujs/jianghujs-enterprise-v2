@@ -191,6 +191,9 @@ const content = {
             { label: "同步-目标表", model: "targetTable", tag: "v-text-field", rules: "validationRules.targetTableRules", 
               colAttrs: { md: 4 },
             },
+            { label: "同步-目标表索引", model: "targetTableIndexList", tag: "v-text-field", 
+              colAttrs: { md: 12 },
+            },
           ], 
           action: [{
             tag: "v-btn",
@@ -263,6 +266,9 @@ const content = {
             },
             { label: "同步-目标表", model: "targetTable", tag: "v-text-field", rules: "validationRules.targetTableRules", 
               colAttrs: { md: 4 },
+            },
+            { label: "同步-目标表索引", model: "targetTableIndexList", tag: "v-text-field", 
+              colAttrs: { md: 12 },
             },
           ], 
           action: [{
