@@ -22,7 +22,7 @@ function getCreateTableSqlFromView({targetTable, targetTableIndexList=[], column
     sql += "PRIMARY KEY (`id`),\n"
   }
   targetTableIndexList = targetTableIndexList.filter(indexObj => {
-    return indexObj.COLUMN_NAME_LIST.every(columnName => {
+    return indexObj.COLUMN_NAME_LIST && indexObj.COLUMN_NAME_LIST.every(columnName => {
       return columnsDefinition.some(columnObj => columnObj.COLUMN_NAME === columnName);
     });
   });

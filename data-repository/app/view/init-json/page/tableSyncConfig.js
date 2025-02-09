@@ -190,8 +190,9 @@ const content = {
             { label: "同步-目标表", model: "targetTable", tag: "v-text-field", rules: "validationRules.targetTableRules", 
               colAttrs: { md: 4 },
             },
-            { label: "同步-目标表索引", model: "targetTableIndexList", tag: "v-text-field", 
-              colAttrs: { md: 12 },
+            { label: "同步-目标表(字段索引)", model: "targetTableIndexList", tag: "v-text-field", 
+              attrs: {},
+              colAttrs: { md: 4, 'v-if': 'constantObj.tableTypeMap[createItem.sourceDatabase + "." + createItem.sourceTable] == "VIEW"', },
             },
           ], 
           action: [{
@@ -259,8 +260,30 @@ const content = {
             { label: "同步-目标表", model: "targetTable", tag: "v-text-field", rules: "validationRules.targetTableRules", 
               colAttrs: { md: 4 },
             },
-            { label: "同步-目标表索引", model: "targetTableIndexList", tag: "v-text-field", 
-              colAttrs: { md: 12 },
+            // { label: "同步-目标表(字段索引)", model: "targetTableIndexList", tag: "v-text-field", 
+            //   attrs: {},
+            //   colAttrs: { md: 4, 'v-if': 'constantObj.tableTypeMap[updateItem.sourceDatabase + "." + updateItem.sourceTable] == "VIEW"', },
+            // },
+
+            { label: "同步-目标表(字段索引)", model: "targetTableIndexList", tag: "v-combobox", 
+              value: [
+                /*html*/`
+                <template v-slot:selection="{ attrs, item }">
+                  <v-chip v-bind="attrs" color="teal lighten-3" label small>
+                    <span class="pr-2">{{ (item.COLUMN_NAME_LIST||[]).join('_') + (item.COLUMN_NAME_LIST ? '_index' : '') }}</span>
+                    <v-icon small @click="() => updateItem.targetTableIndexList.splice(updateItem.targetTableIndexList.indexOf(item), 1)">mdi-close</v-icon>
+                  </v-chip>
+                </template>
+                <template v-slot:append>
+                  <span role="button" class="translate-y-[0px]" @click="doUiAction('indexListEditDailog', { item: updateItem })">
+                    <v-icon size="18" color="success">mdi-note-edit-outline</v-icon>
+                  </span>
+                </template>
+                `
+              ],
+              attrs: { },
+              quickAttrs: ['multiple', 'small-chips', 'readonly'],
+              colAttrs: { md: 4, 'v-if': 'constantObj.tableTypeMap[updateItem.sourceDatabase + "." + updateItem.sourceTable] == "VIEW"', },
             },
           ], 
           action: [{
@@ -397,6 +420,7 @@ const content = {
       initConstantObjData: ['initConstantObjData'],
       recycleItem: ['recycleItem', 'doUiAction.getTableData'],
       clearSyncTimesCount: ['clearSyncTimesCount', 'doUiAction.getTableData'],
+      indexListEditDailog: ['indexListEditDailog'],
     }, // 额外uiAction { [key]: [action1, action2]}
     methods: {
       // ---------- CRUD覆盖 uiAction >>>>>>>>>>>> --------
@@ -438,6 +462,14 @@ const content = {
           row.targetTableText = `${row.targetDatabase}.${row.targetTable}`;
           row.lastSyncTime = row.lastSyncTime ? dayjs(row.lastSyncTime).format('YYYY-MM-DD HH:mm:ss') : '';
           row.scheduleAt = row.scheduleAt ? dayjs(row.scheduleAt).format('YYYY-MM-DD HH:mm:ss') : '';
+          row.targetTableIndexList = JSON.parse(row.targetTableIndexList||'[]');
+          row.targetTableIndexNameList = row.targetTableIndexList.map(item => {
+            let INDEX_NAME = item.COLUMN_NAME_LIST?.join('_');
+            if (INDEX_NAME) {
+              INDEX_NAME = INDEX_NAME + '_index';
+            }
+            return INDEX_NAME;
+          });
           return row;
         });
         this.tableData = tableData;
@@ -514,6 +546,25 @@ const content = {
             });
             window.vtoast.success(dailogTitle);
             await this.doUiAction('getTableData');
+          },
+        });
+      },
+      async indexListEditDailog({ item }) {
+        const dailogTitle = "同步-目标表(字段索引)"
+        await window.jhConfirmDailog({ 
+          title: dailogTitle,
+          data: { 
+            targetTableIndexList: item.targetTableIndexList,
+          },
+          htmlTemplate: /*html*/`
+            
+          `,
+          onConfirm: async ($instance) => {
+            // Tip: 等10ms让 vueData更新完
+            await new Promise(resolve => setTimeout(resolve, 10));
+            window.vtoast.loading(dailogTitle);
+            window.vtoast.success(dailogTitle);
+            item.targetTableIndexList = $instance.targetTableIndexList;
           },
         });
       },

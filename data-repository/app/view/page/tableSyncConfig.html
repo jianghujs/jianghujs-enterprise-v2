@@ -235,8 +235,8 @@
                 <span class="jh-input-label">同步-目标表</span>
                 <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.targetTable" :rules="validationRules.targetTableRules"></v-text-field>
               </v-col>
-              <v-col cols="12" sm="12" md="3" :md="12">
-                <span class="jh-input-label">同步-目标表索引</span>
+              <v-col cols="12" sm="12" md="3" :md="4"v-if="constantObj.tableTypeMap[createItem.sourceDatabase + '.' + createItem.sourceTable] == 'VIEW'">
+                <span class="jh-input-label">同步-目标表(字段索引)</span>
                 <v-text-field class="jh-v-input" dense single-line filled v-model="createItem.targetTableIndexList"></v-text-field>
               </v-col>
             </v-row>
@@ -311,9 +311,21 @@
                 <span class="jh-input-label">同步-目标表</span>
                 <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.targetTable" :rules="validationRules.targetTableRules"></v-text-field>
               </v-col>
-              <v-col cols="12" sm="12" md="3" :md="12">
-                <span class="jh-input-label">同步-目标表索引</span>
-                <v-text-field class="jh-v-input" dense single-line filled v-model="updateItem.targetTableIndexList"></v-text-field>
+              <v-col cols="12" sm="12" md="3" :md="4"v-if="constantObj.tableTypeMap[updateItem.sourceDatabase + '.' + updateItem.sourceTable] == 'VIEW'">
+                <span class="jh-input-label">同步-目标表(字段索引)</span>
+                <v-combobox class="jh-v-input" dense single-line filled v-model="updateItem.targetTableIndexList" multiple small-chips readonly>
+                <template v-slot:selection="{ attrs, item }">
+                  <v-chip v-bind="attrs" color="teal lighten-3" label small>
+                    <span class="pr-2">{{ (item.COLUMN_NAME_LIST||[]).join('_') + (item.COLUMN_NAME_LIST ? '_index' : '') }}</span>
+                    <v-icon small @click="() => updateItem.targetTableIndexList.splice(updateItem.targetTableIndexList.indexOf(item), 1)">mdi-close</v-icon>
+                  </v-chip>
+                </template>
+                <template v-slot:append>
+                  <span role="button" class="translate-y-[0px]" @click="doUiAction('indexListEditDailog', { item: updateItem })">
+                    <v-icon size="18" color="success">mdi-note-edit-outline</v-icon>
+                  </span>
+                </template>
+                </v-combobox>
               </v-col>
             </v-row>
 
@@ -583,6 +595,9 @@ new Vue({
             await this.clearSyncTimesCount(uiActionData);
             await this.doUiAction('getTableData', uiActionData);
             break;
+          case 'indexListEditDailog':
+            await this.indexListEditDailog(uiActionData);
+            break;
           default:
             console.error("[doUiAction] uiActionId not find", {uiActionId});
             break;
@@ -832,6 +847,14 @@ new Vue({
         row.targetTableText = `${row.targetDatabase}.${row.targetTable}`;
         row.lastSyncTime = row.lastSyncTime ? dayjs(row.lastSyncTime).format('YYYY-MM-DD HH:mm:ss') : '';
         row.scheduleAt = row.scheduleAt ? dayjs(row.scheduleAt).format('YYYY-MM-DD HH:mm:ss') : '';
+        row.targetTableIndexList = JSON.parse(row.targetTableIndexList||'[]');
+        row.targetTableIndexNameList = row.targetTableIndexList.map(item => {
+          let INDEX_NAME = item.COLUMN_NAME_LIST?.join('_');
+          if (INDEX_NAME) {
+            INDEX_NAME = INDEX_NAME + '_index';
+          }
+          return INDEX_NAME;
+        });
         return row;
       });
       this.tableData = tableData;
@@ -904,6 +927,25 @@ new Vue({
           });
           window.vtoast.success(dailogTitle);
           await this.doUiAction('getTableData');
+        },
+      });
+    },
+    async indexListEditDailog({ item }) {
+      const dailogTitle = "同步-目标表(字段索引)"
+      await window.jhConfirmDailog({ 
+        title: dailogTitle,
+        data: { 
+          targetTableIndexList: item.targetTableIndexList,
+        },
+        htmlTemplate: /*html*/`
+          
+        `,
+        onConfirm: async ($instance) => {
+          // Tip: 等10ms让 vueData更新完
+          await new Promise(resolve => setTimeout(resolve, 10));
+          window.vtoast.loading(dailogTitle);
+          window.vtoast.success(dailogTitle);
+          item.targetTableIndexList = $instance.targetTableIndexList;
         },
       });
     },

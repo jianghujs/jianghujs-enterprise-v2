@@ -21,13 +21,13 @@ function getCreateTableSqlFromView({targetTable, targetTableIndexList=[], column
     sql += "PRIMARY KEY (`id`),\n"
   }
   targetTableIndexList = targetTableIndexList.filter(indexObj => {
-    return indexObj.COLUMN_NAME_LIST.every(columnName => {
+    return indexObj.COLUMN_NAME_LIST && indexObj.COLUMN_NAME_LIST.every(columnName => {
       return columnsDefinition.some(columnObj => columnObj.COLUMN_NAME === columnName);
     });
   });
   for(const index in targetTableIndexList){
     const {COLUMN_NAME_LIST, INDEX_TYPE} = targetTableIndexList[index];
-    if (!COLUMN_NAME_LIST || COLUMN_NAME_LIST.length === 0) { continue;}
+    if (COLUMN_NAME_LIST.length === 0) { continue;}
     sql += `KEY \`${COLUMN_NAME_LIST.join('_')}_index\` (\`${COLUMN_NAME_LIST.join('`,`')}\`) USING BTREE`
     sql += ",\n"
   }
