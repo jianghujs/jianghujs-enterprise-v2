@@ -49,6 +49,17 @@ class TableSyncService extends Service {
     return { defaultTargetDatabase, syncTriggerPrefix };
   }
 
+  async getSourceTableColumnList({ sourceDatabase, sourceTable }){
+    const { jianghuKnex } = this.app;
+    const columnListResult = await jianghuKnex('information_schema.COLUMNS')
+      .where({TABLE_SCHEMA: sourceDatabase, TABLE_NAME: sourceTable})
+      .select('COLUMN_NAME');
+    const columnList = columnListResult
+      .map(item => item.COLUMN_NAME)
+      .filter(column => !['id', 'operation', 'operationByUserId', 'operationByUser', 'operationAt'].includes(column));
+    return { rows: columnList };
+  }
+
   async getDatabaseInfo() {
     const { jianghuKnex, config } = this.app;
     const { defaultTargetDatabase, syncTriggerPrefix } = this.getConfig();

@@ -42,6 +42,27 @@ function getCreateTableSqlFromView({targetTable, targetTableIndexList=[], column
 
 class TableSyncRemoteService extends Service {
 
+  async getSourceTableColumnList({ sourceRemoteName, sourceDatabase, sourceTable }){
+    const { config } = this.app;
+    const connection = config.remoteDatabaseList.find(item => item.remoteName === sourceRemoteName); 
+    if (!connection) { return { rows: [] }; }
+
+    try {
+      const knex = Knex({ client: 'mysql2', connection });
+      const columnListResult = await knex('information_schema.COLUMNS')
+        .where({TABLE_SCHEMA: sourceDatabase, TABLE_NAME: sourceTable})
+        .select('COLUMN_NAME');
+      const columnList = columnListResult
+        .map(item => item.COLUMN_NAME)
+          .filter(column => !['id', 'operation', 'operationByUserId', 'operationByUser', 'operationAt'].includes(column));
+      knex.destroy();
+      return { rows: columnList };
+    } catch (error) {
+      logger.error('[getSourceTableColumnList]', error);
+      return { rows: [] };
+    }
+  }
+
   async getDatabaseInfo() {
     const { jianghuKnex, config, logger } = this.app;
     const remoteDatabaseList = config.remoteDatabaseList;

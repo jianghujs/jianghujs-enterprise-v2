@@ -46,6 +46,15 @@ const content = {
         service: "tableSyncRemote",
         serviceFunction: "recycleTableSyncConfig"
       }
+    },
+    {
+      actionId: "getSourceTableColumnList",
+      resourceType: "service",
+      desc: "✅数据库管理页-查询源表字段",
+      resourceData: {
+        service: "tableSyncRemote",
+        serviceFunction: "getSourceTableColumnList"
+      }
     }
   ], // { actionId: '', resourceType: '', resourceData: {}, resourceHook: {}, desc: '' }
   headContent: [
@@ -191,8 +200,25 @@ const content = {
             { label: "同步-目标表", model: "targetTable", tag: "v-text-field", rules: "validationRules.targetTableRules", 
               colAttrs: { md: 4 },
             },
-            { label: "同步-目标表索引", model: "targetTableIndexList", tag: "v-text-field", 
-              colAttrs: { md: 12 },
+            { label: "同步-目标表(字段索引)", model: "targetTableIndexList", tag: "v-combobox", 
+              value: [
+                /*html*/`
+                <template v-slot:selection="{ attrs, item }">
+                  <v-chip v-bind="attrs" color="teal lighten-3" class="!mt-[1px] !mb-[1px]" label small>
+                    <span class="pr-2">{{ (item.COLUMN_NAME_LIST||[]).join('_') + (item.COLUMN_NAME_LIST ? '_index' : '') }}</span>
+                    <v-icon small @click="() => createItem.targetTableIndexList.splice(createItem.targetTableIndexList.indexOf(item), 1)">mdi-delete</v-icon>
+                  </v-chip>
+                </template>
+                <template v-slot:append>
+                  <span role="button" class="translate-y-[0px]" @click="doUiAction('indexListEditDailog', { item: createItem })">
+                    <v-icon size="18" color="success">mdi-note-edit-outline</v-icon>
+                  </span>
+                </template>
+                `
+              ],
+              attrs: { },
+              quickAttrs: ['multiple', 'small-chips', 'readonly'],
+              colAttrs: { offsetMd: 8,md: 4, 'v-if': 'constantObj.tableTypeMap[createItem.sourceRemoteName + "." + createItem.sourceDatabase + "." + createItem.sourceTable] == "VIEW"', },
             },
           ], 
           action: [{
@@ -267,8 +293,25 @@ const content = {
             { label: "同步-目标表", model: "targetTable", tag: "v-text-field", rules: "validationRules.targetTableRules", 
               colAttrs: { md: 4 },
             },
-            { label: "同步-目标表索引", model: "targetTableIndexList", tag: "v-text-field", 
-              colAttrs: { md: 12 },
+            { label: "同步-目标表(字段索引)", model: "targetTableIndexList", tag: "v-combobox", 
+              value: [
+                /*html*/`
+                <template v-slot:selection="{ attrs, item }">
+                  <v-chip v-bind="attrs" color="teal lighten-3" class="!mt-[1px] !mb-[1px]" label small>
+                    <span class="pr-2">{{ (item.COLUMN_NAME_LIST||[]).join('_') + (item.COLUMN_NAME_LIST ? '_index' : '') }}</span>
+                    <v-icon small @click="() => updateItem.targetTableIndexList.splice(updateItem.targetTableIndexList.indexOf(item), 1)">mdi-delete</v-icon>
+                  </v-chip>
+                </template>
+                <template v-slot:append>
+                  <span role="button" class="translate-y-[0px]" @click="doUiAction('indexListEditDailog', { item: updateItem })">
+                    <v-icon size="18" color="success">mdi-note-edit-outline</v-icon>
+                  </span>
+                </template>
+                `
+              ],
+              attrs: { },
+              quickAttrs: ['multiple', 'small-chips', 'readonly'],
+              colAttrs: {  offsetMd: 8, md: 4, 'v-if': 'constantObj.tableTypeMap[updateItem.sourceRemoteName + "." + updateItem.sourceDatabase + "." + updateItem.sourceTable] == "VIEW"', },
             },
           ], 
           action: [{
@@ -407,6 +450,7 @@ const content = {
       initConstantObjData: ['initConstantObjData'],
       recycleItem: ['recycleItem', 'doUiAction.getTableData'],
       clearSyncTimesCount: ['clearSyncTimesCount', 'doUiAction.getTableData'],
+      indexListEditDailog: ['indexListEditDailog'],
     }, // 额外uiAction { [key]: [action1, action2]}
     methods: {
       // ---------- CRUD覆盖 uiAction >>>>>>>>>>>> --------
@@ -448,6 +492,7 @@ const content = {
           row.targetTableText = `${row.targetDatabase}.${row.targetTable}`;
           row.lastSyncTime = row.lastSyncTime ? dayjs(row.lastSyncTime).format('YYYY-MM-DD HH:mm:ss') : '';
           row.scheduleAt = row.scheduleAt ? dayjs(row.scheduleAt).format('YYYY-MM-DD HH:mm:ss') : '';
+          row.targetTableIndexList = JSON.parse(row.targetTableIndexList||'[]');
           return row;
         });
         this.tableData = tableData;
@@ -455,8 +500,42 @@ const content = {
       async prepareCreateFormData() {
         this.createItem = {
           syncTimeSlot: 10,
+          targetTableIndexList: [],
         };
         this.createItemOrigin = _.cloneDeep(this.createItem);
+      },
+      async doCreateItem() {
+        this.createActionData.targetTableIndexList = JSON.stringify(this.createActionData.targetTableIndexList);
+        await window.jhMask.show();
+        await window.vtoast.loading("新增数据");
+        await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'tableSyncConfigRemote',
+              actionId: 'insertItem',
+              actionData: this.createActionData
+            }
+          }
+        })
+        await window.jhMask.hide();
+        await window.vtoast.success("新增数据成功");
+      },
+      async doUpdateItem() {
+        this.updateActionData.targetTableIndexList = JSON.stringify(this.updateActionData.targetTableIndexList);
+        await window.jhMask.show();
+        await window.vtoast.loading("修改数据");
+        await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'tableSyncConfigRemote',
+              actionId: 'updateItem',
+              actionData: this.updateActionData,
+              where: {id: this.updateItemId}
+            }
+          }
+        })
+        await window.jhMask.hide();
+        await window.vtoast.success("修改数据成功");
       },
       async recycleItem({ item }) {
         window.vtoast.loading(`${item.id} 移入回收站`);
@@ -522,6 +601,57 @@ const content = {
             });
             window.vtoast.success(dailogTitle);
             await this.doUiAction('getTableData');
+          },
+        });
+      },
+      async indexListEditDailog({ item }) {
+        const dailogTitle = "同步-目标表(字段索引)";
+        const {rows: tableColumnList} = (await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'tableSyncConfigRemote',
+              actionId: "getSourceTableColumnList",
+              actionData: {
+                sourceRemoteName: item.sourceRemoteName,
+                sourceDatabase: item.sourceDatabase,
+                sourceTable: item.sourceTable,
+              },
+            }
+          }
+        })).data.appData.resultData;
+        await window.jhConfirmDailog({ 
+          title: dailogTitle,
+          width: 400,
+          data: { 
+            tableColumnList: tableColumnList,
+            targetTableIndexList: item.targetTableIndexList,
+          },
+          htmlTemplate: /*html*/`
+          <v-list dense>
+            <v-list-item v-for="(obj, indexKey) in targetTableIndexList" :key="indexKey">
+              <v-list-item-content>
+                <v-combobox v-model="obj.COLUMN_NAME_LIST" :items="tableColumnList" 
+                  single-line dense filled multiple class="jh-v-input">
+                  <template v-slot:append>
+                    <span role="button" @click="targetTableIndexList.splice(indexKey, 1)">
+                      <v-icon size="18"  class="translate-y-[1px]" color="grey">mdi-delete</v-icon>
+                    </span>
+                  </template>
+                </v-combobox>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item>
+              <v-spacer></v-spacer>
+              <span role="button" class="mr-3" @click="targetTableIndexList.push({COLUMN_NAME_LIST:[]})">
+                <v-icon size="18" color="success" class="translate-y-[1px]">mdi-plus-circle</v-icon>
+              </span>
+            </v-list-item>
+          </v-list>
+          `,
+          onConfirm: async ($instance) => {
+            // Tip: 等10ms让 vueData更新完
+            await new Promise(resolve => setTimeout(resolve, 10));
+            item.targetTableIndexList = $instance.targetTableIndexList;
           },
         });
       },
