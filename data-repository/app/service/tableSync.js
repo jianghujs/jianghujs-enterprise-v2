@@ -247,7 +247,8 @@ class TableSyncService extends Service {
           targetTableInfo: `${targetDatabase}.${targetTable}`,
           syncStatus: '成功',
           syncTime: dayjs().format(),
-          syncInfo: `${added.length}条新增, ${changed.length}条修改, ${removed.length}条删除`,
+          syncInfo: `${added.length}条新增, ${changed.length}条修改, ${removed.length}条删除`,          
+          syncHyperDiffResult: JSON.stringify(hyperDiffResult),
         });
       }
     }
