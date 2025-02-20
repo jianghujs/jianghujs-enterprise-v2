@@ -272,6 +272,7 @@ class TableSyncRemoteService extends Service {
           syncStatus: '成功',
           syncTime: dayjs().format(),
           syncInfo: `${added.length}条新增, ${changed.length}条修改, ${removed.length}条删除`,
+          syncHyperDiffResult: JSON.stringify(hyperDiffResult),
         });
       }
     }
